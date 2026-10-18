@@ -495,37 +495,91 @@
     const levels = generationMap();
     const grouped = new Map();
     levels.forEach((people, level) => {
-      const filtered = people.filter(person => selectedIds.has(person.id))
-        .sort((a, b) => a.full_name.localeCompare(b.full_name));
+      const filtered = people.filter(person => selectedIds.has(person.id));
       if (filtered.length) grouped.set(level, filtered);
     });
     const levelKeys = Array.from(grouped.keys()).sort((a, b) => a - b);
     const minLevel = Math.min(...levelKeys);
     const maxLevel = Math.max(...levelKeys);
-    const columnWidth = 252;
-    const rowHeight = 265;
     const nodeWidth = 218;
     const nodeHeight = 202;
-    const maxColumns = Math.max(1, ...Array.from(grouped.values()).map(group => group.length));
-    const canvasWidth = Math.max(viewport.clientWidth || 760, maxColumns * columnWidth + 45);
+    const columnGap = 34;
+    const coupleGap = 16;
+    const rowHeight = 286;
+    const levelUnits = new Map();
+    const positions = new Map();
+
+    // Treat partners as one layout unit so they always sit beside one another
+    // on the same generation row, instead of being separated by alphabetical order.
+    levelKeys.forEach(level => {
+      const people = grouped.get(level).slice().sort((a, b) => a.full_name.localeCompare(b.full_name));
+      const peopleById = new Map(people.map(person => [person.id, person]));
+      const paired = new Set();
+      const units = [];
+      people.forEach(person => {
+        if (paired.has(person.id)) return;
+        const spouseIds = state.relationships
+          .filter(r => r.relationship_type === "spouse" && (r.person_id === person.id || r.related_person_id === person.id))
+          .map(r => r.person_id === person.id ? r.related_person_id : r.person_id);
+        const spouse = spouseIds.map(id => peopleById.get(id)).find(candidate => candidate && !paired.has(candidate.id) && candidate.id !== person.id);
+        if (spouse) {
+          paired.add(person.id);
+          paired.add(spouse.id);
+          const pair = [person, spouse].sort((a, b) => a.full_name.localeCompare(b.full_name));
+          units.push({ people: pair, width: nodeWidth * 2 + coupleGap, sortName: pair[0].full_name });
+        } else {
+          paired.add(person.id);
+          units.push({ people: [person], width: nodeWidth, sortName: person.full_name });
+        }
+      });
+
+      // Keep sibling branches near their parents, rather than letting one global
+      // alphabetical sort scatter cousins and children across the canvas.
+      const parentCenter = unit => {
+        const centers = [];
+        unit.people.forEach(person => {
+          state.relationships.filter(r => r.relationship_type === "parent" && r.related_person_id === person.id)
+            .forEach(edge => {
+              const parent = positions.get(edge.person_id);
+              if (parent) centers.push(parent.x + parent.width / 2);
+            });
+        });
+        return centers.length ? centers.reduce((sum, value) => sum + value, 0) / centers.length : null;
+      };
+      units.sort((a, b) => {
+        const ac = parentCenter(a), bc = parentCenter(b);
+        if (ac != null && bc != null && ac !== bc) return ac - bc;
+        if (ac != null && bc == null) return -1;
+        if (ac == null && bc != null) return 1;
+        return a.sortName.localeCompare(b.sortName);
+      });
+      levelUnits.set(level, units);
+
+      let cursorX = 25;
+      units.forEach(unit => {
+        unit.people.forEach((person, index) => {
+          const x = cursorX + index * (nodeWidth + coupleGap);
+          positions.set(person.id, {
+            x,
+            y: 22 + (level - minLevel) * rowHeight,
+            width: nodeWidth,
+            height: nodeHeight
+          });
+        });
+        cursorX += unit.width + columnGap;
+      });
+    });
+
+    const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
+      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
+    ));
+    const canvasWidth = Math.max(viewport.clientWidth || 760, widestLevel + 50);
     const canvasHeight = Math.max(265, (maxLevel - minLevel) * rowHeight + nodeHeight + 50);
     canvas.style.width = canvasWidth + "px";
     canvas.style.height = canvasHeight + "px";
     linesRoot.setAttribute("viewBox", "0 0 " + canvasWidth + " " + canvasHeight);
     linesRoot.setAttribute("width", String(canvasWidth));
     linesRoot.setAttribute("height", String(canvasHeight));
-
-    const positions = new Map();
-    grouped.forEach((people, level) => {
-      people.forEach((person, index) => {
-        positions.set(person.id, {
-          x: 25 + index * columnWidth,
-          y: 22 + (level - minLevel) * rowHeight,
-          width: nodeWidth,
-          height: nodeHeight
-        });
-      });
-    });
 
     const paths = [];
     state.relationships.filter(relationship => relationship.relationship_type === "parent").forEach(relationship => {
