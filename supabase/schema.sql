@@ -45,7 +45,6 @@ create table if not exists public.uravu_tree_members (
   role text not null default 'viewer' check (role in ('owner', 'admin', 'member', 'viewer')),
   person_id uuid references public.uravu_people(id) on delete set null,
   display_name text not null default 'Family member',
-  email text,
   avatar_url text,
   joined_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -62,7 +61,6 @@ create table if not exists public.uravu_access_requests (
   message text not null default '',
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   display_name text not null default 'Family member',
-  email text,
   avatar_url text,
   reviewed_by uuid references auth.users(id) on delete set null,
   reviewed_at timestamptz,
@@ -139,7 +137,6 @@ declare
   v_tree_id uuid;
   v_name text := btrim(coalesce(p_name, ''));
   v_display_name text;
-  v_email text;
   v_avatar text;
 begin
   if v_user is null then raise exception 'Sign in before creating a family tree.'; end if;
@@ -154,17 +151,16 @@ begin
                   nullif(u.raw_user_meta_data->>'name',''),
                   nullif(u.raw_user_meta_data->>'user_name',''),
                   nullif(u.email,''), 'Family owner'),
-         u.email,
          coalesce(u.raw_user_meta_data->>'avatar_url', u.raw_user_meta_data->>'picture')
-    into v_display_name, v_email, v_avatar
+    into v_display_name, v_avatar
   from auth.users u where u.id = v_user;
 
   insert into public.uravu_family_trees(name, description, language, created_by)
   values (v_name, left(coalesce(p_description, ''), 500), coalesce(p_language, 'en'), v_user)
   returning id into v_tree_id;
 
-  insert into public.uravu_tree_members(tree_id, user_id, role, display_name, email, avatar_url)
-  values (v_tree_id, v_user, 'owner', coalesce(v_display_name, 'Family owner'), v_email, v_avatar);
+  insert into public.uravu_tree_members(tree_id, user_id, role, display_name, avatar_url)
+  values (v_tree_id, v_user, 'owner', coalesce(v_display_name, 'Family owner'), v_avatar);
 
   return v_tree_id;
 end;
@@ -185,7 +181,6 @@ declare
   v_role text;
   v_type text;
   v_display_name text;
-  v_email text;
   v_avatar text;
   v_request_id uuid;
 begin
@@ -219,9 +214,8 @@ begin
                   nullif(u.raw_user_meta_data->>'name',''),
                   nullif(u.raw_user_meta_data->>'user_name',''),
                   nullif(u.email,''), 'Family member'),
-         u.email,
          coalesce(u.raw_user_meta_data->>'avatar_url', u.raw_user_meta_data->>'picture')
-    into v_display_name, v_email, v_avatar
+    into v_display_name, v_avatar
   from auth.users u where u.id = v_user;
 
   select r.id into v_request_id from public.uravu_access_requests r
@@ -234,16 +228,16 @@ begin
         requested_person_id=p_requested_person_id,
         message=left(coalesce(p_message,''),1000),
         display_name=coalesce(v_display_name,'Family member'),
-        email=v_email, avatar_url=v_avatar, created_at=now()
+        avatar_url=v_avatar, created_at=now()
     where id=v_request_id;
     return v_request_id;
   end if;
 
   insert into public.uravu_access_requests(
-    tree_id,user_id,request_type,requested_role,requested_person_id,message,display_name,email,avatar_url
+    tree_id,user_id,request_type,requested_role,requested_person_id,message,display_name,avatar_url
   ) values (
     p_tree_id,v_user,v_type,p_requested_role,p_requested_person_id,left(coalesce(p_message,''),1000),
-    coalesce(v_display_name,'Family member'),v_email,v_avatar
+    coalesce(v_display_name,'Family member'),v_avatar
   ) returning id into v_request_id;
   return v_request_id;
 end;
@@ -302,10 +296,10 @@ begin
 
   if v_current_role is null then
     insert into public.uravu_tree_members(
-      tree_id,user_id,role,person_id,display_name,email,avatar_url
+      tree_id,user_id,role,person_id,display_name,avatar_url
     ) values (
       v_req.tree_id,v_req.user_id,p_role,v_req.requested_person_id,
-      v_req.display_name,v_req.email,v_req.avatar_url
+      v_req.display_name,v_req.avatar_url
     );
   else
     if v_current_role='owner' and p_role<>'owner' then
@@ -315,7 +309,6 @@ begin
     set role=case when v_req.request_type='link' then role else p_role end,
         person_id=coalesce(v_req.requested_person_id, person_id),
         display_name=v_req.display_name,
-        email=v_req.email,
         avatar_url=v_req.avatar_url
     where tree_id=v_req.tree_id and user_id=v_req.user_id;
   end if;
