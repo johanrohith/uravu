@@ -884,8 +884,7 @@
 
     linesRoot.innerHTML = paths.join("");
     const relationLabels = relationshipLabelsForCurrentUser();
-    const egoId = state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
-    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id), egoId)).join("");
+    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
@@ -1049,25 +1048,31 @@
   }
 
 
-  function renderPersonCard(person, position, relationLabel, egoId) {
+  function renderPersonCard(person, position, relationLabel) {
     if (!position) return "";
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
     if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
     if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
-    const directRelationship = egoId ? state.relationships.find(edge =>
-      ((edge.person_id === person.id && edge.related_person_id === egoId) ||
-       (edge.person_id === egoId && edge.related_person_id === person.id))
-    ) : null;
+    const edges = state.relationships.filter(edge => edge.person_id === person.id || edge.related_person_id === person.id);
+    const unlinkControls = isManager() && edges.length
+      ? '<div class="graph-relationship-tools">' + edges.map(edge => {
+          const otherId = edge.person_id === person.id ? edge.related_person_id : edge.person_id;
+          const other = state.people.find(item => item.id === otherId);
+          const targetName = other?.full_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "family member");
+          const title = (state.language === "ta" ? "உறவை நீக்கு: " : "Remove connection to ") + targetName;
+          return '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(edge.id) +
+            '" aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">×</button>';
+        }).join("") + '</div>'
+      : "";
     return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px">' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
       (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
-      (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) +
-        (directRelationship && isManager() ? '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(directRelationship.id) + '" aria-label="' + (state.language === "ta" ? "உறவை நீக்கு" : "Remove connection") + '">×</button>' : '') +
-        '</div>' : '') +
+      (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
+      unlinkControls +
       (isManager() ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
       '</article>';
