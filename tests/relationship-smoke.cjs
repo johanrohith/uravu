@@ -12,6 +12,18 @@ const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8"
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
 
+const dateHelperStart = app.indexOf("function datePartsValid");
+const dateHelperEnd = app.indexOf("function formatDateEntry", dateHelperStart);
+assert.ok(dateHelperStart >= 0 && dateHelperEnd > dateHelperStart);
+const parsePartialDate = new Function(app.slice(dateHelperStart, dateHelperEnd) + "\\nreturn parsePartialDate;")();
+assert.deepEqual(parsePartialDate("24-06-1985"), { valid:true, value:"1985-06-24", date:"1985-06-24", precision:"day" });
+assert.deepEqual(parsePartialDate("06-1985"), { valid:true, value:"1985-06", date:null, precision:"month-year" });
+assert.deepEqual(parsePartialDate("1985"), { valid:true, value:"1985", date:null, precision:"year" });
+assert.deepEqual(parsePartialDate("24-06"), { valid:true, value:"06-24", date:null, precision:"month-day" });
+assert.deepEqual(parsePartialDate("06"), { valid:true, value:"06", date:null, precision:"month" });
+assert.equal(parsePartialDate("31-02-1985").valid, false);
+
+
 assert.match(html, /id="signed-out"/);
 assert.match(html, /id="dashboard"/);
 assert.match(html, /id="request-modal"/);
@@ -83,7 +95,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app-v2\.js\?v=uravu-record-entry-20261018-18/);
+assert.match(html, /app-v2\.js\?v=uravu-record-entry-20261018-19/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -102,7 +114,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app-v2\.js\?v=uravu-record-entry-20261018-18/);
+assert.match(html, /app-v2\.js\?v=uravu-record-entry-20261018-19/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
