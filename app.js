@@ -905,7 +905,7 @@
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
 
-    $("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
+    $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
     $$("[data-view-person]").forEach(card => {
