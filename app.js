@@ -392,8 +392,8 @@
       (detailBits.length ? '<div class="person-meta">' + detailBits.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes ? '<div class="person-meta">' + escapeHtml(person.notes) + '</div>' : '') +
       (assigned ? '<span class="unassigned-pill">Linked account: ' + escapeHtml(assigned.display_name || "Family member") + '</span>' : '') +
-      ((parents.length || spouses.length || children.length) ? '<div class="person-connections">' + connection(t("parent"), parents) +
-        connection(t("spouse"), spouses) + connection(t("children"), children) + '</div>' : (relationshipChips ? '<div class="person-connections">' + relationshipChips + '</div>' : '')) +
+      ((parents.length || spouses.length || children.length || relationshipChips) ? '<div class="person-connections">' + connection(t("parent"), parents) +
+        connection(t("spouse"), spouses) + connection(t("children"), children) + relationshipChips + '</div>' : '') +
       (isManager() ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
         '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
       '</article>';
@@ -579,6 +579,7 @@
     const connectedId = $("#connect-person").value || null;
     const connectionType = $("#connect-type").value;
     setBusy(button, true, "Saving…");
+    const wasEditing = Boolean(state.editingPersonId);
     let personId = state.editingPersonId;
     let error = null;
     if (personId) {
@@ -591,17 +592,27 @@
       error = result.error;
       personId = result.data?.id;
     }
-    if (!error && connectedId && personId) {
+    if (error) {
+      setBusy(button, false);
+      showDbError(error, "save family member");
+      return;
+    }
+    let linkError = null;
+    if (connectedId && personId) {
       const linked = await callRpc("uravu_link_people", {
         p_tree_id:state.activeTree.id, p_person_id:personId,
         p_related_person_id:connectedId, p_relationship_type:connectionType
       });
-      error = linked.error;
+      linkError = linked.error;
     }
     setBusy(button, false);
-    if (error) { showDbError(error, "save family member"); return; }
     clearPersonForm();
-    toast(state.editingPersonId ? "Family member updated." : "Family member added.");
+    if (linkError) {
+      showDbError(linkError, "save family connection");
+      await loadWorkspace(state.activeTree.id, false);
+      return;
+    }
+    toast(wasEditing ? "Family member updated." : "Family member added.");
     await loadWorkspace(state.activeTree.id, false);
   }
 
