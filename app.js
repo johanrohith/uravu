@@ -380,7 +380,7 @@
         const otherId = r.person_id === person.id ? r.related_person_id : r.person_id;
         const other = state.people.find(p => p.id === otherId);
         if (!other) return "";
-        const label = r.relationship_type === "spouse" ? "Spouse" :
+        const label = r.relationship_type === "spouse" ? "Spouse / partner: " + other.full_name :
           (r.person_id === person.id ? "Parent of " : "Child of ") + other.full_name;
         return '<span class="connection-line">' + escapeHtml(label) +
           (isManager() ? ' <button type="button" class="text-action" data-remove-relationship="' + escapeHtml(r.id) + '">×</button>' : '') +
@@ -457,7 +457,7 @@
       const roleOptions = ['viewer','member'].concat(owner ? ['admin'] : []);
       const roleSelect = '<label class="inline-control"><span class="tiny-label">Assign role</span><select class="form-input" data-review-role="' +
         escapeHtml(request.id) + '">' + roleOptions.map(role => '<option value="' + role + '"' +
-        ((role === requestedRole && role !== "admin" || (owner && role === requestedRole)) ? ' selected' : '') + '>' +
+        (role === ((!owner && requestedRole === "admin") ? "member" : requestedRole) ? ' selected' : '') + '>' +
         escapeHtml(roleLabel(role)) + '</option>').join("") + '</select></label>';
       return '<article class="request-row"><div><div class="request-identity"><span class="person-avatar">' +
         escapeHtml(initials(request.display_name)) + '</span><div><strong>' + escapeHtml(request.display_name || "Family member") +
