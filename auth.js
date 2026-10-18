@@ -30,15 +30,12 @@
     },
 
     render() {
-      const original = document.getElementById("account-button");
-      if (!original) return;
+      const button = document.getElementById("google-signin-button");
+      const label = document.getElementById("google-signin-label");
+      if (!button || !label) return;
 
-      let button = original;
       if (!button.dataset.googleAuthBound) {
-        button = original.cloneNode(true);
         button.dataset.googleAuthBound = "true";
-        original.replaceWith(button);
-
         button.addEventListener("click", () => {
           if (!auth.user) {
             auth.signIn();
@@ -63,9 +60,7 @@
         auth.user?.email ||
         "";
 
-      button.textContent = auth.user
-        ? name.trim().charAt(0).toUpperCase()
-        : "G";
+      label.textContent = auth.user ? "Sign out" : "Sign in with Google";
       button.title = auth.user
         ? `Signed in as ${name}. Click to sign out.`
         : "Sign in with Google";
