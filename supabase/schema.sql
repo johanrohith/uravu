@@ -82,7 +82,7 @@ create or replace function public.uravu_is_tree_member(p_tree_id uuid)
 returns boolean
 language sql stable security definer
 set search_path = pg_catalog, pg_temp
-as $
+as $$
   select exists (
     select 1 from public.uravu_tree_members m
     where m.tree_id = p_tree_id and m.user_id = auth.uid()
@@ -93,7 +93,7 @@ create or replace function public.uravu_has_tree_role(p_tree_id uuid, p_roles te
 returns boolean
 language sql stable security definer
 set search_path = pg_catalog, pg_temp
-as $
+as $$
   select exists (
     select 1 from public.uravu_tree_members m
     where m.tree_id = p_tree_id
