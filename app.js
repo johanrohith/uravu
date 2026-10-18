@@ -186,7 +186,8 @@ function renderTree(){
   const nodes=$('#tree-nodes'),svg=$('#tree-lines');nodes.innerHTML='';svg.innerHTML='';
   const visible=visiblePeopleSet();
   $('#people-count').textContent=people.length;
-  const generations=estimateGenerations();$('#generation-count').textContent=generations;
+  const generations=people.length?estimateGenerations():0;$('#generation-count').textContent=generations;
+  const emptyTree=$('#empty-tree-state');if(emptyTree)emptyTree.hidden=people.length>0;
   const query=$('#member-search').value.trim().toLocaleLowerCase();
   const matches=query?people.filter(p=>allTextFor(p).includes(query)):[];
   $('#empty-search').hidden=!(query&&matches.length===0);
