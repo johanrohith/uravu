@@ -524,10 +524,13 @@
     const gender = person => person?.gender || "";
     const olderThan = (a, b) => Boolean(a?.birth_date && b?.birth_date && a.birth_date < b.birth_date);
     const tamilSibling = (person, anchor) => {
+      if (!person?.birth_date || !anchor?.birth_date) {
+        return gender(person) === "male" ? "சகோதரர்" : gender(person) === "female" ? "சகோதரி" : "சகோதரர் / சகோதரி";
+      }
       if (gender(person) === "male") return olderThan(person, anchor) ? "அண்ணன்" : "தம்பி";
       if (gender(person) === "female") return olderThan(person, anchor) ? "அக்கா" : "தங்கை";
       return "சகோதரர் / சகோதரி";
-    };
+    }
     const englishSibling = person => gender(person) === "male" ? "Brother" : gender(person) === "female" ? "Sister" : "Sibling";
     const gendered = (person, male, female, other) =>
       gender(person) === "male" ? male : gender(person) === "female" ? female : other;
@@ -559,8 +562,13 @@
       if (id === egoId) {
         english = "You"; tamil = "நீங்கள்";
       } else if (spousesOf(egoId).has(id)) {
-        english = gendered(person, "Husband", "Wife", "Spouse / partner");
-        tamil = gender(person) === "male" ? "கணவர்" : gender(person) === "female" ? "மனைவி" : "துணைவர்";
+        if (gender(ego) === "male" && gender(person) === "female") {
+          english = "Wife"; tamil = "மனைவி";
+        } else if (gender(ego) === "female" && gender(person) === "male") {
+          english = "Husband"; tamil = "கணவர்";
+        } else {
+          english = "Spouse / partner"; tamil = "துணைவர் / துணைவி";
+        }
       } else if (egoParents.includes(id)) {
         english = gendered(person, "Father", "Mother", "Parent");
         tamil = gender(person) === "male" ? "தந்தை" : gender(person) === "female" ? "தாய்" : "பெற்றோர்";
@@ -585,13 +593,13 @@
             if (gender(parentPerson) === "female") tamil = "மாமா";
             else if (gender(parentPerson) === "male" && person.birth_date && parentPerson.birth_date)
               tamil = olderThan(person, parentPerson) ? "பெரியப்பா" : "சித்தப்பா";
-            else tamil = "தந்தைவழி மாமா";
+            else tamil = "தந்தையின் சகோதரர்";
           } else if (gender(person) === "female") {
             english = "Aunt";
             if (gender(parentPerson) === "male") tamil = "அத்தை";
             else if (gender(parentPerson) === "female" && person.birth_date && parentPerson.birth_date)
               tamil = olderThan(person, parentPerson) ? "பெரியம்மா" : "சித்தி";
-            else tamil = "தாய்வழி அத்தை";
+            else tamil = "தாயின் சகோதரி";
           }
         }
 
@@ -832,7 +840,8 @@
 
     linesRoot.innerHTML = paths.join("");
     const relationLabels = relationshipLabelsForCurrentUser();
-    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
+    const egoId = state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
+    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id), egoId)).join("");
     applyTreeCanvasScale(false);
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
@@ -996,17 +1005,23 @@
   }
 
 
-  function renderPersonCard(person, position, relationLabel) {
+  function renderPersonCard(person, position, relationLabel, egoId) {
     if (!position) return "";
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
     if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
     if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
+    const directRelationship = egoId ? state.relationships.find(edge =>
+      ((edge.person_id === person.id && edge.related_person_id === egoId) ||
+       (edge.person_id === egoId && edge.related_person_id === person.id))
+    ) : null;
     return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px">' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
       (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
-      (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
+      (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) +
+        (directRelationship && isManager() ? '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(directRelationship.id) + '" aria-label="' + (state.language === "ta" ? "உறவை நீக்கு" : "Remove connection") + '">×</button>' : '') +
+        '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
       (isManager() ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
