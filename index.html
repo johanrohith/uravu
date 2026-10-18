@@ -22,17 +22,21 @@
         if (document.readyState === 'loading') {
           await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
         }
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.filter(reg => {
-            try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
-            catch (_) { return false; }
-          }).map(reg => reg.unregister()));
-        }
-        if ('caches' in window) {
-          const names = await caches.keys();
-          await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
-        }
+        try {
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.filter(reg => {
+              try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
+              catch (_) { return false; }
+            }).map(reg => reg.unregister()));
+          }
+        } catch (cleanupError) { console.warn('Uravu worker cleanup:', cleanupError); }
+        try {
+          if ('caches' in window) {
+            const names = await caches.keys();
+            await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
+          }
+        } catch (cacheError) { console.warn('Uravu cache cleanup:', cacheError); }
         try {
           const staleKeys = [];
           for (let i = 0; i < localStorage.length; i++) {
