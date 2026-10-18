@@ -81,8 +81,8 @@ create unique index if not exists uravu_one_pending_request_per_user_tree
 create or replace function public.uravu_is_tree_member(p_tree_id uuid)
 returns boolean
 language sql stable security definer
-set search_path = public, pg_temp
-as $$
+set search_path = pg_catalog, pg_temp
+as $
   select exists (
     select 1 from public.uravu_tree_members m
     where m.tree_id = p_tree_id and m.user_id = auth.uid()
@@ -92,8 +92,8 @@ $$;
 create or replace function public.uravu_has_tree_role(p_tree_id uuid, p_roles text[])
 returns boolean
 language sql stable security definer
-set search_path = public, pg_temp
-as $$
+set search_path = pg_catalog, pg_temp
+as $
   select exists (
     select 1 from public.uravu_tree_members m
     where m.tree_id = p_tree_id
@@ -130,7 +130,7 @@ create or replace function public.uravu_create_tree(
 )
 returns uuid
 language plpgsql security definer
-set search_path = public, auth, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   v_user uuid := auth.uid();
@@ -174,7 +174,7 @@ create or replace function public.uravu_request_tree_access(
 )
 returns uuid
 language plpgsql security definer
-set search_path = public, auth, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   v_user uuid := auth.uid();
@@ -250,7 +250,7 @@ create or replace function public.uravu_review_tree_request(
 )
 returns void
 language plpgsql security definer
-set search_path = public, auth, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   v_user uuid := auth.uid();
