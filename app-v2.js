@@ -140,6 +140,19 @@
     "Your family-record linking request is awaiting review.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனையில் உள்ளது."
   });
 
+  Object.assign(interfaceTranslations, {
+    "Manage family records, relationships and membership.":"குடும்பப் பதிவுகள், உறவுகள் மற்றும் உறுப்பினர் இணைப்புகளை நிர்வகிக்கவும்.",
+    "Search for a family tree and request membership.":"குடும்ப மரத்தைத் தேடி உறுப்பினராக இணையக் கோருங்கள்.",
+    "Member accounts":"உறுப்பினர் கணக்குகள்",
+    "Link an account to an existing family record, or add a new record above and link it here. Linked members can maintain family records and relationships.":"கணக்கை ஏற்கனவே உள்ள குடும்பப் பதிவுடன் இணைக்கவும் அல்லது மேலே புதிய பதிவை உருவாக்கி இங்கே இணைக்கவும். இணைக்கப்பட்ட உறுப்பினர்கள் குடும்பப் பதிவுகளையும் உறவுகளையும் பராமரிக்கலாம்.",
+    "Review requests to join this family tree.":"இந்தக் குடும்ப மரத்தில் இணைய வரும் கோரிக்கைகளைப் பரிசீலிக்கவும்.",
+    "Review requests to link an account to an existing family record.":"கணக்கை ஏற்கனவே உள்ள குடும்பப் பதிவுடன் இணைக்க வரும் கோரிக்கைகளைப் பரிசீலிக்கவும்.",
+    "Choose date of birth":"பிறந்த தேதியைத் தேர்ந்தெடுக்கவும்",
+    "Choose date of death":"இறந்த தேதியைத் தேர்ந்தெடுக்கவும்",
+    "Family record linked to the member's account.":"உறுப்பினரின் கணக்குடன் குடும்பப் பதிவு இணைக்கப்பட்டது.",
+    "Access request approved.":"அணுகல் கோரிக்கை ஏற்கப்பட்டது."
+  });
+
   const tamilToEnglish = {};
   Object.entries(interfaceTranslations).forEach(([english, tamil]) => {
     if (!(tamil in tamilToEnglish)) tamilToEnglish[tamil] = english;
