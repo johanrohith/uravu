@@ -139,3 +139,33 @@
   .person-details-modal{padding:18px}
   .person-details-list>div{grid-template-columns:minmax(86px,.7fr) minmax(0,1.3fr);gap:8px}
 }
+
+
+/* Family editor: death status and connection editing */
+.deceased-field{display:flex;align-items:flex-end;min-width:0}
+.checkbox-label{display:flex;align-items:center;gap:9px;min-height:39px;margin:13px 0 0;padding:9px 12px;border:1px solid #dfe5dd;border-radius:10px;background:#fff;color:#45594a;font-size:12px;font-weight:700;cursor:pointer}
+.checkbox-label input{width:16px;height:16px;margin:0;accent-color:var(--green);flex:0 0 auto}
+#death-date-field{min-width:0}
+#death-date-field[hidden]{display:none!important}
+.connection-input-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;padding:12px 13px 13px;border:1px solid #e1e9df;border-radius:13px;background:#fbfcfa}
+.connection-input-group>div{min-width:0}
+.connection-input-group .field-label{margin-top:2px}
+.person-connections-section{margin-top:3px;padding:13px;border:1px solid #e1e9df;border-radius:13px;background:#fbfcfa}
+.person-connections-section h4{margin:0 0 9px;color:#52675a;font-size:12px;font-weight:800;letter-spacing:.2px}
+.person-connections-list{display:grid;gap:7px}
+.person-connection-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:9px 10px;border:1px solid #e5ebe3;border-radius:10px;background:#fff}
+.person-connection-description{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;min-width:0}
+.person-connection-description strong{color:#64806b;font-size:10px;font-weight:800}
+.person-connection-description span{color:#293c2e;font-size:12px;font-weight:600;overflow-wrap:anywhere}
+.person-connection-row .text-action{flex:0 0 auto;border:1px solid #e7d9d5;border-radius:7px;padding:6px 9px;background:#fff8f6;color:#9b554c;font-size:10px;font-weight:700}
+.connections-empty{margin:0;color:#839084;font-size:11px}
+.family-node-card{gap:4px}
+.family-node-card .graph-relationship-label{margin-top:2px}
+.family-node-card .person-meta{margin-top:0}
+.family-node-card .person-card-actions{margin-top:auto}
+@media(max-width:520px){
+  .connection-input-group{grid-template-columns:1fr;gap:6px;padding:10px}
+  .connection-input-group .field-label{margin-top:5px}
+  .person-connections-section{padding:10px}
+  .person-connection-row{padding:8px}
+}
