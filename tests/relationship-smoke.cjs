@@ -80,7 +80,7 @@ assert.match(html, /id="linking-requests-panel"/);
 assert.ok(!html.includes("Access, role and linking requests"));
 assert.match(app, /function syncCalendarFromText/);
 assert.match(app, /function syncTextFromCalendar/);
-assert.match(app, /Only the Owner or a Member linked to a family record will review your linking request/);
+assert.match(app, /The Owner or a Member linked to a family record will review your linking request/);
 assert.match(html, /id="death-date-field" hidden/);
 assert.match(html, /id="person-connections-section" hidden/);
 assert.match(html, /connection-input-group/);
