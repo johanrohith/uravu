@@ -59,7 +59,10 @@
   interfaceTranslations["YOUR ROLE"] = "உங்கள் பங்கு";
   interfaceTranslations["Family members"] = "குடும்ப உறுப்பினர்கள்";
   interfaceTranslations["Delete tree"] = "மரத்தை நீக்கு";
-  const tamilToEnglish = Object.fromEntries(Object.entries(interfaceTranslations).map(([english, tamil]) => [tamil, english]));
+  const tamilToEnglish = {};
+  Object.entries(interfaceTranslations).forEach(([english, tamil]) => {
+    if (!(tamil in tamilToEnglish)) tamilToEnglish[tamil] = english;
+  });
 
   function translateUiValue(value) {
     const raw = String(value == null ? "" : value);
