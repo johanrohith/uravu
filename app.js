@@ -18,7 +18,10 @@
     editingPersonId: null,
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
-    loadingTree: false
+    loadingTree: false,
+    treeZoom: 1,
+    treeBaseWidth: 0,
+    treeBaseHeight: 0
   };
 
   const words = {
@@ -55,7 +58,7 @@
   };
 
 
-  const interfaceTranslations = {"Uravu — Family tree":"உறவு — குடும்ப மரம்","Uravu home":"உறவு முகப்பு","Change language":"மொழியை மாற்று","Sign in with Google":"Google மூலம் உள்நுழைக","Sign out":"வெளியேறு","YOUR FAMILY, CONNECTED":"உங்கள் குடும்பம், ஒன்றிணைந்து","Every generation has a story.":"ஒவ்வொரு தலைமுறைக்கும் ஒரு கதை உண்டு.","Build your family tree, preserve names and relationships, and invite family members to contribute with the right permissions.":"உங்கள் குடும்ப மரத்தை உருவாக்கி, பெயர்களையும் உறவுகளையும் பாதுகாத்து, சரியான அனுமதிகளுடன் குடும்ப உறுப்பினர்களைப் பங்களிக்க அழைக்கவும்.","Continue with Google":"Google மூலம் தொடரவும்","Your family tree is private to its members. Nothing is shown here until you sign in and open or create a tree.":"உங்கள் குடும்ப மரத்தை அதன் உறுப்பினர்கள் மட்டுமே பார்க்க முடியும். உள்நுழைந்து ஒரு மரத்தைத் திறக்கும் அல்லது உருவாக்கும் வரை இங்கு எதுவும் காட்டப்படாது.","Generation":"தலைமுறை","before us":"நமக்கு முன்","Parents &":"பெற்றோர் மற்றும்","guardians":"பாதுகாவலர்கள்","You":"நீங்கள்","and yours":"உங்கள் குடும்பம்","The next":"அடுத்த","generation":"தலைமுறை","YOUR FAMILY WORKSPACE":"உங்கள் குடும்பப் பணியிடம்","Welcome to Uravu":"உறவுக்கு வரவேற்கிறோம்","Create a tree or request access to one that already exists.":"புதிய குடும்ப மரத்தை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள மரத்திற்கு அணுகலைக் கோரவும்.","Family data is loaded from Supabase, not browser cache":"குடும்பத் தரவு உலாவி தற்காலிக நினைவகத்திலிருந்து அல்ல, Supabase-இலிருந்து ஏற்றப்படுகிறது","Create a family tree":"குடும்ப மரத்தை உருவாக்கு","Start a new family space. You become its owner.":"புதிய குடும்ப இடத்தைத் தொடங்குங்கள். அதன் உரிமையாளர் நீங்களாக இருப்பீர்கள்.","Family tree name":"குடும்ப மரத்தின் பெயர்","e.g. The Kumar family":"எ.கா. குமார் குடும்பம்","Description":"விளக்கம்","Optional":"விருப்பத்தேர்வு","A short note about this family tree":"இந்தக் குடும்ப மரத்தைப் பற்றிய சிறு குறிப்பு","Primary language":"முதன்மை மொழி","Create tree":"மரத்தை உருவாக்கு","Find a family tree":"குடும்ப மரத்தைக் கண்டுபிடி","Request access and ask for the role you need.":"அணுகலைக் கோரி, உங்களுக்குத் தேவையான பங்கைக் கேளுங்கள்.","Search trees":"குடும்ப மரங்களைத் தேடு","Search by tree name...":"குடும்ப மரத்தின் பெயரால் தேடுங்கள்...","Loading available trees…":"கிடைக்கும் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","YOUR MEMBERSHIPS":"உங்கள் உறுப்பினர் நிலைகள்","My family trees":"எனது குடும்ப மரங்கள்","Refresh":"புதுப்பி","Loading your trees…":"உங்கள் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","Loading trees…":"குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","TREE MEMBER":"குடும்ப மர உறுப்பினர்","Family tree":"குடும்ப மரம்","Request role / link":"பங்கு / இணைப்பைக் கோரு","Close tree":"மரத்தை மூடு","Tree accounts":"மரக் கணக்குகள்","Pending requests":"நிலுவையிலுள்ள கோரிக்கைகள்","TREE EDITING":"குடும்ப மரத் திருத்தம்","Add a family member":"குடும்ப உறுப்பினரைச் சேர்","Cancel edit":"திருத்தத்தை ரத்து செய்","Name":"பெயர்","Full name":"முழுப் பெயர்","Tamil name":"தமிழ்ப் பெயர்","Gender":"பாலினம்","Not specified":"குறிப்பிடப்படவில்லை","Male":"ஆண்","Female":"பெண்","Other / prefer not to say":"மற்றவை / தெரிவிக்க விருப்பமில்லை","Date of birth":"பிறந்த தேதி","Date of death":"இறந்த தேதி","Connect to someone":"ஒருவருடன் இணை","No connection yet":"இன்னும் உறவு இணைக்கப்படவில்லை","Relationship to them":"அவருடனான உறவு","Child of selected person":"தேர்ந்தெடுத்த நபரின் பிள்ளை","Parent of selected person":"தேர்ந்தெடுத்த நபரின் பெற்றோர்","Spouse / partner":"துணைவர் / துணைவி","Notes":"குறிப்புகள்","Additional details (avoid sensitive information)":"கூடுதல் விவரங்கள் (முக்கியமான தனிப்பட்ட தகவல்களைத் தவிர்க்கவும்)","FAMILY TREE":"குடும்ப மரம்","Search names…":"பெயர்களைத் தேடு…","Reset view":"காட்சியை மீட்டமை","ACCESS CONTROL":"அணுகல் கட்டுப்பாடு","Manage members":"உறுப்பினர்களை நிர்வகி","Change roles and link an account to a family member. Only the owner can grant or remove admin access.":"பங்குகளை மாற்றி, கணக்கை குடும்ப உறுப்பினருடன் இணைக்கவும். நிர்வாகி அணுகலை வழங்கவோ நீக்கவோ உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","NEEDS REVIEW":"பரிசீலனை தேவை","Access, role and linking requests":"அணுகல், பங்கு மற்றும் இணைப்புக் கோரிக்கைகள்","Review each request and choose the role to assign. Only the owner can make someone an admin.":"ஒவ்வொரு கோரிக்கையையும் பரிசீலித்து வழங்க வேண்டிய பங்கைத் தேர்ந்தெடுக்கவும். ஒருவரை நிர்வாகியாக்க உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","Delete this family tree":"இந்தக் குடும்ப மரத்தை நீக்கு","This permanently deletes its people, relationships, memberships and requests.":"இதனால் அதன் உறுப்பினர்கள், உறவுகள், உறுப்பினர் நிலைகள் மற்றும் கோரிக்கைகள் நிரந்தரமாக நீக்கப்படும்.","FAMILY TREE REQUEST":"குடும்ப மரக் கோரிக்கை","Request access":"அணுகலைக் கோரு","Close":"மூடு","Uravu could not start":"உறவைத் தொடங்க முடியவில்லை","One of the app files did not load.":"செயலியின் கோப்புகளில் ஒன்று ஏற்றப்படவில்லை.","Try again":"மீண்டும் முயற்சி செய்","Uravu could not start because a required file or service could not load. Refresh the page or try again later.":"தேவையான கோப்பு அல்லது சேவை ஏற்றப்படாததால் உறவைத் தொடங்க முடியவில்லை. பக்கத்தைப் புதுப்பிக்கவும் அல்லது சிறிது நேரம் கழித்து முயற்சிக்கவும்.","Could not load family trees":"குடும்ப மரங்களை ஏற்ற முடியவில்லை","Database setup or permissions need attention.":"தரவுத்தள அமைப்பு அல்லது அனுமதிகளைச் சரிபார்க்க வேண்டும்.","No description provided.":"விளக்கம் வழங்கப்படவில்லை.","Loading family members from Supabase…":"Supabase-இலிருந்து குடும்ப உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","Loading members…":"உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","No members yet.":"இதுவரை உறுப்பினர்கள் இல்லை.","Role":"பங்கு","Assigned family entry":"ஒதுக்கப்பட்ட குடும்பப் பதிவு","Not linked":"இணைக்கப்படவில்லை","Family member":"குடும்ப உறுப்பினர்","Signed in":"உள்நுழைந்துள்ளார்","Approved member":"ஒப்புதல் பெற்ற உறுப்பினர்","Assign role":"பங்கை ஒதுக்கு","No message added.":"செய்தி எதுவும் சேர்க்கப்படவில்லை.","Requested family entry:":"கோரப்பட்ட குடும்பப் பதிவு:","New join, role and linking requests will appear here.":"புதிய இணைப்பு, பங்கு மற்றும் இணைப்புக் கோரிக்கைகள் இங்கே தோன்றும்.","Remove connection":"உறவு இணைப்பை நீக்கு","No connections yet":"இன்னும் உறவுகள் இல்லை","Linked account:":"இணைக்கப்பட்ட கணக்கு:","Born":"பிறப்பு","Died":"இறப்பு","Spouse / partner:":"துணைவர் / துணைவி:","Parent of:":"பெற்றோர்:","Child of:":"பிள்ளை:","Request approved and role assigned.":"கோரிக்கை ஏற்கப்பட்டு பங்கு ஒதுக்கப்பட்டது.","Request rejected.":"கோரிக்கை நிராகரிக்கப்பட்டது.","Member role updated.":"உறுப்பினரின் பங்கு புதுப்பிக்கப்பட்டது.","Family entry assigned to the account.":"குடும்பப் பதிவு கணக்குடன் இணைக்கப்பட்டது.","Family entry unlinked.":"குடும்பப் பதிவு கணக்கிலிருந்து துண்டிக்கப்பட்டது.","Family member updated.":"குடும்ப உறுப்பினர் விவரங்கள் புதுப்பிக்கப்பட்டன.","Family member added.":"குடும்ப உறுப்பினர் சேர்க்கப்பட்டார்.","Family member and connections deleted.":"குடும்ப உறுப்பினரும் அவருடைய உறவு இணைப்புகளும் நீக்கப்பட்டன.","Family connection removed.":"குடும்ப உறவு இணைப்பு நீக்கப்பட்டது.","Family tree deleted.":"குடும்ப மரம் நீக்கப்பட்டது.","Enter a family tree name with at least 2 characters.":"குடும்ப மரத்தின் பெயர் குறைந்தது 2 எழுத்துகள் கொண்டிருக்க வேண்டும்.","Creating…":"உருவாக்கப்படுகிறது…","Family tree created. You are the owner.":"குடும்ப மரம் உருவாக்கப்பட்டது. நீங்கள் அதன் உரிமையாளர்.","You must be an approved member to open this tree.":"இந்த மரத்தைத் திறக்க ஒப்புதல் பெற்ற உறுப்பினராக இருக்க வேண்டும்.","Family connections across generations.":"தலைமுறைகளைக் கடந்து இணையும் குடும்ப உறவுகள்.","Your tree access request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்ப மர அணுகல் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your family-entry link request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your role-change request is awaiting review. You can submit an updated request if needed.":"உங்கள் பங்கு மாற்றக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","A name is required.":"பெயர் அவசியம்.","Date of death cannot be earlier than date of birth.":"இறந்த தேதி, பிறந்த தேதிக்கு முந்தையதாக இருக்க முடியாது.","Saving…":"சேமிக்கப்படுகிறது…","Approving…":"ஏற்கப்படுகிறது…","Rejecting…":"நிராகரிக்கப்படுகிறது…","Sending…":"அனுப்பப்படுகிறது…","Request a role change or family-entry link":"பங்கு மாற்றம் அல்லது குடும்பப் பதிவு இணைப்பைக் கோரு","The tree owner or an admin will review this request.":"இந்தக் கோரிக்கையை குடும்ப மர உரிமையாளர் அல்லது நிர்வாகி பரிசீலிப்பார்.","Choose the role you want to request. The owner or an admin decides what to approve.":"நீங்கள் கோர விரும்பும் பங்கைத் தேர்ந்தெடுக்கவும். எதை ஏற்க வேண்டும் என்பதை உரிமையாளர் அல்லது நிர்வாகி தீர்மானிப்பார்.","Requested role":"கோரப்படும் பங்கு","Request to link your account to a family member":"உங்கள் கணக்கை ஒரு குடும்ப உறுப்பினருடன் இணைக்கக் கோரு","Message":"செய்தி","Explain your request briefly":"உங்கள் கோரிக்கையைச் சுருக்கமாக விளக்குங்கள்","Send request":"கோரிக்கையை அனுப்பு","Request sent for the owner or an admin to review.":"உரிமையாளர் அல்லது நிர்வாகி பரிசீலிக்கக் கோரிக்கை அனுப்பப்பட்டது.","Add family member":"குடும்ப உறுப்பினரைச் சேர்","Edit family member":"குடும்ப உறுப்பினரைத் திருத்து","Save changes":"மாற்றங்களைச் சேமி","This family tree is empty":"இந்தக் குடும்ப மரம் காலியாக உள்ளது","Add the first family member to begin building your tree.":"குடும்ப மரத்தை உருவாக்கத் தொடங்க முதல் உறுப்பினரைச் சேர்க்கவும்.","You have not joined any family trees yet.":"நீங்கள் இன்னும் எந்தக் குடும்ப மரத்திலும் இணையவில்லை.","Create one or request access to an existing tree.":"புதிய மரத்தை உருவாக்கவும் அல்லது இருக்கும் மரத்திற்கு அணுகலைக் கோரவும்.","No other family trees are available to request.":"அணுகல் கோர வேறு குடும்ப மரங்கள் இல்லை.","Request pending":"கோரிக்கை நிலுவையில் உள்ளது","Requested":"கோரப்பட்டது","Open tree":"மரத்தைத் திற","Members":"உறுப்பினர்கள்","Save":"சேமி","Cancel":"ரத்து செய்","Approve":"ஏற்கவும்","Reject":"நிராகரி","No requests need review.":"பரிசீலிக்க வேண்டிய கோரிக்கைகள் இல்லை.","No connection added.":"உறவு இணைப்பு சேர்க்கப்படவில்லை.","The new Uravu database schema is not installed yet. Run supabase/schema.sql in your Supabase SQL Editor.":"Uravu-வின் புதிய தரவுத்தள அமைப்பு இன்னும் நிறுவப்படவில்லை. Supabase SQL Editor-ல் supabase/schema.sql-ஐ இயக்கவும்.","Database permission blocked this action. Check the Supabase policies in supabase/schema.sql.":"தரவுத்தள அனுமதி இந்தச் செயலைத் தடுத்தது. supabase/schema.sql-இல் உள்ள Supabase கொள்கைகளைச் சரிபார்க்கவும்.","Something went wrong. Please try again.":"ஏதோ தவறு ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.","Sign in with Google to continue.":"தொடர Google மூலம் உள்நுழைக.","Supabase client is not initialized.":"Supabase கிளையன்ட் தொடங்கப்படவில்லை.","Supabase client is missing. Check supabase-config.js.":"Supabase கிளையன்ட் இல்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Uravu could not connect to Supabase. Check supabase-config.js.":"Uravu-வால் Supabase-உடன் இணைக்க முடியவில்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Delete this family connection?":"இந்தக் குடும்ப உறவு இணைப்பை நீக்கவா?","As the owner, use Manage members to link your own family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.","Family tree not found.":"குடும்ப மரத்தைக் காணவில்லை.","Could not load this family tree.":"இந்தக் குடும்ப மரத்தை ஏற்ற முடியவில்லை."};
+  const interfaceTranslations = {"Uravu — Family tree":"உறவு — குடும்ப மரம்","Uravu home":"உறவு முகப்பு","Change language":"மொழியை மாற்று","Sign in with Google":"Google மூலம் உள்நுழைக","Sign out":"வெளியேறு","YOUR FAMILY, CONNECTED":"உங்கள் குடும்பம், ஒன்றிணைந்து","Every generation has a story.":"ஒவ்வொரு தலைமுறைக்கும் ஒரு கதை உண்டு.","Build your family tree, preserve names and relationships, and invite family members to contribute with the right permissions.":"உங்கள் குடும்ப மரத்தை உருவாக்கி, பெயர்களையும் உறவுகளையும் பாதுகாத்து, சரியான அனுமதிகளுடன் குடும்ப உறுப்பினர்களைப் பங்களிக்க அழைக்கவும்.","Continue with Google":"Google மூலம் தொடரவும்","Your family tree is private to its members. Nothing is shown here until you sign in and open or create a tree.":"உங்கள் குடும்ப மரத்தை அதன் உறுப்பினர்கள் மட்டுமே பார்க்க முடியும். உள்நுழைந்து ஒரு மரத்தைத் திறக்கும் அல்லது உருவாக்கும் வரை இங்கு எதுவும் காட்டப்படாது.","Generation":"தலைமுறை","before us":"நமக்கு முன்","Parents &":"பெற்றோர் மற்றும்","guardians":"பாதுகாவலர்கள்","You":"நீங்கள்","and yours":"உங்கள் குடும்பம்","The next":"அடுத்த","generation":"தலைமுறை","YOUR FAMILY WORKSPACE":"உங்கள் குடும்பப் பணியிடம்","Welcome to Uravu":"உறவுக்கு வரவேற்கிறோம்","Create a tree or request access to one that already exists.":"புதிய குடும்ப மரத்தை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள மரத்திற்கு அணுகலைக் கோரவும்.","Family data is loaded from Supabase, not browser cache":"குடும்பத் தரவு உலாவி தற்காலிக நினைவகத்திலிருந்து அல்ல, Supabase-இலிருந்து ஏற்றப்படுகிறது","Create a family tree":"குடும்ப மரத்தை உருவாக்கு","Start a new family space. You become its owner.":"புதிய குடும்ப இடத்தைத் தொடங்குங்கள். அதன் உரிமையாளர் நீங்களாக இருப்பீர்கள்.","Family tree name":"குடும்ப மரத்தின் பெயர்","e.g. The Kumar family":"எ.கா. குமார் குடும்பம்","Description":"விளக்கம்","Optional":"விருப்பத்தேர்வு","A short note about this family tree":"இந்தக் குடும்ப மரத்தைப் பற்றிய சிறு குறிப்பு","Primary language":"முதன்மை மொழி","Create tree":"மரத்தை உருவாக்கு","Find a family tree":"குடும்ப மரத்தைக் கண்டுபிடி","Request access and ask for the role you need.":"அணுகலைக் கோரி, உங்களுக்குத் தேவையான பங்கைக் கேளுங்கள்.","Search trees":"குடும்ப மரங்களைத் தேடு","Search by tree name...":"குடும்ப மரத்தின் பெயரால் தேடுங்கள்...","Loading available trees…":"கிடைக்கும் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","YOUR MEMBERSHIPS":"உங்கள் உறுப்பினர் நிலைகள்","My family trees":"எனது குடும்ப மரங்கள்","Refresh":"புதுப்பி","Loading your trees…":"உங்கள் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","Loading trees…":"குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","TREE MEMBER":"குடும்ப மர உறுப்பினர்","Family tree":"குடும்ப மரம்","Request role / link":"பங்கு / இணைப்பைக் கோரு","Close tree":"மரத்தை மூடு","Tree accounts":"மரக் கணக்குகள்","Pending requests":"நிலுவையிலுள்ள கோரிக்கைகள்","TREE EDITING":"குடும்ப மரத் திருத்தம்","Add a family member":"குடும்ப உறுப்பினரைச் சேர்","Cancel edit":"திருத்தத்தை ரத்து செய்","Name":"பெயர்","Full name":"முழுப் பெயர்","Tamil name":"தமிழ்ப் பெயர்","Gender":"பாலினம்","Not specified":"குறிப்பிடப்படவில்லை","Male":"ஆண்","Female":"பெண்","Other / prefer not to say":"மற்றவை / தெரிவிக்க விருப்பமில்லை","Date of birth":"பிறந்த தேதி","Date of death":"இறந்த தேதி","Connect to someone":"ஒருவருடன் இணை","No connection yet":"இன்னும் உறவு இணைக்கப்படவில்லை","Relationship to them":"அவருடனான உறவு","Child of selected person":"தேர்ந்தெடுத்த நபரின் பிள்ளை","Parent of selected person":"தேர்ந்தெடுத்த நபரின் பெற்றோர்","Spouse / partner":"துணைவர் / துணைவி","Notes":"குறிப்புகள்","Additional details (avoid sensitive information)":"கூடுதல் விவரங்கள் (முக்கியமான தனிப்பட்ட தகவல்களைத் தவிர்க்கவும்)","FAMILY TREE":"குடும்ப மரம்","Search names…":"பெயர்களைத் தேடு…","Reset view":"காட்சியை மீட்டமை","Fit tree":"மரத்தைப் பொருத்து","Zoom out":"சிறிதாக்கு","Zoom in":"பெரிதாக்கு","Full screen":"முழுத்திரை","Exit full screen":"முழுத்திரையிலிருந்து வெளியேறு","Pinch to zoom · drag to move · Ctrl + scroll to zoom":"பெரிதாக்க இரண்டு விரல்களைப் பயன்படுத்தவும் · நகர்த்த இழுக்கவும்","ACCESS CONTROL":"அணுகல் கட்டுப்பாடு","Manage members":"உறுப்பினர்களை நிர்வகி","Change roles and link an account to a family member. Only the owner can grant or remove admin access.":"பங்குகளை மாற்றி, கணக்கை குடும்ப உறுப்பினருடன் இணைக்கவும். நிர்வாகி அணுகலை வழங்கவோ நீக்கவோ உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","NEEDS REVIEW":"பரிசீலனை தேவை","Access, role and linking requests":"அணுகல், பங்கு மற்றும் இணைப்புக் கோரிக்கைகள்","Review each request and choose the role to assign. Only the owner can make someone an admin.":"ஒவ்வொரு கோரிக்கையையும் பரிசீலித்து வழங்க வேண்டிய பங்கைத் தேர்ந்தெடுக்கவும். ஒருவரை நிர்வாகியாக்க உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","Delete this family tree":"இந்தக் குடும்ப மரத்தை நீக்கு","This permanently deletes its people, relationships, memberships and requests.":"இதனால் அதன் உறுப்பினர்கள், உறவுகள், உறுப்பினர் நிலைகள் மற்றும் கோரிக்கைகள் நிரந்தரமாக நீக்கப்படும்.","FAMILY TREE REQUEST":"குடும்ப மரக் கோரிக்கை","Request access":"அணுகலைக் கோரு","Close":"மூடு","Uravu could not start":"உறவைத் தொடங்க முடியவில்லை","One of the app files did not load.":"செயலியின் கோப்புகளில் ஒன்று ஏற்றப்படவில்லை.","Try again":"மீண்டும் முயற்சி செய்","Uravu could not start because a required file or service could not load. Refresh the page or try again later.":"தேவையான கோப்பு அல்லது சேவை ஏற்றப்படாததால் உறவைத் தொடங்க முடியவில்லை. பக்கத்தைப் புதுப்பிக்கவும் அல்லது சிறிது நேரம் கழித்து முயற்சிக்கவும்.","Could not load family trees":"குடும்ப மரங்களை ஏற்ற முடியவில்லை","Database setup or permissions need attention.":"தரவுத்தள அமைப்பு அல்லது அனுமதிகளைச் சரிபார்க்க வேண்டும்.","No description provided.":"விளக்கம் வழங்கப்படவில்லை.","Loading family members from Supabase…":"Supabase-இலிருந்து குடும்ப உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","Loading members…":"உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","No members yet.":"இதுவரை உறுப்பினர்கள் இல்லை.","Role":"பங்கு","Assigned family entry":"ஒதுக்கப்பட்ட குடும்பப் பதிவு","Not linked":"இணைக்கப்படவில்லை","Family member":"குடும்ப உறுப்பினர்","Signed in":"உள்நுழைந்துள்ளார்","Approved member":"ஒப்புதல் பெற்ற உறுப்பினர்","Assign role":"பங்கை ஒதுக்கு","No message added.":"செய்தி எதுவும் சேர்க்கப்படவில்லை.","Requested family entry:":"கோரப்பட்ட குடும்பப் பதிவு:","New join, role and linking requests will appear here.":"புதிய இணைப்பு, பங்கு மற்றும் இணைப்புக் கோரிக்கைகள் இங்கே தோன்றும்.","Remove connection":"உறவு இணைப்பை நீக்கு","No connections yet":"இன்னும் உறவுகள் இல்லை","Linked account:":"இணைக்கப்பட்ட கணக்கு:","Born":"பிறப்பு","Died":"இறப்பு","Spouse / partner:":"துணைவர் / துணைவி:","Parent of:":"பெற்றோர்:","Child of:":"பிள்ளை:","Request approved and role assigned.":"கோரிக்கை ஏற்கப்பட்டு பங்கு ஒதுக்கப்பட்டது.","Request rejected.":"கோரிக்கை நிராகரிக்கப்பட்டது.","Member role updated.":"உறுப்பினரின் பங்கு புதுப்பிக்கப்பட்டது.","Family entry assigned to the account.":"குடும்பப் பதிவு கணக்குடன் இணைக்கப்பட்டது.","Family entry unlinked.":"குடும்பப் பதிவு கணக்கிலிருந்து துண்டிக்கப்பட்டது.","Family member updated.":"குடும்ப உறுப்பினர் விவரங்கள் புதுப்பிக்கப்பட்டன.","Family member added.":"குடும்ப உறுப்பினர் சேர்க்கப்பட்டார்.","Family member and connections deleted.":"குடும்ப உறுப்பினரும் அவருடைய உறவு இணைப்புகளும் நீக்கப்பட்டன.","Family connection removed.":"குடும்ப உறவு இணைப்பு நீக்கப்பட்டது.","Family tree deleted.":"குடும்ப மரம் நீக்கப்பட்டது.","Enter a family tree name with at least 2 characters.":"குடும்ப மரத்தின் பெயர் குறைந்தது 2 எழுத்துகள் கொண்டிருக்க வேண்டும்.","Creating…":"உருவாக்கப்படுகிறது…","Family tree created. You are the owner.":"குடும்ப மரம் உருவாக்கப்பட்டது. நீங்கள் அதன் உரிமையாளர்.","You must be an approved member to open this tree.":"இந்த மரத்தைத் திறக்க ஒப்புதல் பெற்ற உறுப்பினராக இருக்க வேண்டும்.","Family connections across generations.":"தலைமுறைகளைக் கடந்து இணையும் குடும்ப உறவுகள்.","Your tree access request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்ப மர அணுகல் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your family-entry link request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your role-change request is awaiting review. You can submit an updated request if needed.":"உங்கள் பங்கு மாற்றக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","A name is required.":"பெயர் அவசியம்.","Date of death cannot be earlier than date of birth.":"இறந்த தேதி, பிறந்த தேதிக்கு முந்தையதாக இருக்க முடியாது.","Saving…":"சேமிக்கப்படுகிறது…","Approving…":"ஏற்கப்படுகிறது…","Rejecting…":"நிராகரிக்கப்படுகிறது…","Sending…":"அனுப்பப்படுகிறது…","Request a role change or family-entry link":"பங்கு மாற்றம் அல்லது குடும்பப் பதிவு இணைப்பைக் கோரு","The tree owner or an admin will review this request.":"இந்தக் கோரிக்கையை குடும்ப மர உரிமையாளர் அல்லது நிர்வாகி பரிசீலிப்பார்.","Choose the role you want to request. The owner or an admin decides what to approve.":"நீங்கள் கோர விரும்பும் பங்கைத் தேர்ந்தெடுக்கவும். எதை ஏற்க வேண்டும் என்பதை உரிமையாளர் அல்லது நிர்வாகி தீர்மானிப்பார்.","Requested role":"கோரப்படும் பங்கு","Request to link your account to a family member":"உங்கள் கணக்கை ஒரு குடும்ப உறுப்பினருடன் இணைக்கக் கோரு","Message":"செய்தி","Explain your request briefly":"உங்கள் கோரிக்கையைச் சுருக்கமாக விளக்குங்கள்","Send request":"கோரிக்கையை அனுப்பு","Request sent for the owner or an admin to review.":"உரிமையாளர் அல்லது நிர்வாகி பரிசீலிக்கக் கோரிக்கை அனுப்பப்பட்டது.","Add family member":"குடும்ப உறுப்பினரைச் சேர்","Edit family member":"குடும்ப உறுப்பினரைத் திருத்து","Save changes":"மாற்றங்களைச் சேமி","This family tree is empty":"இந்தக் குடும்ப மரம் காலியாக உள்ளது","Add the first family member to begin building your tree.":"குடும்ப மரத்தை உருவாக்கத் தொடங்க முதல் உறுப்பினரைச் சேர்க்கவும்.","You have not joined any family trees yet.":"நீங்கள் இன்னும் எந்தக் குடும்ப மரத்திலும் இணையவில்லை.","Create one or request access to an existing tree.":"புதிய மரத்தை உருவாக்கவும் அல்லது இருக்கும் மரத்திற்கு அணுகலைக் கோரவும்.","No other family trees are available to request.":"அணுகல் கோர வேறு குடும்ப மரங்கள் இல்லை.","Request pending":"கோரிக்கை நிலுவையில் உள்ளது","Requested":"கோரப்பட்டது","Open tree":"மரத்தைத் திற","Members":"உறுப்பினர்கள்","Save":"சேமி","Cancel":"ரத்து செய்","Approve":"ஏற்கவும்","Reject":"நிராகரி","No requests need review.":"பரிசீலிக்க வேண்டிய கோரிக்கைகள் இல்லை.","No connection added.":"உறவு இணைப்பு சேர்க்கப்படவில்லை.","The new Uravu database schema is not installed yet. Run supabase/schema.sql in your Supabase SQL Editor.":"Uravu-வின் புதிய தரவுத்தள அமைப்பு இன்னும் நிறுவப்படவில்லை. Supabase SQL Editor-ல் supabase/schema.sql-ஐ இயக்கவும்.","Database permission blocked this action. Check the Supabase policies in supabase/schema.sql.":"தரவுத்தள அனுமதி இந்தச் செயலைத் தடுத்தது. supabase/schema.sql-இல் உள்ள Supabase கொள்கைகளைச் சரிபார்க்கவும்.","Something went wrong. Please try again.":"ஏதோ தவறு ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.","Sign in with Google to continue.":"தொடர Google மூலம் உள்நுழைக.","Supabase client is not initialized.":"Supabase கிளையன்ட் தொடங்கப்படவில்லை.","Supabase client is missing. Check supabase-config.js.":"Supabase கிளையன்ட் இல்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Uravu could not connect to Supabase. Check supabase-config.js.":"Uravu-வால் Supabase-உடன் இணைக்க முடியவில்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Delete this family connection?":"இந்தக் குடும்ப உறவு இணைப்பை நீக்கவா?","As the owner, use Manage members to link your own family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.","Family tree not found.":"குடும்ப மரத்தைக் காணவில்லை.","Could not load this family tree.":"இந்தக் குடும்ப மரத்தை ஏற்ற முடியவில்லை."};
   interfaceTranslations["YOUR ROLE"] = "உங்கள் பங்கு";
   interfaceTranslations["Family members"] = "குடும்ப உறுப்பினர்கள்";
   interfaceTranslations["Delete tree"] = "மரத்தை நீக்கு";
@@ -510,18 +513,12 @@
     const selected = state.people.filter(person => !search ||
       [person.full_name, person.tamil_name, person.notes].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
 
-    if (!state.people.length) {
+    if (!state.people.length || !selected.length) {
       viewport.hidden = true;
       empty.hidden = false;
-      empty.innerHTML = '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"));
-      nodesRoot.innerHTML = "";
-      linesRoot.innerHTML = "";
-      return;
-    }
-    if (!selected.length) {
-      viewport.hidden = true;
-      empty.hidden = false;
-      empty.textContent = t("noSearchResults");
+      empty.innerHTML = !state.people.length
+        ? '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"))
+        : escapeHtml(t("noSearchResults"));
       nodesRoot.innerHTML = "";
       linesRoot.innerHTML = "";
       return;
@@ -529,77 +526,101 @@
 
     viewport.hidden = false;
     empty.hidden = true;
+
+    // Lay out all visible entries into generation rows, treating married/partner
+    // people as a single unit before ordering each row.
     const selectedIds = new Set(selected.map(person => person.id));
     const levels = generationMap();
     const grouped = new Map();
     levels.forEach((people, level) => {
-      const filtered = people.filter(person => selectedIds.has(person.id));
-      if (filtered.length) grouped.set(level, filtered);
+      const visible = people.filter(person => selectedIds.has(person.id));
+      if (visible.length) grouped.set(level, visible);
     });
     const levelKeys = Array.from(grouped.keys()).sort((a, b) => a - b);
-    const minLevel = Math.min(...levelKeys);
-    const maxLevel = Math.max(...levelKeys);
-    const nodeWidth = 218;
-    const nodeHeight = 202;
-    const columnGap = 34;
-    const coupleGap = 16;
-    const rowHeight = 286;
+    if (!levelKeys.length) return;
+
+    const minLevel = levelKeys[0];
+    const maxLevel = levelKeys[levelKeys.length - 1];
+    const nodeWidth = 236;
+    const nodeHeight = 210;
+    const columnGap = 44;
+    const coupleGap = 18;
+    const rowHeight = 302;
     const levelUnits = new Map();
     const positions = new Map();
+    const byId = new Map(state.people.map(person => [person.id, person]));
+    const spouseOf = id => state.relationships
+      .filter(edge => edge.relationship_type === "spouse" && (edge.person_id === id || edge.related_person_id === id))
+      .map(edge => edge.person_id === id ? edge.related_person_id : edge.person_id);
 
-    // Treat partners as one layout unit so they always sit beside one another
-    // on the same generation row, instead of being separated by alphabetical order.
     levelKeys.forEach(level => {
       const people = grouped.get(level).slice().sort((a, b) => a.full_name.localeCompare(b.full_name));
-      const peopleById = new Map(people.map(person => [person.id, person]));
-      const paired = new Set();
+      const visibleById = new Map(people.map(person => [person.id, person]));
+      const used = new Set();
       const units = [];
+
       people.forEach(person => {
-        if (paired.has(person.id)) return;
-        const spouseIds = state.relationships
-          .filter(r => r.relationship_type === "spouse" && (r.person_id === person.id || r.related_person_id === person.id))
-          .map(r => r.person_id === person.id ? r.related_person_id : r.person_id);
-        const spouse = spouseIds.map(id => peopleById.get(id)).find(candidate => candidate && !paired.has(candidate.id) && candidate.id !== person.id);
-        if (spouse) {
-          paired.add(person.id);
-          paired.add(spouse.id);
-          const pair = [person, spouse].sort((a, b) => a.full_name.localeCompare(b.full_name));
+        if (used.has(person.id)) return;
+        const partner = spouseOf(person.id)
+          .map(id => visibleById.get(id))
+          .find(candidate => candidate && !used.has(candidate.id) && candidate.id !== person.id);
+        if (partner) {
+          used.add(person.id);
+          used.add(partner.id);
+          const pair = [person, partner].sort((a, b) => a.full_name.localeCompare(b.full_name));
           units.push({ people: pair, width: nodeWidth * 2 + coupleGap, sortName: pair[0].full_name });
         } else {
-          paired.add(person.id);
+          used.add(person.id);
           units.push({ people: [person], width: nodeWidth, sortName: person.full_name });
         }
       });
 
-      // Keep sibling branches near their parents, rather than letting one global
-      // alphabetical sort scatter cousins and children across the canvas.
+      // Use the centre of the parents' couple where possible. This keeps each
+      // sibling branch underneath its family instead of scattering all cousins
+      // in alphabetical order across the generation.
       const parentCenter = unit => {
         const centers = [];
+        const seenParentIds = new Set();
         unit.people.forEach(person => {
-          state.relationships.filter(r => r.relationship_type === "parent" && r.related_person_id === person.id)
+          state.relationships
+            .filter(edge => edge.relationship_type === "parent" && edge.related_person_id === person.id)
             .forEach(edge => {
-              const parent = positions.get(edge.person_id);
-              if (parent) centers.push(parent.x + parent.width / 2);
+              const parentPerson = byId.get(edge.person_id);
+              if (!parentPerson || seenParentIds.has(parentPerson.id)) return;
+              const parentPosition = positions.get(parentPerson.id);
+              if (!parentPosition) return;
+              const partners = spouseOf(parentPerson.id)
+                .map(id => ({ id, position: positions.get(id) }))
+                .filter(item => item.position && item.position.y === parentPosition.y);
+              if (partners.length) {
+                const couplePeople = [parentPosition, ...partners.map(item => item.position)];
+                const ids = [parentPerson.id, ...partners.map(item => item.id)];
+                ids.forEach(id => seenParentIds.add(id));
+                centers.push(couplePeople.reduce((sum, pos) => sum + pos.x + pos.width / 2, 0) / couplePeople.length);
+              } else {
+                seenParentIds.add(parentPerson.id);
+                centers.push(parentPosition.x + parentPosition.width / 2);
+              }
             });
         });
-        return centers.length ? centers.reduce((sum, value) => sum + value, 0) / centers.length : null;
+        return centers.length ? centers.reduce((sum, center) => sum + center, 0) / centers.length : null;
       };
+
       units.sort((a, b) => {
         const ac = parentCenter(a), bc = parentCenter(b);
-        if (ac != null && bc != null && ac !== bc) return ac - bc;
+        if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
         if (ac != null && bc == null) return -1;
         if (ac == null && bc != null) return 1;
         return a.sortName.localeCompare(b.sortName);
       });
       levelUnits.set(level, units);
 
-      let cursorX = 25;
+      let cursorX = 26;
       units.forEach(unit => {
         unit.people.forEach((person, index) => {
-          const x = cursorX + index * (nodeWidth + coupleGap);
           positions.set(person.id, {
-            x,
-            y: 22 + (level - minLevel) * rowHeight,
+            x: cursorX + index * (nodeWidth + coupleGap),
+            y: 24 + (level - minLevel) * rowHeight,
             width: nodeWidth,
             height: nodeHeight
           });
@@ -611,43 +632,218 @@
     const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
       units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
     ));
-    const canvasWidth = Math.max(viewport.clientWidth || 760, widestLevel + 50);
-    const canvasHeight = Math.max(265, (maxLevel - minLevel) * rowHeight + nodeHeight + 50);
-    canvas.style.width = canvasWidth + "px";
-    canvas.style.height = canvasHeight + "px";
-    linesRoot.setAttribute("viewBox", "0 0 " + canvasWidth + " " + canvasHeight);
-    linesRoot.setAttribute("width", String(canvasWidth));
-    linesRoot.setAttribute("height", String(canvasHeight));
+    const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 52);
+    const baseHeight = Math.max(290, (maxLevel - minLevel) * rowHeight + nodeHeight + 54);
+    state.treeBaseWidth = baseWidth;
+    state.treeBaseHeight = baseHeight;
+
+    // The canvas is a scrollable spacer; its two layers scale together so
+    // scrollbars, card hit targets, and relationship lines stay aligned.
+    canvas.style.minWidth = "0";
+    canvas.style.minHeight = "0";
+    nodesRoot.style.left = "0";
+    nodesRoot.style.top = "0";
+    nodesRoot.style.right = "auto";
+    nodesRoot.style.bottom = "auto";
+    nodesRoot.style.width = baseWidth + "px";
+    nodesRoot.style.height = baseHeight + "px";
+    linesRoot.style.left = "0";
+    linesRoot.style.top = "0";
+    linesRoot.style.right = "auto";
+    linesRoot.style.bottom = "auto";
+    linesRoot.style.width = baseWidth + "px";
+    linesRoot.style.height = baseHeight + "px";
+    linesRoot.setAttribute("viewBox", "0 0 " + baseWidth + " " + baseHeight);
+    linesRoot.setAttribute("width", String(baseWidth));
+    linesRoot.setAttribute("height", String(baseHeight));
 
     const paths = [];
-    state.relationships.filter(relationship => relationship.relationship_type === "parent").forEach(relationship => {
-      const parent = positions.get(relationship.person_id);
-      const child = positions.get(relationship.related_person_id);
+    state.relationships.filter(edge => edge.relationship_type === "parent").forEach(edge => {
+      const parent = positions.get(edge.person_id);
+      const child = positions.get(edge.related_person_id);
       if (!parent || !child || child.y <= parent.y) return;
-      const startX = parent.x + nodeWidth / 2;
-      const startY = parent.y + nodeHeight;
-      const endX = child.x + nodeWidth / 2;
+      const startX = parent.x + parent.width / 2;
+      const startY = parent.y + parent.height;
+      const endX = child.x + child.width / 2;
       const endY = child.y;
-      const middleY = startY + Math.max(12, (endY - startY) / 2);
+      const middleY = startY + Math.max(14, (endY - startY) / 2);
       paths.push('<path class="family-line" d="M ' + startX + ' ' + startY + ' V ' + middleY + ' H ' + endX + ' V ' + endY + '"/>');
     });
-    state.relationships.filter(relationship => relationship.relationship_type === "spouse").forEach(relationship => {
-      const first = positions.get(relationship.person_id);
-      const second = positions.get(relationship.related_person_id);
+    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
+      const first = positions.get(edge.person_id);
+      const second = positions.get(edge.related_person_id);
       if (!first || !second || first.y !== second.y) return;
       const left = first.x < second.x ? first : second;
       const right = first.x < second.x ? second : first;
-      if (Math.abs((left.x + nodeWidth) - right.x) > coupleGap + 2) return;
-      const y = left.y + 35;
-      paths.push('<path class="family-line spouse-line" d="M ' + (left.x + nodeWidth) + ' ' + y + ' H ' + right.x + '"/>');
+      if (Math.abs((left.x + left.width) - right.x) > coupleGap + 2) return;
+      paths.push('<path class="family-line spouse-line" d="M ' +
+        (left.x + left.width) + ' ' + (left.y + 36) + ' H ' + right.x + '"/>');
     });
+
     linesRoot.innerHTML = paths.join("");
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id))).join("");
+    applyTreeCanvasScale(false);
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
   }
+
+  function applyTreeCanvasScale(preservePosition = true, anchorX, anchorY) {
+    const viewport = $("#family-tree-viewport");
+    const canvas = $("#family-tree-canvas");
+    const nodesRoot = $("#family-tree-nodes");
+    const linesRoot = $("#family-tree-lines");
+    if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
+    const scale = Math.max(0.25, Math.min(2.5, state.treeZoom || 1));
+    const oldWidth = Number(canvas.dataset.scaledWidth || state.treeBaseWidth * scale);
+    const oldScale = oldWidth / state.treeBaseWidth;
+    const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
+    const ay = Number.isFinite(anchorY) ? anchorY : viewport.clientHeight / 2;
+    const worldX = (viewport.scrollLeft + ax) / (oldScale || 1);
+    const worldY = (viewport.scrollTop + ay) / (oldScale || 1);
+
+    state.treeZoom = scale;
+    nodesRoot.style.transformOrigin = "0 0";
+    nodesRoot.style.transform = "scale(" + scale + ")";
+    linesRoot.style.transformOrigin = "0 0";
+    linesRoot.style.transform = "scale(" + scale + ")";
+    canvas.style.width = Math.ceil(state.treeBaseWidth * scale) + "px";
+    canvas.style.height = Math.ceil(state.treeBaseHeight * scale) + "px";
+    canvas.dataset.scaledWidth = String(state.treeBaseWidth * scale);
+    const level = $("#tree-zoom-level");
+    if (level) level.textContent = Math.round(scale * 100) + "%";
+
+    if (preservePosition) {
+      viewport.scrollLeft = Math.max(0, worldX * scale - ax);
+      viewport.scrollTop = Math.max(0, worldY * scale - ay);
+    }
+  }
+
+  function setTreeZoom(nextScale, anchorX, anchorY) {
+    state.treeZoom = Math.max(0.25, Math.min(2.5, Number(nextScale) || 1));
+    applyTreeCanvasScale(true, anchorX, anchorY);
+  }
+
+  function fitTreeToView() {
+    const viewport = $("#family-tree-viewport");
+    if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return;
+    const availableWidth = Math.max(100, viewport.clientWidth - 36);
+    const availableHeight = Math.max(100, viewport.clientHeight - 36);
+    const fitScale = Math.max(0.25, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
+    state.treeZoom = fitScale;
+    applyTreeCanvasScale(false);
+    viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+  }
+
+  function toggleTreeFullscreen() {
+    const panel = $(".people-panel");
+    if (!panel) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+      return;
+    }
+    if (panel.requestFullscreen) {
+      panel.requestFullscreen().catch(error => {
+        console.warn("Uravu fullscreen is unavailable:", error);
+        toast("Full screen is not available in this browser.", true);
+      });
+    } else {
+      toast("Full screen is not available in this browser.", true);
+    }
+  }
+
+  function bindTreeGestures() {
+    const viewport = $("#family-tree-viewport");
+    if (!viewport || viewport.dataset.gesturesBound === "1") return;
+    viewport.dataset.gesturesBound = "1";
+    const pointers = new Map();
+    let lastDragPoint = null;
+    let pinchStartDistance = 0;
+    let pinchStartScale = 1;
+    let moved = false;
+    let suppressClickUntil = 0;
+
+    const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    const localPoint = event => {
+      const rect = viewport.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    };
+
+    viewport.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (event.target.closest("button,input,select,textarea,a")) return;
+      const point = localPoint(event);
+      pointers.set(event.pointerId, point);
+      try { viewport.setPointerCapture(event.pointerId); } catch (_) {}
+      moved = false;
+      if (pointers.size === 1) {
+        lastDragPoint = point;
+      } else if (pointers.size === 2) {
+        const pair = Array.from(pointers.values());
+        pinchStartDistance = Math.max(1, distance(pair[0], pair[1]));
+        pinchStartScale = state.treeZoom;
+        lastDragPoint = null;
+      }
+    });
+
+    viewport.addEventListener("pointermove", event => {
+      if (!pointers.has(event.pointerId)) return;
+      const point = localPoint(event);
+      pointers.set(event.pointerId, point);
+      if (pointers.size >= 2) {
+        const pair = Array.from(pointers.values()).slice(0, 2);
+        const middle = midpoint(pair[0], pair[1]);
+        const rect = viewport.getBoundingClientRect();
+        const nextScale = pinchStartScale * distance(pair[0], pair[1]) / pinchStartDistance;
+        setTreeZoom(nextScale, middle.x, middle.y);
+        moved = true;
+        suppressClickUntil = Date.now() + 350;
+        event.preventDefault();
+      } else if (pointers.size === 1 && lastDragPoint) {
+        const dx = point.x - lastDragPoint.x;
+        const dy = point.y - lastDragPoint.y;
+        if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+        if (moved) {
+          viewport.scrollLeft -= dx;
+          viewport.scrollTop -= dy;
+          suppressClickUntil = Date.now() + 350;
+          event.preventDefault();
+        }
+        lastDragPoint = point;
+      }
+    });
+
+    const finishPointer = event => {
+      pointers.delete(event.pointerId);
+      try { if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId); } catch (_) {}
+      if (pointers.size === 1) {
+        lastDragPoint = Array.from(pointers.values())[0];
+        pinchStartDistance = 0;
+      } else {
+        lastDragPoint = null;
+        pinchStartDistance = 0;
+      }
+    };
+    viewport.addEventListener("pointerup", finishPointer);
+    viewport.addEventListener("pointercancel", finishPointer);
+    viewport.addEventListener("lostpointercapture", finishPointer);
+    viewport.addEventListener("click", event => {
+      if (Date.now() < suppressClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClickUntil = 0;
+      }
+    }, true);
+    viewport.addEventListener("wheel", event => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      const rect = viewport.getBoundingClientRect();
+      setTreeZoom(state.treeZoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1), event.clientX - rect.left, event.clientY - rect.top);
+    }, { passive: false });
+  }
+
 
   function renderPersonCard(person, position) {
     if (!position) return "";
@@ -964,7 +1160,22 @@
       $("#tree-workspace").hidden = true;
     });
     $("#delete-tree-button").addEventListener("click", deleteTree);
-    $("#fit-tree-button").addEventListener("click", () => { const viewport = $("#family-tree-viewport"); viewport.scrollTo({ top:0, left:0, behavior:"smooth" }); });
+    $("#fit-tree-button").addEventListener("click", fitTreeToView);
+    $("#tree-zoom-out").addEventListener("click", () => setTreeZoom(state.treeZoom / 1.2));
+    $("#tree-zoom-in").addEventListener("click", () => setTreeZoom(state.treeZoom * 1.2));
+    $("#tree-fullscreen-button").addEventListener("click", toggleTreeFullscreen);
+    document.addEventListener("fullscreenchange", () => {
+      const button = $("#tree-fullscreen-button");
+      if (button) {
+        const active = document.fullscreenElement === $(".people-panel");
+        button.textContent = active ? "Exit full screen" : "Full screen";
+        button.setAttribute("aria-label", active ? "Exit full screen" : "Full screen");
+      }
+      window.requestAnimationFrame(() => {
+        if (state.treeBaseWidth) applyTreeCanvasScale(false);
+      });
+    });
+    bindTreeGestures();
     $("#language-button").addEventListener("click", setLanguage);
     $("#request-modal-close").addEventListener("click", closeRequestDialog);
     $("#request-modal").addEventListener("click", event => {
