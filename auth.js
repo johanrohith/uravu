@@ -1,86 +1,96 @@
 (() => {
   const supabase = window.supabaseClient;
-
-  if (!supabase) {
-    console.error("Uravu: Supabase client not initialized. Check supabase-config.js.");
-    return;
-  }
+  const AUTH_EVENT = "uravu:auth";
 
   const auth = {
     user: null,
-
+    loading: true,
     async signIn() {
+      if (!supabase) {
+        alert("Uravu could not connect to Supabase. Check supabase-config.js.");
+        return;
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: window.location.origin + window.location.pathname
-        }
+        options: { redirectTo: new URL("./", window.location.href).toString() }
       });
-
-      if (error) alert("Google sign-in failed: " + error.message);
-    },
-
-    async signOut() {
-      const { error } = await supabase.auth.signOut();
       if (error) {
+        console.error("Uravu Google sign-in:", error);
+        alert("Google sign-in failed: " + error.message);
+      }
+    },
+    async signOut() {
+      if (!supabase) return;
+      const button = document.getElementById("sign-out-button");
+      if (button) button.disabled = true;
+      const { error } = await supabase.auth.signOut();
+      if (button) button.disabled = false;
+      if (error) {
+        console.error("Uravu sign-out:", error);
         alert("Sign-out failed: " + error.message);
         return;
       }
-      window.location.reload();
+      auth.user = null;
+      auth.publish();
     },
-
-    render() {
-      const button = document.getElementById("google-signin-button");
-      const label = document.getElementById("google-signin-label");
-      if (!button || !label) return;
-
-      if (!button.dataset.googleAuthBound) {
-        button.dataset.googleAuthBound = "true";
-        button.addEventListener("click", () => {
-          if (!auth.user) {
-            auth.signIn();
-            return;
-          }
-
-          const name =
-            auth.user.user_metadata?.full_name ||
-            auth.user.user_metadata?.name ||
-            auth.user.email ||
-            "your account";
-
-          if (window.confirm(`Signed in as ${name}.\nSign out of Uravu?`)) {
-            auth.signOut();
-          }
-        });
-      }
-
-      const name =
-        auth.user?.user_metadata?.full_name ||
+    publish() {
+      document.dispatchEvent(new CustomEvent(AUTH_EVENT, {
+        detail: { user: auth.user, loading: auth.loading }
+      }));
+      auth.renderHeader();
+    },
+    renderHeader() {
+      const signIn = document.getElementById("header-signin");
+      const menu = document.getElementById("user-menu");
+      const nameNode = document.getElementById("user-name");
+      const avatarNode = document.getElementById("user-avatar");
+      const name = auth.user?.user_metadata?.full_name ||
         auth.user?.user_metadata?.name ||
         auth.user?.email ||
-        "";
-
-      label.textContent = auth.user ? "Sign out" : "Sign in with Google";
-      button.title = auth.user
-        ? `Signed in as ${name}. Click to sign out.`
-        : "Sign in with Google";
-      button.setAttribute("aria-label", button.title);
+        "Account";
+      if (signIn) signIn.hidden = Boolean(auth.user) || auth.loading;
+      if (menu) menu.hidden = !auth.user || auth.loading;
+      if (nameNode) nameNode.textContent = name;
+      if (avatarNode) {
+        const avatar = auth.user?.user_metadata?.avatar_url ||
+          auth.user?.user_metadata?.picture;
+        if (avatar) {
+          const img = document.createElement("img");
+          img.src = avatar;
+          img.alt = "";
+          img.referrerPolicy = "no-referrer";
+          avatarNode.replaceChildren(img);
+        } else {
+          avatarNode.textContent = name.trim().charAt(0).toUpperCase() || "U";
+        }
+      }
     },
-
     async init() {
+      if (!supabase) {
+        auth.loading = false;
+        auth.publish();
+        throw new Error("Supabase client is missing.");
+      }
       const { data, error } = await supabase.auth.getSession();
-      if (error) console.error("Uravu session error:", error.message);
-
+      if (error) console.error("Uravu session check:", error.message);
       auth.user = data?.session?.user ?? null;
-      auth.render();
-
+      auth.loading = false;
+      auth.publish();
       supabase.auth.onAuthStateChange((_event, session) => {
         auth.user = session?.user ?? null;
-        auth.render();
+        auth.loading = false;
+        auth.publish();
       });
+      return auth.user;
     }
   };
 
+  document.getElementById("header-signin")?.addEventListener("click", () => auth.signIn());
+  document.getElementById("hero-signin")?.addEventListener("click", () => auth.signIn());
+  document.getElementById("sign-out-button")?.addEventListener("click", () => auth.signOut());
   window.uravuAuth = auth;
-  document.addEventListener("DOMContentLoaded", () => auth.init());
+  auth.ready = auth.init().catch(error => {
+    console.error("Uravu auth initialization:", error);
+    return null;
+  });
 })();
