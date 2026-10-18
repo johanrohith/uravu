@@ -169,3 +169,19 @@
   .person-connections-section{padding:10px}
   .person-connection-row{padding:8px}
 }
+
+
+/* Flexible date inputs: support unknown/partial dates without fake calendar days. */
+.partial-date-input{font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.field-help{margin:5px 0 0;color:#89958a;font-size:10px;line-height:1.45}
+.connection-group-title{grid-column:1/-1;margin:0 0 3px;color:#53675a;font-size:12px;font-weight:800}
+.connection-add-actions{grid-column:1/-1;display:flex;justify-content:flex-end;margin-top:9px}
+.connection-add-actions .primary-button{min-width:145px}
+.connection-input-group .field-label{margin-top:2px}
+#death-date-field .field-help{margin-bottom:3px}
+@media(max-width:520px){
+  .connection-group-title{grid-column:1}
+  .connection-add-actions{grid-column:1}
+  .connection-add-actions .primary-button{width:100%}
+  .field-help{font-size:9px}
+}
