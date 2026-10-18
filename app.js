@@ -392,7 +392,51 @@
     state.members = results[2].data || [];
     state.requests = results[3].data || [];
     state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || state.activeMembership;
+
+    // Repair existing one-parent records when a person already has a spouse.
+    // Owners/admins only can mutate relationships; visitors keep this read-only.
+    const repaired = await backfillExistingSpouseChildren();
+    if (repaired.error) showDbError(repaired.error, "sync shared children");
+    if (repaired.changed) {
+      const refreshedRelations = await db.from("uravu_relationships")
+        .select("id,tree_id,person_id,related_person_id,relationship_type,created_at")
+        .eq("tree_id", treeId);
+      if (!refreshedRelations.error) state.relationships = refreshedRelations.data || state.relationships;
+      else showDbError(refreshedRelations.error, "refresh family relationships");
+    }
     renderWorkspace();
+  }
+
+  async function backfillExistingSpouseChildren() {
+    if (!isManager() || !state.activeTree) return { changed: false, error: null };
+    const spouseMap = new Map();
+    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
+      if (!spouseMap.has(edge.person_id)) spouseMap.set(edge.person_id, new Set());
+      if (!spouseMap.has(edge.related_person_id)) spouseMap.set(edge.related_person_id, new Set());
+      spouseMap.get(edge.person_id).add(edge.related_person_id);
+      spouseMap.get(edge.related_person_id).add(edge.person_id);
+    });
+    const existing = new Set(state.relationships.filter(edge => edge.relationship_type === "parent")
+      .map(edge => edge.person_id + "|" + edge.related_person_id));
+    const parentChildEdges = state.relationships.filter(edge => edge.relationship_type === "parent");
+    let changed = false;
+
+    for (const edge of parentChildEdges) {
+      for (const spouseId of (spouseMap.get(edge.person_id) || new Set())) {
+        const key = spouseId + "|" + edge.related_person_id;
+        if (spouseId === edge.related_person_id || existing.has(key)) continue;
+        const result = await callRpc("uravu_link_people", {
+          p_tree_id:state.activeTree.id,
+          p_person_id:spouseId,
+          p_related_person_id:edge.related_person_id,
+          p_relationship_type:"parent_of"
+        });
+        if (result.error) return { changed, error: result.error };
+        existing.add(key);
+        changed = true;
+      }
+    }
+    return { changed, error: null };
   }
 
   function renderWorkspace() {
