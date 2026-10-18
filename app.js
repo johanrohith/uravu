@@ -491,6 +491,164 @@
     return Array.from(new Set(ids)).map(id => state.people.find(p => p.id === id)).filter(Boolean);
   }
 
+  function relationshipLabelsForCurrentUser() {
+    const labels = new Map();
+    const egoMember = state.members.find(member => member.user_id === state.user?.id && member.person_id);
+    if (!egoMember) return labels;
+    const egoId = egoMember.person_id;
+    const byId = new Map(state.people.map(person => [person.id, person]));
+    if (!byId.has(egoId)) return labels;
+
+    const parentsByChild = new Map();
+    const childrenByParent = new Map();
+    const spousesByPerson = new Map();
+    const add = (map, id, relatedId) => {
+      if (!map.has(id)) map.set(id, new Set());
+      map.get(id).add(relatedId);
+    };
+    state.relationships.forEach(edge => {
+      if (edge.relationship_type === "parent") {
+        add(parentsByChild, edge.related_person_id, edge.person_id);
+        add(childrenByParent, edge.person_id, edge.related_person_id);
+      } else if (edge.relationship_type === "spouse") {
+        add(spousesByPerson, edge.person_id, edge.related_person_id);
+        add(spousesByPerson, edge.related_person_id, edge.person_id);
+      }
+    });
+    const parentsOf = id => parentsByChild.get(id) || new Set();
+    const childrenOf = id => childrenByParent.get(id) || new Set();
+    const spousesOf = id => spousesByPerson.get(id) || new Set();
+    const toArray = values => Array.from(values || []);
+    const grandparentsOf = id => new Set(toArray(parentsOf(id)).flatMap(parentId => toArray(parentsOf(parentId))));
+    const siblingsOf = id => new Set(toArray(parentsOf(id)).flatMap(parentId => toArray(childrenOf(parentId))).filter(otherId => otherId !== id));
+    const gender = person => person?.gender || "";
+    const olderThan = (a, b) => Boolean(a?.birth_date && b?.birth_date && a.birth_date < b.birth_date);
+    const tamilSibling = (person, anchor) => {
+      if (!person?.birth_date || !anchor?.birth_date) {
+        return gender(person) === "male" ? "சகோதரர்" : gender(person) === "female" ? "சகோதரி" : "சகோதரர் / சகோதரி";
+      }
+      if (gender(person) === "male") return olderThan(person, anchor) ? "அண்ணன்" : "தம்பி";
+      if (gender(person) === "female") return olderThan(person, anchor) ? "அக்கா" : "தங்கை";
+      return "சகோதரர் / சகோதரி";
+    }
+    const englishSibling = person => gender(person) === "male" ? "Brother" : gender(person) === "female" ? "Sister" : "Sibling";
+    const gendered = (person, male, female, other) =>
+      gender(person) === "male" ? male : gender(person) === "female" ? female : other;
+
+    // Build reachability once, so disconnected or not-yet-linked entries are not
+    // incorrectly labelled as relatives.
+    const connected = new Set([egoId]);
+    const queue = [egoId];
+    for (let index = 0; index < queue.length; index++) {
+      const current = queue[index];
+      const nextIds = [
+        ...toArray(parentsOf(current)), ...toArray(childrenOf(current)), ...toArray(spousesOf(current))
+      ];
+      nextIds.forEach(id => {
+        if (!connected.has(id)) { connected.add(id); queue.push(id); }
+      });
+    }
+    const ego = byId.get(egoId);
+    const egoParents = toArray(parentsOf(egoId));
+    const egoChildren = toArray(childrenOf(egoId));
+    const egoSiblings = siblingsOf(egoId);
+    const egoGrandparents = grandparentsOf(egoId);
+    const egoSpouses = toArray(spousesOf(egoId));
+
+    for (const person of state.people) {
+      const id = person.id;
+      let english = "";
+      let tamil = "";
+      if (id === egoId) {
+        english = "You"; tamil = "நீங்கள்";
+      } else if (spousesOf(egoId).has(id)) {
+        if (gender(ego) === "male" && gender(person) === "female") {
+          english = "Wife"; tamil = "மனைவி";
+        } else if (gender(ego) === "female" && gender(person) === "male") {
+          english = "Husband"; tamil = "கணவர்";
+        } else {
+          english = "Spouse / partner"; tamil = "துணைவர் / துணைவி";
+        }
+      } else if (egoParents.includes(id)) {
+        english = gendered(person, "Father", "Mother", "Parent");
+        tamil = gender(person) === "male" ? "தந்தை" : gender(person) === "female" ? "தாய்" : "பெற்றோர்";
+      } else if (egoChildren.includes(id)) {
+        english = gendered(person, "Son", "Daughter", "Child");
+        tamil = gender(person) === "male" ? "மகன்" : gender(person) === "female" ? "மகள்" : "பிள்ளை";
+      } else if (egoSiblings.has(id)) {
+        english = englishSibling(person);
+        tamil = tamilSibling(person, ego);
+      } else if (egoGrandparents.has(id)) {
+        english = gendered(person, "Grandfather", "Grandmother", "Grandparent");
+        tamil = gender(person) === "male" ? "தாத்தா" : gender(person) === "female" ? "பாட்டி" : "தாத்தா / பாட்டி";
+      } else if (egoChildren.some(childId => childrenOf(childId).has(id))) {
+        english = gendered(person, "Grandson", "Granddaughter", "Grandchild");
+        tamil = gender(person) === "male" ? "பேரன்" : gender(person) === "female" ? "பேத்தி" : "பேரக்குழந்தை";
+      } else {
+        const parentSibling = egoParents.find(parentId => siblingsOf(parentId).has(id));
+        if (parentSibling) {
+          const parentPerson = byId.get(parentSibling);
+          if (gender(person) === "male") {
+            english = "Uncle";
+            if (gender(parentPerson) === "female") tamil = "மாமா";
+            else if (gender(parentPerson) === "male" && person.birth_date && parentPerson.birth_date)
+              tamil = olderThan(person, parentPerson) ? "பெரியப்பா" : "சித்தப்பா";
+            else tamil = "தந்தையின் சகோதரர்";
+          } else if (gender(person) === "female") {
+            english = "Aunt";
+            if (gender(parentPerson) === "male") tamil = "அத்தை";
+            else if (gender(parentPerson) === "female" && person.birth_date && parentPerson.birth_date)
+              tamil = olderThan(person, parentPerson) ? "பெரியம்மா" : "சித்தி";
+            else tamil = "தாயின் சகோதரி";
+          }
+        }
+
+        if (!english) {
+          const siblingParent = toArray(parentsOf(id)).find(parentId => egoSiblings.has(parentId));
+          if (siblingParent) {
+            const sibling = byId.get(siblingParent);
+            english = gendered(person, "Nephew", "Niece", "Nibling");
+            tamil = tamilSibling(sibling, ego) + (gender(person) === "male" ? " மகன்" : gender(person) === "female" ? " மகள்" : " பிள்ளை");
+          }
+        }
+
+        if (!english) {
+          const spouseParent = egoSpouses.some(spouseId => parentsOf(spouseId).has(id));
+          const childSpouse = egoChildren.some(childId => spousesOf(childId).has(id));
+          const spouseSibling = egoSpouses.some(spouseId => siblingsOf(spouseId).has(id));
+          const siblingSpouse = Array.from(egoSiblings).some(siblingId => spousesOf(siblingId).has(id));
+          const stepParent = egoParents.some(parentId => spousesOf(parentId).has(id));
+          if (spouseParent) {
+            english = gendered(person, "Father-in-law", "Mother-in-law", "Parent-in-law");
+            tamil = gender(person) === "male" ? "மாமனார்" : gender(person) === "female" ? "மாமியார்" : "மாமனார் / மாமியார்";
+          } else if (childSpouse) {
+            english = gendered(person, "Son-in-law", "Daughter-in-law", "Child-in-law");
+            tamil = gender(person) === "male" ? "மருமகன்" : gender(person) === "female" ? "மருமகள்" : "மருமகன் / மருமகள்";
+          } else if (spouseSibling || siblingSpouse) {
+            english = gendered(person, "Brother-in-law", "Sister-in-law", "Sibling-in-law");
+            tamil = gender(person) === "male" ? "மைத்துனர்" : gender(person) === "female" ? "மைத்துனி" : "மைத்துனர் / மைத்துனி";
+          } else if (stepParent) {
+            english = gendered(person, "Stepfather", "Stepmother", "Step-parent");
+            tamil = gender(person) === "male" ? "மாற்றாந்தந்தை" : gender(person) === "female" ? "மாற்றாந்தாய்" : "மாற்றாந்தாய் / மாற்றாந்தந்தை";
+          }
+        }
+
+        if (!english && connected.has(id)) {
+          const sharesGrandparent = Array.from(grandparentsOf(id)).some(grandparentId => egoGrandparents.has(grandparentId));
+          if (sharesGrandparent) {
+            english = "Cousin";
+            tamil = gender(person) === "male" ? "ஒன்றுவிட்ட சகோதரர்" : gender(person) === "female" ? "ஒன்றுவிட்ட சகோதரி" : "ஒன்றுவிட்ட உறவினர்";
+          } else {
+            english = "Relative";
+            tamil = "உறவினர்";
+          }
+        }
+      }
+      if (english) labels.set(id, state.language === "ta" ? tamil : english);
+    }
+    return labels;
+  }
+
   function renderPersonConnectOptions() {
     const select = $("#connect-person");
     if (!select) return;
@@ -681,7 +839,9 @@
     });
 
     linesRoot.innerHTML = paths.join("");
-    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id))).join("");
+    const relationLabels = relationshipLabelsForCurrentUser();
+    const egoId = state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
+    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id), egoId)).join("");
     applyTreeCanvasScale(false);
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
@@ -845,35 +1005,25 @@
   }
 
 
-  function renderPersonCard(person, position) {
+  function renderPersonCard(person, position, relationLabel, egoId) {
     if (!position) return "";
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
     if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
     if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
-    const edges = state.relationships.filter(relationship =>
-      relationship.person_id === person.id || relationship.related_person_id === person.id
-    );
-    const relationLines = edges.map(relationship => {
-      const otherId = relationship.person_id === person.id ? relationship.related_person_id : relationship.person_id;
-      const other = state.people.find(item => item.id === otherId);
-      if (!other) return "";
-      const label = relationship.relationship_type === "spouse"
-        ? (state.language === "ta" ? "துணைவர் / துணைவி: " : "Spouse / partner: ") + other.full_name
-        : (state.language === "ta" ? (relationship.person_id === person.id ? "பெற்றோர்: " : "பிள்ளை: ") : (relationship.person_id === person.id ? "Parent of: " : "Child of: ")) + other.full_name;
-      return '<div class="graph-relationship"><span>' + escapeHtml(label) + '</span>' +
-        (isManager() ? '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(relationship.id) + '" aria-label="Remove connection">×</button>' : '') +
-        '</div>';
-    }).join("");
-    const assigned = state.members.find(member => member.person_id === person.id);
+    const directRelationship = egoId ? state.relationships.find(edge =>
+      ((edge.person_id === person.id && edge.related_person_id === egoId) ||
+       (edge.person_id === egoId && edge.related_person_id === person.id))
+    ) : null;
     return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px">' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
       (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
+      (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) +
+        (directRelationship && isManager() ? '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(directRelationship.id) + '" aria-label="' + (state.language === "ta" ? "உறவை நீக்கு" : "Remove connection") + '">×</button>' : '') +
+        '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
-      (assigned ? '<span class="unassigned-pill">Linked account: ' + escapeHtml(assigned.display_name || "Family member") + '</span>' : '') +
-      '<div class="graph-relationships">' + (relationLines || '<span class="connection-line">No connections yet</span>') + '</div>' +
       (isManager() ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
       '</article>';
@@ -1040,6 +1190,55 @@
     renderPersonConnectOptions();
   }
 
+  async function syncSpouseChildLinks(personId, connectedId, relationshipType) {
+    if (!personId || !connectedId || !state.activeTree) return null;
+    const treeId = state.activeTree.id;
+    const existingParentLinks = state.relationships.filter(edge => edge.relationship_type === "parent");
+    const hasParentLink = (parentId, childId) => existingParentLinks.some(edge =>
+      edge.person_id === parentId && edge.related_person_id === childId
+    );
+    const linkAsParent = async (parentId, childId) => {
+      if (!parentId || !childId || parentId === childId || hasParentLink(parentId, childId)) return null;
+      const result = await callRpc("uravu_link_people", {
+        p_tree_id:treeId,
+        p_person_id:parentId,
+        p_related_person_id:childId,
+        p_relationship_type:"parent_of"
+      });
+      return result.error || null;
+    };
+
+    if (relationshipType === "spouse_of") {
+      // When a spouse is added, link them to the existing children of either
+      // partner so a child's two parents stay connected in the family graph.
+      const children = new Set(existingParentLinks
+        .filter(edge => edge.person_id === personId || edge.person_id === connectedId)
+        .map(edge => edge.related_person_id));
+      for (const childId of children) {
+        for (const parentId of [personId, connectedId]) {
+          const error = await linkAsParent(parentId, childId);
+          if (error) return error;
+        }
+      }
+      return null;
+    }
+
+    const parentId = relationshipType === "child_of" ? connectedId : personId;
+    const childId = relationshipType === "child_of" ? personId : connectedId;
+    const spouseIds = new Set();
+    state.relationships.filter(edge => edge.relationship_type === "spouse" &&
+      (edge.person_id === parentId || edge.related_person_id === parentId))
+      .forEach(edge => spouseIds.add(edge.person_id === parentId ? edge.related_person_id : edge.person_id));
+
+    // If a child is connected to one parent, add the corresponding parent link
+    // for that parent's spouse as well.
+    for (const spouseId of spouseIds) {
+      const error = await linkAsParent(spouseId, childId);
+      if (error) return error;
+    }
+    return null;
+  }
+
   async function savePerson(event) {
     event.preventDefault();
     if (!isManager() || !state.activeTree) return;
@@ -1084,6 +1283,7 @@
         p_related_person_id:connectedId, p_relationship_type:connectionType
       });
       linkError = linked.error;
+      if (!linkError) linkError = await syncSpouseChildLinks(personId, connectedId, connectionType);
     }
     setBusy(button, false);
     clearPersonForm();
