@@ -34,7 +34,7 @@
       noTrees:"You have not joined any family trees yet.",noTreesSub:"Create one or request access to an existing tree.",
       noBrowse:"No other family trees are available to request.",pending:"Request pending",requested:"Requested",
       viewTree:"Open tree",members:"Members",requestRole:"Request a family record",sendRequest:"Send request",
-      requestSent:"Request sent for the owner or a linked member to review.",roleChange:"Family record request",linkRequest:"Family entry link",
+      requestSent:"Request sent for review.",roleChange:"Family record request",linkRequest:"Family entry link",
       joinRequest:"Tree access",save:"Save",cancel:"Cancel",approve:"Approve",reject:"Reject",
       noRequests:"No requests need review.",notConnected:"No connection added.",setupError:"The new Uravu database schema is not installed yet. Run supabase/schema.sql in your Supabase SQL Editor.",
       noSearchResults:"No family members match that search.",treeLoadError:"Could not load this family tree."
@@ -49,7 +49,7 @@
       noTreesSub:"புதிய மரத்தை உருவாக்கவும் அல்லது இருக்கும் மரத்திற்கு அணுகல் கோரவும்.",
       noBrowse:"அணுகல் கோரக்கூடிய வேறு மரங்கள் இல்லை.",pending:"கோரிக்கை நிலுவையில் உள்ளது",
       requested:"கோரப்பட்டது",viewTree:"மரத்தைத் திற",members:"உறுப்பினர்கள்",requestRole:"குடும்பப் பதிவைக் கோரு",
-      sendRequest:"கோரிக்கையை அனுப்பு",requestSent:"உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் பரிசீலிக்கக் கோரிக்கை அனுப்பப்பட்டது.",
+      sendRequest:"கோரிக்கையை அனுப்பு",requestSent:"கோரிக்கை பரிசீலனைக்கு அனுப்பப்பட்டது.",
       roleChange:"குடும்பப் பதிவு கோரிக்கை",linkRequest:"குடும்பப் பதிவை இணை",joinRequest:"மர அணுகல்",
       save:"சேமி",cancel:"ரத்து",approve:"ஏற்கவும்",reject:"நிராகரி",noRequests:"பரிசீலிக்க கோரிக்கைகள் இல்லை.",
       notConnected:"உறவு இணைப்பு சேர்க்கப்படவில்லை.",
@@ -1295,7 +1295,7 @@
       const typeLabel = request.request_type === "join" ? t("joinRequest") :
         request.request_type === "link" ? t("linkRequest") : t("roleChange");
       const requestedPerson = state.people.find(person => person.id === request.requested_person_id);
-      const mayReview = owner || request.request_type === "join";
+      const mayReview = owner || (request.request_type === "join" && !request.requested_person_id);
       const actions = mayReview
         ? '<div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
           escapeHtml(request.id) + '" data-decision="approve">' + escapeHtml(t("approve")) +
@@ -1346,7 +1346,7 @@
       ? (state.language === "ta" ? "குடும்பப் பதிவைக் கோரு" : "Request a family record")
       : translateUiValue("Request access to " + tree.name);
     const description = hasMembership
-      ? (state.language === "ta" ? "கோரிக்கையை உரிமையாளர் அல்லது ஏற்கனவே பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்." : "The owner or a member already linked to a family record can review your request.")
+      ? (state.language === "ta" ? "குடும்பப் பதிவை ஒதுக்க உரிமையாளர் உங்கள் கோரிக்கையைப் பரிசீலிப்பார்." : "The owner will review your family-record assignment request.")
       : (state.language === "ta" ? "குடும்ப மரத்தில் இணைய அனுமதி கோருங்கள். பின்னர் உரிமையாளர் உங்களை ஒரு குடும்பப் பதிவுடன் இணைக்கலாம்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
     $("#request-modal-title").textContent = title;
     $("#request-modal-description").textContent = description;
