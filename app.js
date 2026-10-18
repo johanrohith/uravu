@@ -16,6 +16,7 @@
     members: [],
     requests: [],
     editingPersonId: null,
+    connectionEditPersonId: null,
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
     loadingTree: false,
@@ -887,9 +888,23 @@
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
 
-    $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
-    $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
-    $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
+    $("[data-edit-person]").forEach(button => button.addEventListener("click", () => {
+      const personId = button.dataset.editPerson;
+      state.connectionEditPersonId = personId;
+      renderPeople();
+      beginEditPerson(personId);
+    }));
+    $("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
+    $("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
+    $("[data-view-person]").forEach(card => {
+      card.addEventListener("click", () => openPersonDetails(card.dataset.viewPerson));
+      card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openPersonDetails(card.dataset.viewPerson);
+        }
+      });
+    });
   }
 
   function applyTreeCanvasScale(preservePosition = true, anchorX, anchorY) {
@@ -1050,30 +1065,39 @@
 
   function renderPersonCard(person, position, relationLabel) {
     if (!position) return "";
+    const manager = isManager();
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
     if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
     if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
     const edges = state.relationships.filter(edge => edge.person_id === person.id || edge.related_person_id === person.id);
-    const unlinkControls = isManager() && edges.length
-      ? '<div class="graph-relationship-tools">' + edges.map(edge => {
+    const showConnectionEditor = manager && state.connectionEditPersonId === person.id;
+    const connectionEditor = showConnectionEditor
+      ? '<div class="graph-relationship-tools"><span class="graph-relationship-tools-title">' +
+        (state.language === "ta" ? "இணைப்புகள்" : "Connections") + '</span>' +
+        (edges.length ? edges.map(edge => {
           const otherId = edge.person_id === person.id ? edge.related_person_id : edge.person_id;
           const other = state.people.find(item => item.id === otherId);
-          const targetName = other?.full_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "family member");
+          const targetName = other?.full_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "Family member");
           const title = (state.language === "ta" ? "உறவை நீக்கு: " : "Remove connection to ") + targetName;
-          return '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(edge.id) +
-            '" aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">×</button>';
-        }).join("") + '</div>'
+          return '<div class="graph-edit-connection"><span>' + escapeHtml(targetName) + '</span><button type="button" class="text-action" data-remove-relationship="' +
+            escapeHtml(edge.id) + '" aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">×</button></div>';
+        }).join("") : '<span class="graph-no-connections">' + (state.language === "ta" ? "இணைப்புகள் இல்லை" : "No connections") + '</span>') +
+        '</div>'
       : "";
-    return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px">' +
+    const viewAttributes = manager ? "" :
+      ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
+      escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
+    return '<article class="family-node-card' + (showConnectionEditor ? ' is-editing-connections' : '') +
+      '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
       (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
-      (person.notes ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
-      unlinkControls +
-      (isManager() ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
+      (person.notes && manager ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
+      connectionEditor +
+      (manager ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
       '</article>';
   }
@@ -1210,15 +1234,67 @@
     });
   }
 
+  function setPersonDetailRow(rowId, valueId, value) {
+    const row = $("#" + rowId);
+    const field = $("#" + valueId);
+    if (!row || !field) return;
+    row.hidden = value == null || value === "";
+    field.textContent = value || "";
+  }
+
+  function openPersonDetails(personId) {
+    const person = state.people.find(item => item.id === personId);
+    if (!person) return;
+    const modal = $("#person-details-modal");
+    if (!modal) return;
+    const labels = state.language === "ta"
+      ? { eyebrow:"குடும்ப உறுப்பினர்", relation:"உறவு", tamilName:"தமிழ்ப் பெயர்", gender:"பாலினம்", born:"பிறந்த தேதி", died:"இறந்த தேதி", notes:"குறிப்புகள்", close:"மூடு" }
+      : { eyebrow:"FAMILY MEMBER", relation:"Relationship", tamilName:"Tamil name", gender:"Gender", born:"Born", died:"Died", notes:"Notes", close:"Close" };
+    $("#person-details-eyebrow").textContent = labels.eyebrow;
+    $("#person-details-title").textContent = person.full_name;
+    $("#person-details-close").setAttribute("aria-label", labels.close);
+    $("#person-details-close-footer").textContent = labels.close;
+    $("#person-detail-relation-label").textContent = labels.relation;
+    $("#person-detail-tamil-label").textContent = labels.tamilName;
+    $("#person-detail-gender-label").textContent = labels.gender;
+    $("#person-detail-born-label").textContent = labels.born;
+    $("#person-detail-died-label").textContent = labels.died;
+    $("#person-detail-notes-label").textContent = labels.notes;
+
+    const relation = relationshipLabelsForCurrentUser().get(person.id) || "";
+    const gender = person.gender === "male"
+      ? (state.language === "ta" ? "ஆண்" : "Male")
+      : person.gender === "female"
+        ? (state.language === "ta" ? "பெண்" : "Female")
+        : person.gender === "other"
+          ? (state.language === "ta" ? "மற்றவை" : "Other")
+          : "";
+    setPersonDetailRow("person-detail-relation-row", "person-detail-relation", relation);
+    setPersonDetailRow("person-detail-tamil-row", "person-detail-tamil", person.tamil_name || "");
+    setPersonDetailRow("person-detail-gender-row", "person-detail-gender", gender);
+    setPersonDetailRow("person-detail-born-row", "person-detail-born", person.birth_date ? prettyDate(person.birth_date) : "");
+    setPersonDetailRow("person-detail-died-row", "person-detail-died", person.death_date ? prettyDate(person.death_date) : "");
+    setPersonDetailRow("person-detail-notes-row", "person-detail-notes", person.notes || "");
+    modal.hidden = false;
+    $("#person-details-close").focus();
+  }
+
+  function closePersonDetails() {
+    const modal = $("#person-details-modal");
+    if (modal) modal.hidden = true;
+  }
+
   function closeRequestDialog() { $("#request-modal").hidden = true; $("#request-modal-body").innerHTML = ""; }
 
   function clearPersonForm() {
     state.editingPersonId = null;
+    state.connectionEditPersonId = null;
     $("#person-form").reset();
     $("#person-form-title").textContent = "Add a family member";
     $("#save-person-button").textContent = "Add family member";
     $("#cancel-edit-button").hidden = true;
     renderPersonConnectOptions();
+    if (state.activeTree) renderPeople();
   }
 
   function beginEditPerson(personId) {
@@ -1429,6 +1505,14 @@
     $("#request-modal-close").addEventListener("click", closeRequestDialog);
     $("#request-modal").addEventListener("click", event => {
       if (event.target.id === "request-modal") closeRequestDialog();
+    });
+    $("#person-details-close").addEventListener("click", closePersonDetails);
+    $("#person-details-close-footer").addEventListener("click", closePersonDetails);
+    $("#person-details-modal").addEventListener("click", event => {
+      if (event.target.id === "person-details-modal") closePersonDetails();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closePersonDetails();
     });
   }
 
