@@ -15,7 +15,7 @@ const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-re
 const dateHelperStart = app.indexOf("function datePartsValid");
 const dateHelperEnd = app.indexOf("function formatDateEntry", dateHelperStart);
 assert.ok(dateHelperStart >= 0 && dateHelperEnd > dateHelperStart);
-const parsePartialDate = new Function(app.slice(dateHelperStart, dateHelperEnd) + "\\nreturn parsePartialDate;")();
+const parsePartialDate = new Function(app.slice(dateHelperStart, dateHelperEnd) + "\nreturn parsePartialDate;")();
 assert.deepEqual(parsePartialDate("24-06-1985"), { valid:true, value:"1985-06-24", date:"1985-06-24", precision:"day" });
 assert.deepEqual(parsePartialDate("06-1985"), { valid:true, value:"1985-06", date:null, precision:"month-year" });
 assert.deepEqual(parsePartialDate("1985"), { valid:true, value:"1985", date:null, precision:"year" });
