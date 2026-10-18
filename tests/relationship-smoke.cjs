@@ -59,7 +59,7 @@ assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
 assert.match(app, /function renderEditorConnections/);
-assert.ok(app.includes("Boolean(connectedId) !== Boolean(connectionType)"));
+assert.ok(app.includes("if (!connectedId || !relationshipType)"))
 assert.match(app, /person-connections-list/);
 assert.match(styles, /person-connection-row/);
 assert.match(styles, /connection-input-group/);
