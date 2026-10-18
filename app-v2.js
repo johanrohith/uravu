@@ -16,7 +16,6 @@
     members: [],
     requests: [],
     editingPersonId: null,
-    connectionEditPersonId: null,
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
     loadingTree: false,
@@ -63,6 +62,23 @@
   interfaceTranslations["YOUR ROLE"] = "உங்கள் பங்கு";
   interfaceTranslations["Family members"] = "குடும்ப உறுப்பினர்கள்";
   interfaceTranslations["Delete tree"] = "மரத்தை நீக்கு";
+  Object.assign(interfaceTranslations, {
+    "Deceased":"இறந்தவர்",
+    "Connections":"இணைப்புகள்",
+    "Select a family member":"குடும்ப உறுப்பினரைத் தேர்ந்தெடுக்கவும்",
+    "Select relationship":"உறவைத் தேர்ந்தெடுக்கவும்",
+    "Connect to someone":"ஒருவருடன் இணைக்கவும்",
+    "Relationship to them":"அவருடனான உறவு",
+    "Choose both a family member and relationship to add a connection.":"இணைப்பைச் சேர்க்க குடும்ப உறுப்பினரையும் உறவையும் தேர்ந்தெடுக்கவும்.",
+    "Enter the date of death when Deceased is checked.":"இறந்தவர் என்பதைத் தேர்ந்தெடுத்தால் இறந்த தேதியை உள்ளிடவும்.",
+    "No connections yet.":"இன்னும் இணைப்புகள் இல்லை.",
+    "Remove connection: ":"இணைப்பை நீக்கு: ",
+    "Parent":"பெற்றோர்",
+    "Child":"பிள்ளை",
+    "Spouse / partner":"துணைவர் / துணைவி",
+    "Remove":"நீக்கு"
+  });
+
   const tamilToEnglish = {};
   Object.entries(interfaceTranslations).forEach(([english, tamil]) => {
     if (!(tamil in tamilToEnglish)) tamilToEnglish[tamil] = english;
@@ -699,7 +715,7 @@
     const select = $("#connect-person");
     if (!select) return;
     const old = select.value;
-    select.innerHTML = '<option value="">No connection yet</option>' + state.people
+    select.innerHTML = '<option value="">' + (state.language === "ta" ? "குடும்ப உறுப்பினரைத் தேர்ந்தெடுக்கவும்" : "Select a family member") + '</option>' + state.people
       .filter(p => p.id !== state.editingPersonId)
       .map(p => '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.full_name) + (p.tamil_name ? " · " + escapeHtml(p.tamil_name) : "") + '</option>').join("");
     if (old && state.people.some(p => p.id === old && p.id !== state.editingPersonId)) select.value = old;
@@ -1069,8 +1085,7 @@
     const viewAttributes = manager ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
-    return '<article class="family-node-card"' +
-      '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
+    return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
       (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
