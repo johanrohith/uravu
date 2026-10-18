@@ -462,6 +462,7 @@
     $("#delete-tree-zone").hidden = !owner;
     $("#request-role-button").hidden = owner;
     renderPersonConnectOptions();
+    renderEditorConnections();
     renderPeople();
     renderMembers();
     renderRequests();
@@ -745,7 +746,7 @@
     const minLevel = levelKeys[0];
     const maxLevel = levelKeys[levelKeys.length - 1];
     const nodeWidth = 236;
-    const nodeHeight = 210;
+    const nodeHeight = 178;
     const columnGap = 44;
     const coupleGap = 18;
     const rowHeight = 302;
@@ -888,12 +889,7 @@
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
 
-    $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => {
-      const personId = button.dataset.editPerson;
-      state.connectionEditPersonId = personId;
-      renderPeople();
-      beginEditPerson(personId);
-    }));
+    $("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
     $$("[data-view-person]").forEach(card => {
@@ -1070,25 +1066,10 @@
     const details = [];
     if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
     if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
-    const edges = state.relationships.filter(edge => edge.person_id === person.id || edge.related_person_id === person.id);
-    const showConnectionEditor = manager && state.connectionEditPersonId === person.id;
-    const connectionEditor = showConnectionEditor
-      ? '<div class="graph-relationship-tools"><span class="graph-relationship-tools-title">' +
-        (state.language === "ta" ? "இணைப்புகள்" : "Connections") + '</span>' +
-        (edges.length ? edges.map(edge => {
-          const otherId = edge.person_id === person.id ? edge.related_person_id : edge.person_id;
-          const other = state.people.find(item => item.id === otherId);
-          const targetName = other?.full_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "Family member");
-          const title = (state.language === "ta" ? "உறவை நீக்கு: " : "Remove connection to ") + targetName;
-          return '<div class="graph-edit-connection"><span>' + escapeHtml(targetName) + '</span><button type="button" class="text-action" data-remove-relationship="' +
-            escapeHtml(edge.id) + '" aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">×</button></div>';
-        }).join("") : '<span class="graph-no-connections">' + (state.language === "ta" ? "இணைப்புகள் இல்லை" : "No connections") + '</span>') +
-        '</div>'
-      : "";
     const viewAttributes = manager ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
-    return '<article class="family-node-card' + (showConnectionEditor ? ' is-editing-connections' : '') +
+    return '<article class="family-node-card"' +
       '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
@@ -1096,7 +1077,6 @@
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes && manager ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
-      connectionEditor +
       (manager ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
       '</article>';
@@ -1286,14 +1266,71 @@
 
   function closeRequestDialog() { $("#request-modal").hidden = true; $("#request-modal-body").innerHTML = ""; }
 
+  function syncDeathDateField() {
+    const checkbox = $("#person-deceased");
+    const field = $("#death-date-field");
+    const deathInput = $("#person-death");
+    if (!checkbox || !field || !deathInput) return;
+    field.hidden = !checkbox.checked;
+    deathInput.required = checkbox.checked;
+    if (!checkbox.checked) deathInput.value = "";
+  }
+
+  function renderEditorConnections() {
+    const section = $("#person-connections-section");
+    const root = $("#person-connections-list");
+    const heading = $("#person-connections-heading");
+    if (!section || !root || !heading) return;
+    const personId = state.editingPersonId;
+    if (!personId || !isManager()) {
+      section.hidden = true;
+      root.innerHTML = "";
+      return;
+    }
+
+    section.hidden = false;
+    heading.textContent = state.language === "ta" ? "இணைப்புகள்" : "Connections";
+    const edges = state.relationships.filter(edge =>
+      edge.person_id === personId || edge.related_person_id === personId
+    );
+    if (!edges.length) {
+      root.innerHTML = '<p class="connections-empty">' +
+        (state.language === "ta" ? "இன்னும் இணைப்புகள் இல்லை." : "No connections yet.") + '</p>';
+      return;
+    }
+    root.innerHTML = edges.map(edge => {
+      const otherId = edge.person_id === personId ? edge.related_person_id : edge.person_id;
+      const other = state.people.find(person => person.id === otherId);
+      if (!other) return "";
+      let relation = "";
+      if (edge.relationship_type === "spouse") {
+        relation = state.language === "ta" ? "துணைவர் / துணைவி" : "Spouse / partner";
+      } else if (edge.person_id === personId) {
+        relation = state.language === "ta" ? "பிள்ளை" : "Child";
+      } else {
+        relation = state.language === "ta" ? "பெற்றோர்" : "Parent";
+      }
+      const removeLabel = (state.language === "ta" ? "இணைப்பை நீக்கு: " : "Remove connection: ") + other.full_name;
+      return '<div class="person-connection-row"><div class="person-connection-description"><strong>' +
+        escapeHtml(relation) + '</strong><span>' + escapeHtml(other.full_name) + '</span></div>' +
+        '<button class="text-action" type="button" data-remove-relationship="' + escapeHtml(edge.id) +
+        '" aria-label="' + escapeHtml(removeLabel) + '" title="' + escapeHtml(removeLabel) + '">' +
+        (state.language === "ta" ? "நீக்கு" : "Remove") + '</button></div>';
+    }).join("");
+    $$("[data-remove-relationship]").forEach(button => {
+      button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship));
+    });
+  }
+
   function clearPersonForm() {
     state.editingPersonId = null;
-    state.connectionEditPersonId = null;
     $("#person-form").reset();
+    syncDeathDateField();
     $("#person-form-title").textContent = "Add a family member";
     $("#save-person-button").textContent = "Add family member";
     $("#cancel-edit-button").hidden = true;
     renderPersonConnectOptions();
+    renderEditorConnections();
     if (state.activeTree) renderPeople();
   }
 
@@ -1305,7 +1342,9 @@
     $("#person-tamil").value = person.tamil_name || "";
     $("#person-gender").value = person.gender || "";
     $("#person-birth").value = person.birth_date || "";
+    $("#person-deceased").checked = Boolean(person.death_date);
     $("#person-death").value = person.death_date || "";
+    syncDeathDateField();
     $("#person-notes").value = person.notes || "";
     $("#person-form-title").textContent = "Edit family member";
     $("#save-person-button").textContent = "Save changes";
@@ -1313,6 +1352,9 @@
     $("#add-person-panel").scrollIntoView({ behavior:"smooth", block:"start" });
     $("#person-name").focus();
     renderPersonConnectOptions();
+    $("#connect-person").value = "";
+    $("#connect-type").value = "";
+    renderEditorConnections();
   }
 
   async function syncSpouseChildLinks(personId, connectedId, relationshipType) {
@@ -1373,15 +1415,21 @@
       tamil_name:$("#person-tamil").value.trim() || null,
       gender:$("#person-gender").value || null,
       birth_date:$("#person-birth").value || null,
-      death_date:$("#person-death").value || null,
+      death_date:$("#person-deceased").checked ? ($("#person-death").value || null) : null,
       notes:$("#person-notes").value.trim() || null
     };
     if (!data.full_name) { toast("A name is required.", true); return; }
+    if ($("#person-deceased").checked && !$("#person-death").value) {
+      toast("Enter the date of death when Deceased is checked.", true); return;
+    }
     if (data.birth_date && data.death_date && data.death_date < data.birth_date) {
       toast("Date of death cannot be earlier than date of birth.", true); return;
     }
     const connectedId = $("#connect-person").value || null;
-    const connectionType = $("#connect-type").value;
+    const connectionType = $("#connect-type").value || null;
+    if (Boolean(connectedId) !== Boolean(connectionType)) {
+      toast("Choose both a family member and relationship to add a connection.", true); return;
+    }
     setBusy(button, true, "Saving…");
     const wasEditing = Boolean(state.editingPersonId);
     let personId = state.editingPersonId;
@@ -1475,7 +1523,9 @@
     $("#tree-search").addEventListener("input", renderTreeLists);
     $("#people-search").addEventListener("input", renderPeople);
     $("#person-form").addEventListener("submit", savePerson);
+    $("#person-deceased").addEventListener("change", syncDeathDateField);
     $("#cancel-edit-button").addEventListener("click", clearPersonForm);
+    syncDeathDateField();
     $("#request-role-button").addEventListener("click", () => {
       if (state.activeTree) openRequestDialog(state.activeTree.id, true);
     });
