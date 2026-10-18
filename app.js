@@ -251,7 +251,9 @@
   async function loadWorkspace(treeId, showLoading) {
     if (!state.user || !state.activeTree || state.activeTree.id !== treeId) return;
     if (showLoading) {
-      $("#people-list").innerHTML = '<div class="loading-line">Loading family members from Supabase…</div>';
+      $("#family-tree-viewport").hidden = true;
+      $("#people-empty").hidden = false;
+      $("#people-empty").textContent = "Loading family members from Supabase…";
       $("#tree-members-list").innerHTML = '<div class="loading-line">Loading members…</div>';
     }
     state.loadingTree = true;
@@ -263,7 +265,13 @@
     ]);
     state.loadingTree = false;
     const error = results.find(result => result.error)?.error;
-    if (error) { showDbError(error, "tree workspace"); $("#people-list").innerHTML = '<div class="empty-state">' + escapeHtml(t("treeLoadError")) + '</div>'; return; }
+    if (error) {
+      showDbError(error, "tree workspace");
+      $("#family-tree-viewport").hidden = true;
+      $("#people-empty").hidden = false;
+      $("#people-empty").textContent = t("treeLoadError");
+      return;
+    }
     if (!state.activeTree || state.activeTree.id !== treeId) return;
     state.people = results[0].data || [];
     state.relationships = results[1].data || [];
