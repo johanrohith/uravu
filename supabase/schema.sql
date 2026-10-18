@@ -105,7 +105,7 @@ $$;
 create or replace function public.uravu_touch_updated_at()
 returns trigger
 language plpgsql
-set search_path = public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 begin
   new.updated_at = now();
@@ -325,7 +325,7 @@ create or replace function public.uravu_assign_member_person(
 )
 returns void
 language plpgsql security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 begin
   if auth.uid() is null then raise exception 'Sign in before managing members.'; end if;
@@ -355,7 +355,7 @@ create or replace function public.uravu_set_member_role(
 )
 returns void
 language plpgsql security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   v_actor_role text;
@@ -392,7 +392,7 @@ create or replace function public.uravu_link_people(
 )
 returns uuid
 language plpgsql security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   v_a uuid := p_person_id;
@@ -446,7 +446,7 @@ $$;
 create or replace function public.uravu_delete_tree(p_tree_id uuid)
 returns void
 language plpgsql security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $$
 begin
   if auth.uid() is null then raise exception 'Sign in before deleting a tree.'; end if;
