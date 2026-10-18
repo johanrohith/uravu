@@ -152,6 +152,7 @@
         });
       } else if (record.type === "attributes") {
         const current = record.target.getAttribute(record.attributeName);
+        if (current == null) return;
         const next = translateUiValue(current);
         if (next !== current) record.target.setAttribute(record.attributeName, next);
       }
@@ -207,7 +208,8 @@
     } else if (/row-level security|permission denied|not allowed/i.test(message)) {
       toast(translateUiValue("Database permission blocked this action. Check the Supabase policies in supabase/schema.sql."), true);
     } else {
-      toast(message || "Something went wrong. Please try again.", true);
+      // Arbitrary Supabase messages are useful in the console, but keep the visible UI in Tamil.
+      toast(state.language === "ta" ? "Something went wrong. Please try again." : (message || "Something went wrong. Please try again."), true);
     }
   }
   function requireSignedIn() {
