@@ -888,15 +888,15 @@
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
 
-    $("[data-edit-person]").forEach(button => button.addEventListener("click", () => {
+    $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => {
       const personId = button.dataset.editPerson;
       state.connectionEditPersonId = personId;
       renderPeople();
       beginEditPerson(personId);
     }));
-    $("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
-    $("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
-    $("[data-view-person]").forEach(card => {
+    $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
+    $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
+    $$("[data-view-person]").forEach(card => {
       card.addEventListener("click", () => openPersonDetails(card.dataset.viewPerson));
       card.addEventListener("keydown", event => {
         if (event.key === "Enter" || event.key === " ") {
