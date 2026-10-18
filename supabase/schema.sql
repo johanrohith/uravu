@@ -17,8 +17,8 @@ create table if not exists public.uravu_people (
   id uuid primary key default gen_random_uuid(),
   tree_id uuid not null references public.uravu_family_trees(id) on delete cascade,
   full_name text not null check (char_length(btrim(full_name)) between 1 and 120),
-  tamil_name text,
-  gender text check (gender is null or gender in ('male', 'female', 'other')),
+  tamil_name text not null check (length(trim(tamil_name)) > 0),
+  gender text not null check (gender in ('male', 'female', 'other')),
   birth_date date,
   birth_date_text text,
   death_date date,
@@ -33,6 +33,17 @@ create table if not exists public.uravu_people (
 
 -- Additive migration for existing databases: preserve exact dates and support
 -- year-only, month/year, or month/day dates without inventing a day or year.
+-- Backfill existing incomplete profiles before enforcing required fields.
+update public.uravu_people set tamil_name = full_name
+where tamil_name is null or length(trim(tamil_name)) = 0;
+update public.uravu_people set gender = 'other' where gender is null;
+alter table public.uravu_people alter column tamil_name set not null;
+alter table public.uravu_people alter column gender set not null;
+alter table public.uravu_people drop constraint if exists uravu_people_tamil_name_check;
+alter table public.uravu_people add constraint uravu_people_tamil_name_check check (length(trim(tamil_name)) > 0);
+alter table public.uravu_people drop constraint if exists uravu_people_gender_check;
+alter table public.uravu_people add constraint uravu_people_gender_check check (gender in ('male', 'female', 'other'));
+
 alter table public.uravu_people add column if not exists birth_date_text text;
 alter table public.uravu_people add column if not exists death_date_text text;
 alter table public.uravu_people add column if not exists is_deceased boolean not null default false;
