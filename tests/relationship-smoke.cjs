@@ -1,8 +1,40 @@
-const fs=require('fs');const vm=require('vm');const source=fs.readFileSync(__dirname+'/../app.js','utf8');
-const dataStart=source.indexOf('let people = [');const dataEnd=source.indexOf('\nlet language',dataStart);
-const dataCode=source.slice(dataStart,dataEnd);
-const fnStart=source.indexOf('function t(key)');const fnEnd=source.indexOf('function allTextFor(',fnStart);
-const fnCode=source.slice(fnStart,fnEnd);
-const ctx={console,Date,Set,Map,Math};vm.createContext(ctx);
-vm.runInContext(`${dataCode}\n${fnCode}\nJSON.stringify({\n self:relationResult('johan','johan').ta,\n father:relationResult('johan','father').ta,\n mother:relationResult('johan','mother').ta,\n grandfather:relationResult('johan','pgf').ta,\n greatGrandfather:relationResult('johan','ggf-p').ta,\n elderBrother:relationResult('johan','sister').ta,\n paternalElderUncle:relationResult('johan','uncle-p').ta,\n paternalAunt:relationResult('johan','aunt-p').ta,\n paternalUncleWife:relationResult('johan','aunt-p-wife').ta,\n paternalAuntHusband:relationResult('johan','aunt-p-husband').ta,\n maternalUncle:relationResult('johan','uncle-m').ta,\n parallelCousin:relationResult('johan','cousin-p1').ta,\n crossCousinMaternal:relationResult('johan','cousin-m1').ta,\n crossCousinPaternal:relationResult('johan','cousin-p3').ta\n})`,ctx);
-console.log(vm.runInContext(`JSON.stringify({self:relationResult('johan','johan').ta,father:relationResult('johan','father').ta,mother:relationResult('johan','mother').ta,grandfather:relationResult('johan','pgf').ta,greatGrandfather:relationResult('johan','ggf-p').ta,sister:relationResult('johan','sister').ta,paternalElderUncle:relationResult('johan','uncle-p').ta,paternalAunt:relationResult('johan','aunt-p').ta,paternalUncleWife:relationResult('johan','aunt-p-wife').ta,paternalAuntHusband:relationResult('johan','aunt-p-husband').ta,maternalUncle:relationResult('johan','uncle-m').ta,parallelCousin:relationResult('johan','cousin-p1').ta,crossCousinMaternal:relationResult('johan','cousin-m1').ta,crossCousinPaternal:relationResult('johan','cousin-p3').ta})`,ctx));
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const root = path.join(__dirname, "..");
+const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
+const auth = fs.readFileSync(path.join(root, "auth.js"), "utf8");
+const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
+const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8");
+
+assert.match(html, /id="signed-out"/);
+assert.match(html, /id="dashboard"/);
+assert.match(html, /id="request-modal"/);
+assert.match(html, /Sign in with Google/);
+assert.match(auth, /signInWithOAuth/);
+assert.match(auth, /provider:\s*"google"/);
+
+assert.match(app, /from\("uravu_family_trees"\)/);
+assert.match(app, /from\("uravu_people"\)/);
+assert.match(app, /from\("uravu_relationships"\)/);
+assert.match(app, /from\("uravu_tree_members"\)/);
+assert.match(app, /uravu_create_tree/);
+assert.match(app, /uravu_request_tree_access/);
+assert.match(app, /uravu_review_tree_request/);
+assert.match(app, /uravu_assign_member_person/);
+assert.match(app, /uravu_set_member_role/);
+assert.match(app, /uravu_delete_tree/);
+
+assert.doesNotMatch(app, /Johan Rohith|S\. Priya|ggf-p|cousin-p1|demo family data/i);
+assert.doesNotMatch(app, /localStorage\.(setItem|getItem).*tree/i);
+assert.match(worker, /Deliberately no fetch handler/);
+assert.doesNotMatch(worker, /caches\.match\(event\.request\)/i);
+
+assert.match(schema, /enable row level security/ig);
+assert.match(schema, /Only the tree owner can grant admin access/);
+assert.match(schema, /Only the tree owner or an admin can assign family entries/);
+assert.match(schema, /uravu_one_pending_request_per_user_tree/);
+
+console.log("Uravu clean-app smoke checks passed.");
