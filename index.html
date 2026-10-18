@@ -182,9 +182,16 @@
                 <div><label class="field-label" for="person-tamil">Tamil name <span class="optional">Optional</span></label><input class="form-input tamil-input" id="person-tamil" maxlength="120" placeholder="தமிழ்ப் பெயர்"></div>
                 <div><label class="field-label" for="person-gender">Gender <span class="optional">Optional</span></label><select class="form-input" id="person-gender"><option value="">Not specified</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
                 <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><input class="form-input" id="person-birth" type="date"></div>
-                <div><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><input class="form-input" id="person-death" type="date"></div>
-                <div><label class="field-label" for="connect-person">Connect to someone <span class="optional">Optional</span></label><select class="form-input" id="connect-person"><option value="">No connection yet</option></select></div>
-                <div><label class="field-label" for="connect-type">Relationship to them</label><select class="form-input" id="connect-type"><option value="child_of">Child of selected person</option><option value="parent_of">Parent of selected person</option><option value="spouse_of">Spouse / partner</option></select></div>
+                <div class="deceased-field"><label class="checkbox-label" for="person-deceased"><input id="person-deceased" type="checkbox"><span>Deceased</span></label></div>
+                <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death</label><input class="form-input" id="person-death" type="date"></div>
+                <div class="form-wide connection-input-group">
+                  <div><label class="field-label" for="connect-person">Connect to someone</label><select class="form-input" id="connect-person"><option value="">Select a family member</option></select></div>
+                  <div><label class="field-label" for="connect-type">Relationship to them</label><select class="form-input" id="connect-type"><option value="">Select relationship</option><option value="child_of">Child of selected person</option><option value="parent_of">Parent of selected person</option><option value="spouse_of">Spouse / partner</option></select></div>
+                </div>
+                <div class="form-wide person-connections-section" id="person-connections-section" hidden>
+                  <h4 id="person-connections-heading">Connections</h4>
+                  <div id="person-connections-list" class="person-connections-list"></div>
+                </div>
                 <div class="form-wide"><label class="field-label" for="person-notes">Notes <span class="optional">Optional</span></label><textarea class="form-input form-textarea" id="person-notes" maxlength="1000" placeholder="Additional details (avoid sensitive information)"></textarea></div>
               </div>
               <div class="form-actions"><button class="primary-button" id="save-person-button" type="submit">Add family member</button></div>
