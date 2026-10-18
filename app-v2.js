@@ -1379,7 +1379,8 @@
       const placeholder = owner
         ? '<option value=""' + (!assignedId ? ' selected' : '') + '>Not linked</option>'
         : (!assignedId ? '<option value="" selected disabled>Select a record</option>' : '<option value="" disabled>Linked</option>');
-      const assignedControl = '<label class="inline-control"><span class="tiny-label">Linked family record</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '">' +
+      const controlDisabled = !owner && Boolean(assignedId) ? " disabled" : "";
+      const assignedControl = '<label class="inline-control"><span class="tiny-label">Linked family record</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '"' + controlDisabled + '>' +
         placeholder + state.people.filter(person => !state.members.some(other => other.person_id === person.id && other.user_id !== member.user_id))
         .map(person => '<option value="' + escapeHtml(person.id) + '"' + (assignedId === person.id ? ' selected' : '') + '>' + escapeHtml(person.full_name) + '</option>').join("") +
         '</select></label>';
@@ -1400,7 +1401,7 @@
         p_tree_id:state.activeTree.id, p_user_id:select.dataset.memberPerson, p_person_id:value
       });
       if (error) { showDbError(error, "assign family entry"); await loadWorkspace(state.activeTree.id, false); return; }
-      toast(value ? "Family entry assigned to the account." : "Family entry unlinked.");
+      toast(value ? "Member linked to family record." : "Member link removed.");
       await loadWorkspace(state.activeTree.id, false);
     }));
   }
@@ -1457,8 +1458,8 @@
     if (!tree) { toast("Family tree not found.", true); return; }
     const membership = state.memberships.find(item => item.tree_id === treeId);
     const hasMembership = Boolean(membership);
-    if (membership?.role === "owner") {
-      toast("As the owner, use Manage members to link your family entry.", true);
+    if (membership?.role === "owner" || membership?.person_id) {
+      toast("Your account is already linked to a family record.", true);
       return;
     }
     const personOptions = ['<option value="">Select a family member</option>'].concat(
@@ -1471,7 +1472,7 @@
       ? (state.language === "ta" ? "குடும்பப் பதிவுடன் இணைக்கக் கோரு" : "Request a record link")
       : translateUiValue("Request access to " + tree.name);
     const description = hasMembership
-      ? (state.language === "ta" ? "குடும்பப் பதிவை ஒதுக்க உரிமையாளர் உங்கள் கோரிக்கையைப் பரிசீலிப்பார்." : "The owner will review your family-record assignment request.")
+      ? (state.language === "ta" ? "குடும்பப் பதிவுடன் இணைக்க உங்கள் கோரிக்கையை உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்." : "The Owner or a Member linked to a family record will review your linking request.")
       : (state.language === "ta" ? "குடும்ப மரத்தில் இணைய அனுமதி கோருங்கள். பின்னர் உரிமையாளர் உங்களை ஒரு குடும்பப் பதிவுடன் இணைக்கலாம்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
     $("#request-modal-title").textContent = title;
     $("#request-modal-description").textContent = description;
