@@ -103,6 +103,9 @@
     "Family record to link to your account":"உங்கள் கணக்குடன் இணைக்க வேண்டிய குடும்பப் பதிவு",
     "Select a family record to request.":"கோருவதற்கு ஒரு குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்.",
     "The owner or a member linked to a family record will review this request.":"இந்தக் கோரிக்கையை உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
+    "Link member accounts to family records. The owner assigns records; members can edit once their account is linked.":"குடும்பக் கணக்குகளைப் பதிவுகளுடன் இணைக்கவும். உரிமையாளர் பதிவுகளை ஒதுக்குவார்; இணைக்கப்பட்ட உறுப்பினர்கள் பதிவுகளைத் திருத்தலாம்.",
+    "The owner or a member linked to a family record can approve or reject requests.":"உரிமையாளர் அல்லது குடும்பப் பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் கோரிக்கைகளை ஏற்க அல்லது நிராகரிக்கலாம்.",
+    "Only the owner can review family-record assignment requests.":"குடும்பப் பதிவு ஒதுக்கீட்டுக் கோரிக்கைகளை உரிமையாளர் மட்டுமே பரிசீலிக்க முடியும்.",
     "Add a family member":"குடும்ப உறுப்பினரைச் சேர்"
   });
 
