@@ -20,13 +20,31 @@ create table if not exists public.uravu_people (
   tamil_name text,
   gender text check (gender is null or gender in ('male', 'female', 'other')),
   birth_date date,
+  birth_date_text text,
   death_date date,
+  death_date_text text,
+  is_deceased boolean not null default false,
   notes text,
   created_by uuid not null references auth.users(id) on delete restrict,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (death_date is null or birth_date is null or death_date >= birth_date)
 );
+
+-- Additive migration for existing databases: preserve exact dates and support
+-- year-only, month/year, or month/day dates without inventing a day or year.
+alter table public.uravu_people add column if not exists birth_date_text text;
+alter table public.uravu_people add column if not exists death_date_text text;
+alter table public.uravu_people add column if not exists is_deceased boolean not null default false;
+
+update public.uravu_people
+set birth_date_text = coalesce(birth_date_text, to_char(birth_date, 'YYYY-MM-DD'))
+where birth_date is not null and birth_date_text is null;
+
+update public.uravu_people
+set death_date_text = coalesce(death_date_text, to_char(death_date, 'YYYY-MM-DD')),
+    is_deceased = true
+where death_date is not null;
 
 create table if not exists public.uravu_relationships (
   id uuid primary key default gen_random_uuid(),
