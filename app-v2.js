@@ -97,7 +97,7 @@
     "Request a family record":"குடும்பப் பதிவைக் கோரு",
     "The owner or a linked member will review this request.":"இந்தக் கோரிக்கையை உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
     "The owner or a member already linked to a family record can review your request.":"கோரிக்கையை உரிமையாளர் அல்லது ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
-    "Request to join this family tree. The owner can assign your family record when approving your request.":"இந்தக் குடும்ப மரத்தில் இணையக் கோருங்கள். கோரிக்கையை ஏற்கும்போது உரிமையாளர் உங்களுக்குக் குடும்பப் பதிவை ஒதுக்கலாம்.",
+    "Request to join this family tree. The Owner or a linked Member can review your request.":"இந்தக் குடும்ப மரத்தில் இணையக் கோருங்கள். கோரிக்கையை ஏற்கும்போது உரிமையாளர் உங்களுக்குக் குடும்பப் பதிவை ஒதுக்கலாம்.",
     "As the owner, use Manage members to link your family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.",
     "No family record requested yet.":"இதுவரை குடும்பப் பதிவு கோரப்படவில்லை.",
     "Family record to link to your account":"உங்கள் கணக்குடன் இணைக்க வேண்டிய குடும்பப் பதிவு",
@@ -1449,7 +1449,9 @@
     });
     setBusy(button, false);
     if (error) { showDbError(error, "review request"); return; }
-    toast(decision === "approve" ? "Request approved and role assigned." : "Request rejected.");
+    const reviewed = state.requests.find(request => request.id === requestId);
+    toast(decision === "reject" ? "Request rejected." :
+      reviewed?.request_type === "link" ? "Family record linked to the member's account." : "Access request approved.");
     await refreshDashboard();
   }
 
@@ -1473,7 +1475,7 @@
       : translateUiValue("Request access to " + tree.name);
     const description = hasMembership
       ? (state.language === "ta" ? "குடும்பப் பதிவுடன் இணைக்க உங்கள் கோரிக்கையை உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்." : "The Owner or a Member linked to a family record will review your linking request.")
-      : (state.language === "ta" ? "குடும்ப மரத்தில் இணைய அனுமதி கோருங்கள். பின்னர் உரிமையாளர் உங்களை ஒரு குடும்பப் பதிவுடன் இணைக்கலாம்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
+      : (state.language === "ta" ? "குடும்ப மரத்தில் இணையக் கோருங்கள். உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் உங்கள் கோரிக்கையைப் பரிசீலிப்பார்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
     $("#request-modal-title").textContent = title;
     $("#request-modal-description").textContent = description;
     $("#request-modal-body").innerHTML =
