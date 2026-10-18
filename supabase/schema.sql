@@ -60,7 +60,7 @@ create table if not exists public.uravu_relationships (
 create table if not exists public.uravu_tree_members (
   tree_id uuid not null references public.uravu_family_trees(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  role text not null default 'viewer' check (role in ('owner', 'admin', 'member', 'viewer')),
+  role text not null default 'member' check (role in ('owner', 'member')),
   person_id uuid references public.uravu_people(id) on delete set null,
   display_name text not null default 'Family member',
   avatar_url text,
@@ -74,7 +74,7 @@ create table if not exists public.uravu_access_requests (
   tree_id uuid not null references public.uravu_family_trees(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   request_type text not null check (request_type in ('join', 'role_change', 'link')),
-  requested_role text not null default 'viewer' check (requested_role in ('viewer', 'member', 'admin')),
+  requested_role text not null default 'member' check (requested_role = 'member'),
   requested_person_id uuid references public.uravu_people(id) on delete set null,
   message text not null default '',
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
@@ -119,6 +119,23 @@ as $$
       and m.role = any(p_roles)
   );
 $$;
+
+create or replace function public.uravu_can_edit_tree(p_tree_id uuid)
+returns boolean
+language sql stable security definer
+set search_path = pg_catalog, pg_temp
+as $
+  select exists (
+    select 1
+    from public.uravu_tree_members m
+    where m.tree_id = p_tree_id
+      and m.user_id = auth.uid()
+      and (
+        m.role = 'owner'
+        or (m.role = 'member' and m.person_id is not null)
+      )
+  );
+$;
 
 create or replace function public.uravu_touch_updated_at()
 returns trigger
@@ -187,7 +204,7 @@ $$;
 create or replace function public.uravu_request_tree_access(
   p_tree_id uuid,
   p_message text default '',
-  p_requested_role text default 'viewer',
+  p_requested_role text default 'member',
   p_requested_person_id uuid default null
 )
 returns uuid
@@ -203,8 +220,8 @@ declare
   v_request_id uuid;
 begin
   if v_user is null then raise exception 'Sign in before making a request.'; end if;
-  if p_requested_role is null or p_requested_role not in ('viewer', 'member', 'admin') then
-    raise exception 'The requested role must be viewer, member, or admin.';
+  if p_requested_role is distinct from 'member' then
+    raise exception 'The only available membership role is member.';
   end if;
   if not exists(select 1 from public.uravu_family_trees t where t.id = p_tree_id) then
     raise exception 'Family tree not found.';
@@ -218,14 +235,12 @@ begin
 
   if v_role is null then
     v_type := 'join';
-  elsif p_requested_person_id is not null and p_requested_role = v_role then
-    v_type := 'link';
-  elsif p_requested_role <> v_role then
-    v_type := 'role_change';
+  elsif v_role = 'owner' then
+    raise exception 'The tree owner should use Manage members to link their own family entry.';
   elsif p_requested_person_id is not null then
     v_type := 'link';
   else
-    raise exception 'Choose a different role or a family member to link to.';
+    raise exception 'Select a family record to request assignment.';
   end if;
 
   select coalesce(nullif(u.raw_user_meta_data->>'full_name',''),
@@ -264,7 +279,7 @@ $$;
 create or replace function public.uravu_review_tree_request(
   p_request_id uuid,
   p_decision text,
-  p_role text default 'viewer'
+  p_role text default 'member'
 )
 returns void
 language plpgsql security definer
@@ -278,7 +293,7 @@ declare
 begin
   if v_user is null then raise exception 'Sign in before reviewing requests.'; end if;
   if p_decision is null or p_decision not in ('approve','reject') then raise exception 'Decision must be approve or reject.'; end if;
-  if p_role is null or p_role not in ('viewer','member','admin') then raise exception 'Invalid assigned role.'; end if;
+  if p_role is distinct from 'member' then raise exception 'The only available membership role is member.'; end if;
 
   select * into v_req from public.uravu_access_requests r where r.id=p_request_id for update;
   if not found then raise exception 'Request not found.'; end if;
@@ -287,11 +302,8 @@ begin
 
   select m.role into v_reviewer_role from public.uravu_tree_members m
   where m.tree_id=v_req.tree_id and m.user_id=v_user;
-  if coalesce(v_reviewer_role,'') not in ('owner','admin') then
-    raise exception 'Only the tree owner or an admin can review requests.';
-  end if;
-  if p_role='admin' and v_reviewer_role <> 'owner' then
-    raise exception 'Only the tree owner can grant admin access.';
+  if not public.uravu_can_edit_tree(v_req.tree_id) then
+    raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
 
   if p_decision='reject' then
@@ -320,11 +332,11 @@ begin
       v_req.display_name,v_req.avatar_url
     );
   else
-    if v_current_role='owner' and p_role<>'owner' then
+    if v_current_role='owner' then
       raise exception 'The tree owner role cannot be changed here.';
     end if;
     update public.uravu_tree_members
-    set role=case when v_req.request_type='link' then role else p_role end,
+    set role='member',
         person_id=coalesce(v_req.requested_person_id, person_id),
         display_name=v_req.display_name,
         avatar_url=v_req.avatar_url
@@ -347,8 +359,8 @@ set search_path = pg_catalog, pg_temp
 as $$
 begin
   if auth.uid() is null then raise exception 'Sign in before managing members.'; end if;
-  if not public.uravu_has_tree_role(p_tree_id, array['owner','admin']) then
-    raise exception 'Only the tree owner or an admin can assign family entries.';
+  if not public.uravu_has_tree_role(p_tree_id, array['owner']) then
+    raise exception 'Only the tree owner can assign family entries.';
   end if;
   if not exists(select 1 from public.uravu_tree_members m where m.tree_id=p_tree_id and m.user_id=p_user_id) then
     raise exception 'That account is not a member of this tree.';
@@ -380,24 +392,18 @@ declare
   v_target_role text;
 begin
   if auth.uid() is null then raise exception 'Sign in before managing roles.'; end if;
-  if p_role not in ('admin','member','viewer') then raise exception 'Invalid member role.'; end if;
+  if p_role is distinct from 'member' then raise exception 'The only available member role is member.'; end if;
 
   select m.role into v_actor_role from public.uravu_tree_members m
   where m.tree_id=p_tree_id and m.user_id=auth.uid();
-  if coalesce(v_actor_role,'') not in ('owner','admin') then
-    raise exception 'Only the tree owner or an admin can change roles.';
+  if coalesce(v_actor_role,'') <> 'owner' then
+    raise exception 'Only the tree owner can manage member accounts.';
   end if;
   select m.role into v_target_role from public.uravu_tree_members m
   where m.tree_id=p_tree_id and m.user_id=p_user_id;
   if v_target_role is null then raise exception 'Member not found.'; end if;
   if v_target_role='owner' then raise exception 'The tree owner role cannot be changed here.'; end if;
-  if p_role='admin' and v_actor_role<>'owner' then
-    raise exception 'Only the tree owner can grant admin access.';
-  end if;
-  if v_actor_role='admin' and v_target_role='admin' then
-    raise exception 'Admins cannot change another admin role.';
-  end if;
-  update public.uravu_tree_members set role=p_role
+  update public.uravu_tree_members set role='member'
   where tree_id=p_tree_id and user_id=p_user_id;
 end;
 $$;
@@ -418,8 +424,8 @@ declare
   v_id uuid;
 begin
   if auth.uid() is null then raise exception 'Sign in before editing a family tree.'; end if;
-  if not public.uravu_has_tree_role(p_tree_id, array['owner','admin']) then
-    raise exception 'Only the tree owner or an admin can edit family connections.';
+  if not public.uravu_can_edit_tree(p_tree_id) then
+    raise exception 'Only the owner or a member linked to a family record can edit family connections.';
   end if;
   if p_relationship_type is null or p_relationship_type not in ('parent_of','child_of','spouse_of') then
     raise exception 'Choose a valid family relationship.';
@@ -485,9 +491,10 @@ drop policy if exists uravu_trees_select_auth on public.uravu_family_trees;
 create policy uravu_trees_select_auth on public.uravu_family_trees
 for select to authenticated using (auth.uid() is not null);
 drop policy if exists uravu_trees_update_admin on public.uravu_family_trees;
-create policy uravu_trees_update_admin on public.uravu_family_trees
-for update to authenticated using (public.uravu_has_tree_role(id,array['owner','admin']))
-with check (public.uravu_has_tree_role(id,array['owner','admin']));
+drop policy if exists uravu_trees_update_owner on public.uravu_family_trees;
+create policy uravu_trees_update_owner on public.uravu_family_trees
+for update to authenticated using (public.uravu_has_tree_role(id,array['owner']))
+with check (public.uravu_has_tree_role(id,array['owner']));
 drop policy if exists uravu_trees_delete_owner on public.uravu_family_trees;
 create policy uravu_trees_delete_owner on public.uravu_family_trees
 for delete to authenticated using (public.uravu_has_tree_role(id,array['owner']));
@@ -496,24 +503,28 @@ drop policy if exists uravu_people_select_members on public.uravu_people;
 create policy uravu_people_select_members on public.uravu_people
 for select to authenticated using (public.uravu_is_tree_member(tree_id));
 drop policy if exists uravu_people_insert_admin on public.uravu_people;
-create policy uravu_people_insert_admin on public.uravu_people
+drop policy if exists uravu_people_insert_editor on public.uravu_people;
+create policy uravu_people_insert_editor on public.uravu_people
 for insert to authenticated with check (
-  created_by=auth.uid() and public.uravu_has_tree_role(tree_id,array['owner','admin'])
+  created_by=auth.uid() and public.uravu_can_edit_tree(tree_id)
 );
 drop policy if exists uravu_people_update_admin on public.uravu_people;
-create policy uravu_people_update_admin on public.uravu_people
-for update to authenticated using (public.uravu_has_tree_role(tree_id,array['owner','admin']))
-with check (public.uravu_has_tree_role(tree_id,array['owner','admin']));
+drop policy if exists uravu_people_update_editor on public.uravu_people;
+create policy uravu_people_update_editor on public.uravu_people
+for update to authenticated using (public.uravu_can_edit_tree(tree_id))
+with check (public.uravu_can_edit_tree(tree_id));
 drop policy if exists uravu_people_delete_admin on public.uravu_people;
-create policy uravu_people_delete_admin on public.uravu_people
-for delete to authenticated using (public.uravu_has_tree_role(tree_id,array['owner','admin']));
+drop policy if exists uravu_people_delete_editor on public.uravu_people;
+create policy uravu_people_delete_editor on public.uravu_people
+for delete to authenticated using (public.uravu_can_edit_tree(tree_id));
 
 drop policy if exists uravu_relationships_select_members on public.uravu_relationships;
 create policy uravu_relationships_select_members on public.uravu_relationships
 for select to authenticated using (public.uravu_is_tree_member(tree_id));
 drop policy if exists uravu_relationships_delete_admin on public.uravu_relationships;
-create policy uravu_relationships_delete_admin on public.uravu_relationships
-for delete to authenticated using (public.uravu_has_tree_role(tree_id,array['owner','admin']));
+drop policy if exists uravu_relationships_delete_editor on public.uravu_relationships;
+create policy uravu_relationships_delete_editor on public.uravu_relationships
+for delete to authenticated using (public.uravu_can_edit_tree(tree_id));
 
 drop policy if exists uravu_members_select_tree_or_self on public.uravu_tree_members;
 create policy uravu_members_select_tree_or_self on public.uravu_tree_members
@@ -522,9 +533,10 @@ for select to authenticated using (
 );
 
 drop policy if exists uravu_requests_select_self_or_admin on public.uravu_access_requests;
-create policy uravu_requests_select_self_or_admin on public.uravu_access_requests
+drop policy if exists uravu_requests_select_self_or_editor on public.uravu_access_requests;
+create policy uravu_requests_select_self_or_editor on public.uravu_access_requests
 for select to authenticated using (
-  user_id=auth.uid() or public.uravu_has_tree_role(tree_id,array['owner','admin'])
+  user_id=auth.uid() or public.uravu_can_edit_tree(tree_id)
 );
 
 revoke all on public.uravu_family_trees from anon, authenticated;
@@ -551,6 +563,7 @@ revoke all on function public.uravu_link_people(uuid,uuid,uuid,text) from public
 revoke all on function public.uravu_delete_tree(uuid) from public, anon, authenticated;
 revoke all on function public.uravu_is_tree_member(uuid) from public, anon, authenticated;
 revoke all on function public.uravu_has_tree_role(uuid,text[]) from public, anon, authenticated;
+revoke all on function public.uravu_can_edit_tree(uuid) from public, anon, authenticated;
 
 grant execute on function public.uravu_create_tree(text,text,text) to authenticated;
 grant execute on function public.uravu_request_tree_access(uuid,text,text,uuid) to authenticated;
@@ -561,5 +574,6 @@ grant execute on function public.uravu_link_people(uuid,uuid,uuid,text) to authe
 grant execute on function public.uravu_delete_tree(uuid) to authenticated;
 grant execute on function public.uravu_is_tree_member(uuid) to authenticated;
 grant execute on function public.uravu_has_tree_role(uuid,text[]) to authenticated;
+grant execute on function public.uravu_can_edit_tree(uuid) to authenticated;
 
 -- The app has no cache table. RLS and these grants control all persisted family data.
