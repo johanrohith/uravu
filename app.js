@@ -97,7 +97,7 @@
     "Request a family record":"குடும்பப் பதிவைக் கோரு",
     "The owner or a linked member will review this request.":"இந்தக் கோரிக்கையை உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
     "The owner or a member already linked to a family record can review your request.":"கோரிக்கையை உரிமையாளர் அல்லது ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
-    "Request to join this family tree. The owner can assign your family record when approving your request.":"இந்தக் குடும்ப மரத்தில் இணையக் கோருங்கள். கோரிக்கையை ஏற்கும்போது உரிமையாளர் உங்களுக்குக் குடும்பப் பதிவை ஒதுக்கலாம்.",
+    "Request to join this family tree. The Owner or a linked Member can review your request.":"இந்தக் குடும்ப மரத்தில் இணையக் கோருங்கள். கோரிக்கையை ஏற்கும்போது உரிமையாளர் உங்களுக்குக் குடும்பப் பதிவை ஒதுக்கலாம்.",
     "As the owner, use Manage members to link your family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.",
     "No family record requested yet.":"இதுவரை குடும்பப் பதிவு கோரப்படவில்லை.",
     "Family record to link to your account":"உங்கள் கணக்குடன் இணைக்க வேண்டிய குடும்பப் பதிவு",
@@ -107,6 +107,37 @@
     "The owner or a member linked to a family record can approve or reject requests.":"உரிமையாளர் அல்லது குடும்பப் பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் கோரிக்கைகளை ஏற்க அல்லது நிராகரிக்கலாம்.",
     "Only the owner can review family-record assignment requests.":"குடும்பப் பதிவு ஒதுக்கீட்டுக் கோரிக்கைகளை உரிமையாளர் மட்டுமே பரிசீலிக்க முடியும்.",
     "Add a family member":"குடும்ப உறுப்பினரைச் சேர்"
+  });
+
+  Object.assign(interfaceTranslations, {
+    "English Name":"ஆங்கிலப் பெயர்",
+    "Full English name":"முழு ஆங்கிலப் பெயர்",
+    "Tamil name":"தமிழ்ப் பெயர்",
+    "Gender":"பாலினம்",
+    "Choose a date":"தேதியைத் தேர்ந்தெடுக்கவும்",
+    "Calendar":"நாட்காட்டி",
+    "Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.":"DD-MM-YYYY, MM-YYYY, YYYY, DD-MM அல்லது MM உள்ளிடவும். முழுத் தேதிக்கு நாட்காட்டியைப் பயன்படுத்தவும்.",
+    "Access requests":"அணுகல் கோரிக்கைகள்",
+    "Linking requests":"இணைப்புக் கோரிக்கைகள்",
+    "Review requests to join this family tree.":"இந்தக் குடும்ப மரத்தில் இணைய வரும் கோரிக்கைகளைப் பரிசீலிக்கவும்.",
+    "Review requests to link an account to an existing family record.":"கணக்கை ஏற்கனவே உள்ள குடும்பப் பதிவுடன் இணைக்க வரும் கோரிக்கைகளைப் பரிசீலிக்கவும்.",
+    "Request a record link":"குடும்பப் பதிவுடன் இணைக்கக் கோரு",
+    "Linked family record":"இணைக்கப்பட்ட குடும்பப் பதிவு",
+    "Select a record":"பதிவைத் தேர்ந்தெடுக்கவும்",
+    "Only the owner can unlink a member account.":"உறுப்பினர் கணக்கின் இணைப்பை உரிமையாளர் மட்டுமே நீக்க முடியும்.",
+    "English name is required.":"ஆங்கிலப் பெயர் அவசியம்.",
+    "Tamil name is required.":"தமிழ்ப் பெயர் அவசியம்.",
+    "Select a gender.":"பாலினத்தைத் தேர்ந்தெடுக்கவும்.",
+    "Use DD-MM-YYYY for full dates. Partial dates may be entered as MM-YYYY, YYYY, DD-MM or MM.":"முழுத் தேதிக்கு DD-MM-YYYY வடிவத்தைப் பயன்படுத்தவும். பகுதி தேதிகளுக்கு MM-YYYY, YYYY, DD-MM அல்லது MM பயன்படுத்தலாம்.",
+    "Your account is already linked to a family record.":"உங்கள் கணக்கு ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்டுள்ளது.",
+    "Manage member accounts":"உறுப்பினர் கணக்குகளை நிர்வகி",
+    "Link member accounts to family records. The owner assigns records; members can edit once their account is linked.":"உறுப்பினர் கணக்குகளை குடும்பப் பதிவுகளுடன் இணைக்கவும். இணைக்கப்பட்ட உறுப்பினர்கள் குடும்ப விவரங்களைத் திருத்தலாம்.",
+    "Review membership and record-link requests.":"உறுப்பினர் மற்றும் குடும்பப் பதிவு இணைப்புக் கோரிக்கைகளைப் பரிசீலிக்கவும்.",
+    "Select gender":"பாலினத்தைத் தேர்ந்தெடுக்கவும்",
+    "Family tree access":"குடும்ப மர அணுகல்",
+    "Family record linking":"குடும்பப் பதிவு இணைப்பு",
+    "Your access request is awaiting review.":"உங்கள் அணுகல் கோரிக்கை பரிசீலனையில் உள்ளது.",
+    "Your family-record linking request is awaiting review.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனையில் உள்ளது."
   });
 
   const tamilToEnglish = {};
@@ -229,38 +260,71 @@
     return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat(state.language === "ta" ? "ta-IN" : "en-IN", { day:"numeric", month:"short", year:"numeric" }).format(date);
   }
 
-  function parsePartialDate(value) {
+  function datePartsValid(year, month, day) {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return month >= 1 && month <= 12 && day >= 1 &&
+      date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  }
+
+  function parsePartialDate(value, options = {}) {
     const raw = String(value || "").trim();
+    const stored = Boolean(options.stored);
     if (!raw) return { valid:true, value:null, date:null, precision:null };
     let match;
-    if ((match = raw.match(/^(\\d{4})$/))) {
+
+    if ((match = raw.match(/^(\d{4})$/))) {
       return { valid:true, value:match[1], date:null, precision:"year" };
     }
-    if ((match = raw.match(/^(\\d{4})-(\\d{2})$/))) {
+
+    // New preferred input format: DD-MM-YYYY.
+    if (!stored && (match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/))) {
+      const day = Number(match[1]), month = Number(match[2]), year = Number(match[3]);
+      if (!datePartsValid(year, month, day)) return { valid:false };
+      const canonical = match[3] + "-" + match[2] + "-" + match[1];
+      return { valid:true, value:canonical, date:canonical, precision:"day" };
+    }
+
+    // ISO full date is accepted for calendar inputs and compatibility with previously saved entries.
+    if ((match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+      const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+      if (!datePartsValid(year, month, day)) return { valid:false };
+      return { valid:true, value:match[1] + "-" + match[2] + "-" + match[3], date:match[1] + "-" + match[2] + "-" + match[3], precision:"day" };
+    }
+
+    // Canonical month/year (YYYY-MM) and user-facing month/year (MM-YYYY).
+    if ((match = raw.match(/^(\d{4})-(\d{2})$/))) {
       const month = Number(match[2]);
       return month >= 1 && month <= 12
         ? { valid:true, value:match[1] + "-" + match[2], date:null, precision:"month-year" }
         : { valid:false };
     }
-    if ((match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/))) {
-      const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
-      const date = new Date(Date.UTC(year, month - 1, day));
-      const valid = month >= 1 && month <= 12 && day >= 1 &&
-        date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-      return valid
-        ? { valid:true, value:match[1] + "-" + match[2] + "-" + match[3], date:match[1] + "-" + match[2] + "-" + match[3], precision:"day" }
+    if (!stored && (match = raw.match(/^(\d{2})-(\d{4})$/))) {
+      const month = Number(match[1]);
+      return month >= 1 && month <= 12
+        ? { valid:true, value:match[2] + "-" + match[1], date:null, precision:"month-year" }
         : { valid:false };
     }
-    if ((match = raw.match(/^(\\d{2})-(\\d{2})$/))) {
-      const month = Number(match[1]), day = Number(match[2]);
-      const date = new Date(Date.UTC(2000, month - 1, day));
-      const valid = month >= 1 && month <= 12 && day >= 1 &&
-        date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-      return valid
-        ? { valid:true, value:match[1] + "-" + match[2], date:null, precision:"month-day" }
-        : { valid:false };
+
+    if ((match = raw.match(/^(\d{2})-(\d{2})$/))) {
+      const first = Number(match[1]), second = Number(match[2]);
+      let month, day;
+      if (stored) {
+        // Stored month/day values from earlier builds are canonical MM-DD.
+        month = first; day = second;
+      } else if (first > 12 && second >= 1 && second <= 12) {
+        day = first; month = second;
+      } else if (second > 12 && first >= 1 && first <= 12) {
+        // Continue accepting legacy MM-DD input when its order is unambiguous.
+        month = first; day = second;
+      } else {
+        // For ambiguous text, use the requested DD-MM convention.
+        day = first; month = second;
+      }
+      if (month < 1 || month > 12 || day < 1 || !datePartsValid(2000, month, day)) return { valid:false };
+      return { valid:true, value:String(month).padStart(2,"0") + "-" + String(day).padStart(2,"0"), date:null, precision:"month-day" };
     }
-    if ((match = raw.match(/^(\\d{2})$/))) {
+
+    if ((match = raw.match(/^(\d{2})$/))) {
       const month = Number(match[1]);
       return month >= 1 && month <= 12
         ? { valid:true, value:match[1], date:null, precision:"month" }
@@ -269,12 +333,51 @@
     return { valid:false };
   }
 
+  function formatDateEntry(value) {
+    if (!value) return "";
+    const parsed = parsePartialDate(value, { stored:true });
+    if (!parsed.valid) return String(value);
+    if (parsed.precision === "day") {
+      const [year, month, day] = parsed.value.split("-");
+      return day + "-" + month + "-" + year;
+    }
+    if (parsed.precision === "month-year") {
+      const [year, month] = parsed.value.split("-");
+      return month + "-" + year;
+    }
+    if (parsed.precision === "month-day") {
+      const [month, day] = parsed.value.split("-");
+      return day + "-" + month;
+    }
+    return parsed.value;
+  }
+
+  function syncCalendarFromText(textId, calendarId) {
+    const textInput = $("#" + textId);
+    const calendar = $("#" + calendarId);
+    if (!textInput || !calendar) return;
+    const parsed = parsePartialDate(textInput.value);
+    calendar.value = parsed.valid && parsed.precision === "day" ? (parsed.date || "") : "";
+  }
+
+  function syncTextFromCalendar(calendarId, textId) {
+    const calendar = $("#" + calendarId);
+    const textInput = $("#" + textId);
+    if (!calendar || !textInput) return;
+    if (!calendar.value) {
+      textInput.value = "";
+      return;
+    }
+    const [year, month, day] = calendar.value.split("-");
+    textInput.value = day + "-" + month + "-" + year;
+  }
+
   function formatFamilyDate(value) {
     if (!value) return "";
-    const parsed = parsePartialDate(value);
+    const parsed = parsePartialDate(value, { stored:true });
     if (!parsed.valid) return String(value);
+    if (parsed.precision === "day") return formatDateEntry(parsed.value);
     const locale = state.language === "ta" ? "ta-IN" : "en-IN";
-    if (parsed.precision === "day") return prettyDate(parsed.value);
     if (parsed.precision === "year") return parsed.value;
     if (parsed.precision === "month-year") {
       const [year, month] = parsed.value.split("-").map(Number);
@@ -283,8 +386,7 @@
     }
     if (parsed.precision === "month-day") {
       const [month, day] = parsed.value.split("-").map(Number);
-      return new Intl.DateTimeFormat(locale, { month:"short", day:"numeric", timeZone:"UTC" })
-        .format(new Date(Date.UTC(2000, month - 1, day)));
+      return String(day).padStart(2,"0") + "-" + String(month).padStart(2,"0");
     }
     if (parsed.precision === "month") {
       const month = Number(parsed.value);
@@ -300,12 +402,16 @@
 
   function collectPersonFormData() {
     const fullName = $("#person-name").value.trim();
-    if (!fullName) { toast("A name is required.", true); return null; }
+    const tamilName = $("#person-tamil").value.trim();
+    const gender = $("#person-gender").value;
+    if (!fullName) { toast("English name is required.", true); $("#person-name").focus(); return null; }
+    if (!tamilName) { toast("Tamil name is required.", true); $("#person-tamil").focus(); return null; }
+    if (!gender) { toast("Select a gender.", true); $("#person-gender").focus(); return null; }
     const birth = parsePartialDate($("#person-birth").value);
     const deceased = $("#person-deceased").checked;
     const death = deceased ? parsePartialDate($("#person-death").value) : { valid:true, value:null, date:null, precision:null };
     if (!birth.valid || !death.valid) {
-      toast("Use YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD for dates.", true);
+      toast("Use DD-MM-YYYY for full dates. Partial dates may be entered as MM-YYYY, YYYY, DD-MM or MM.", true);
       return null;
     }
     if (birth.precision === "day" && death.precision === "day" && death.date < birth.date) {
@@ -322,8 +428,8 @@
 
     const data = {
       full_name:fullName,
-      tamil_name:$("#person-tamil").value.trim() || null,
-      gender:$("#person-gender").value || null,
+      tamil_name:tamilName,
+      gender:gender,
       birth_date:birth.date || null,
       death_date:deceased ? (death.date || null) : null,
       notes:$("#person-notes").value.trim() || null
@@ -405,6 +511,7 @@
       state.members = [];
       state.requests = [];
       $("#tree-workspace").hidden = true;
+      $("#dashboard").classList.remove("tree-open");
       return;
     }
     refreshDashboard();
@@ -441,6 +548,7 @@
         state.activeTree = null;
         state.activeMembership = null;
         $("#tree-workspace").hidden = true;
+        $("#dashboard").classList.remove("tree-open");
       }
     }
   }
@@ -512,6 +620,7 @@
     if (!tree || !membership) { toast("You must be an approved member to open this tree.", true); return; }
     state.activeTree = tree;
     state.activeMembership = membership;
+    $("#dashboard").classList.add("tree-open");
     $("#tree-workspace").hidden = false;
     $("#workspace-title").textContent = tree.name;
     $("#workspace-description").textContent = tree.description || "Family connections across generations.";
@@ -525,7 +634,7 @@
     if (showLoading) {
       $("#family-tree-viewport").hidden = true;
       $("#people-empty").hidden = false;
-      $("#people-empty").textContent = "Loading family members from Supabase…";
+      $("#people-empty").textContent = "Loading family members…";
       $("#tree-members-list").innerHTML = '<div class="loading-line">Loading members…</div>';
     }
     state.loadingTree = true;
@@ -620,14 +729,16 @@
     const ownStatus = $("#member-request-status");
     ownStatus.hidden = !ownPending;
     ownStatus.textContent = ownPending
-      ? "Your " + (ownPending.request_type === "join" ? "tree access" : ownPending.request_type === "link" ? "family-entry link" : "role-change") + " request is awaiting review. You can submit an updated request if needed."
+      ? (ownPending.request_type === "join" ? "Your access request is awaiting review." : "Your family-record linking request is awaiting review.")
       : "";
     $("#add-person-panel").hidden = !manager;
-    $("#member-management-panel").hidden = !owner;
-    $("#requests-panel").hidden = !manager;
+    $("#member-management-panel").hidden = !manager;
+    $("#access-requests-panel").hidden = !manager;
+    $("#linking-requests-panel").hidden = !manager;
     $("#delete-tree-zone").hidden = !owner;
     $("#request-role-button").hidden = owner;
-    $("#request-role-button").textContent = translateUiValue("Request a family record");
+    $("#request-role-button").textContent = translateUiValue("Request a record link");
+    $("#request-role-button").hidden = owner || Boolean(state.activeMembership.person_id);
     renderPersonConnectOptions();
     renderEditorConnections();
     renderPeople();
@@ -1259,13 +1370,18 @@
 
   function renderMembers() {
     const root = $("#tree-members-list");
-    if (!isOwner()) { root.innerHTML = ""; return; }
+    if (!isManager()) { root.innerHTML = ""; return; }
+    const owner = isOwner();
     if (!state.members.length) { root.innerHTML = '<div class="empty-state">No members yet.</div>'; return; }
     root.innerHTML = state.members.map(member => {
       const roleControl = '<span class="role-pill role-' + escapeHtml(member.role) + '">' + escapeHtml(roleLabel(member.role)) + '</span>';
       const assignedId = member.person_id || "";
-      const assignedControl = '<label class="inline-control"><span class="tiny-label">Assigned family entry</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '">' +
-        '<option value="">Not linked</option>' + state.people.filter(person => !state.members.some(other => other.person_id === person.id && other.user_id !== member.user_id))
+      const placeholder = owner
+        ? '<option value=""' + (!assignedId ? ' selected' : '') + '>Not linked</option>'
+        : (!assignedId ? '<option value="" selected disabled>Select a record</option>' : '<option value="" disabled>Linked</option>');
+      const controlDisabled = !owner && Boolean(assignedId) ? " disabled" : "";
+      const assignedControl = '<label class="inline-control"><span class="tiny-label">Linked family record</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '"' + controlDisabled + '>' +
+        placeholder + state.people.filter(person => !state.members.some(other => other.person_id === person.id && other.user_id !== member.user_id))
         .map(person => '<option value="' + escapeHtml(person.id) + '"' + (assignedId === person.id ? ' selected' : '') + '>' + escapeHtml(person.full_name) + '</option>').join("") +
         '</select></label>';
       return '<div class="member-row"><div class="member-identity"><span class="person-avatar">' + escapeHtml(initials(member.display_name)) +
@@ -1275,45 +1391,52 @@
     }).join("");
     $$("[data-member-person]").forEach(select => select.addEventListener("change", async () => {
       const value = select.value || null;
+      const target = state.members.find(member => member.user_id === select.dataset.memberPerson);
+      if (!value && target?.person_id && !isOwner()) {
+        toast("Only the owner can unlink a member account.", true);
+        await loadWorkspace(state.activeTree.id, false);
+        return;
+      }
       const { error } = await callRpc("uravu_assign_member_person", {
         p_tree_id:state.activeTree.id, p_user_id:select.dataset.memberPerson, p_person_id:value
       });
       if (error) { showDbError(error, "assign family entry"); await loadWorkspace(state.activeTree.id, false); return; }
-      toast(value ? "Family entry assigned to the account." : "Family entry unlinked.");
+      toast(value ? "Member linked to family record." : "Member link removed.");
       await loadWorkspace(state.activeTree.id, false);
     }));
   }
 
   function renderRequests() {
-    const root = $("#tree-requests-list");
+    renderRequestGroup($("#access-requests-list"), state.requests.filter(request => request.request_type === "join"), "access");
+    renderRequestGroup($("#linking-requests-list"), state.requests.filter(request => request.request_type === "link"), "linking");
+  }
+
+  function renderRequestGroup(root, requests, kind) {
+    if (!root) return;
     if (!isManager()) { root.innerHTML = ""; return; }
-    if (!state.requests.length) {
-      root.innerHTML = '<div class="empty-state"><strong>' + escapeHtml(t("noRequests")) + '</strong>' +
-        (state.language === "ta" ? "புதிய உறுப்பினர் மற்றும் குடும்பப் பதிவு கோரிக்கைகள் இங்கே தோன்றும்." : "New membership and family-record requests will appear here.") +
+    if (!requests.length) {
+      root.innerHTML = '<div class="empty-state">' +
+        (kind === "access"
+          ? (state.language === "ta" ? "அணுகல் கோரிக்கைகள் இல்லை." : "There are no pending access requests.")
+          : (state.language === "ta" ? "இணைப்பு கோரிக்கைகள் இல்லை." : "There are no pending linking requests.")) +
         '</div>';
       return;
     }
-    const owner = isOwner();
-    root.innerHTML = state.requests.map(request => {
-      const typeLabel = request.request_type === "join" ? t("joinRequest") :
-        request.request_type === "link" ? t("linkRequest") : t("roleChange");
+    root.innerHTML = requests.map(request => {
       const requestedPerson = state.people.find(person => person.id === request.requested_person_id);
-      const mayReview = owner || (request.request_type === "join" && !request.requested_person_id);
-      const actions = mayReview
-        ? '<div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
-          escapeHtml(request.id) + '" data-decision="approve">' + escapeHtml(t("approve")) +
-          '</button><button class="danger-button" type="button" data-review-request="' + escapeHtml(request.id) +
-          '" data-decision="reject">' + escapeHtml(t("reject")) + '</button></div>'
-        : '<p class="request-copy request-owner-only">' +
-          (state.language === "ta" ? "இந்தக் குடும்பப் பதிவுக் கோரிக்கையை உரிமையாளர் மட்டுமே பரிசீலிக்க முடியும்." : "Only the owner can review family-record assignment requests.") +
-          '</p>';
+      const typeLabel = kind === "access"
+        ? (state.language === "ta" ? "குடும்ப மர அணுகல்" : "Family tree access")
+        : (state.language === "ta" ? "குடும்பப் பதிவு இணைப்பு" : "Family record linking");
       return '<article class="request-row"><div><div class="request-identity"><span class="person-avatar">' +
-        escapeHtml(initials(request.display_name)) + '</span><div><strong>' + escapeHtml(request.display_name || "Family member") +
-        '</strong><small>' + escapeHtml(typeLabel) + ' · ' + escapeHtml(t("member")) + '</small></div></div>' +
-        '<p class="request-copy">' + escapeHtml(request.message || (state.language === "ta" ? "செய்தி எதுவும் சேர்க்கப்படவில்லை." : "No message added.")) +
-        (requestedPerson ? '<br>' + (state.language === "ta" ? "கோரிய குடும்பப் பதிவு: " : "Requested family entry: ") + '<strong>' + escapeHtml(requestedPerson.full_name) + '</strong>' :
-          request.request_type === "join" ? '<br>' + (state.language === "ta" ? "இன்னும் குடும்பப் பதிவு தேர்ந்தெடுக்கப்படவில்லை." : "No family record requested yet.") : '') +
-        '</p></div>' + actions + '</article>';
+        escapeHtml(initials(request.display_name)) + '</span><div><strong>' +
+        escapeHtml(request.display_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "Family member")) +
+        '</strong><small>' + escapeHtml(typeLabel) + '</small></div></div>' +
+        '<p class="request-copy">' + escapeHtml(request.message || (state.language === "ta" ? "குறிப்பு எதுவும் வழங்கப்படவில்லை." : "No additional message provided.")) +
+        (requestedPerson ? '<br>' + (state.language === "ta" ? "கோரிய பதிவு: " : "Requested record: ") + '<strong>' + escapeHtml(requestedPerson.full_name) + '</strong>' : '') +
+        '</p></div><div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
+        escapeHtml(request.id) + '" data-decision="approve">' + escapeHtml(t("approve")) +
+        '</button><button class="danger-button" type="button" data-review-request="' + escapeHtml(request.id) +
+        '" data-decision="reject">' + escapeHtml(t("reject")) + '</button></div></article>';
     }).join("");
     $$("[data-review-request]").forEach(button => button.addEventListener("click", () => reviewRequest(button.dataset.reviewRequest, button.dataset.decision, button)));
   }
@@ -1326,7 +1449,9 @@
     });
     setBusy(button, false);
     if (error) { showDbError(error, "review request"); return; }
-    toast(decision === "approve" ? "Request approved and role assigned." : "Request rejected.");
+    const reviewed = state.requests.find(request => request.id === requestId);
+    toast(decision === "reject" ? "Request rejected." :
+      reviewed?.request_type === "link" ? "Family record linked to the member's account." : "Access request approved.");
     await refreshDashboard();
   }
 
@@ -1335,8 +1460,8 @@
     if (!tree) { toast("Family tree not found.", true); return; }
     const membership = state.memberships.find(item => item.tree_id === treeId);
     const hasMembership = Boolean(membership);
-    if (membership?.role === "owner") {
-      toast("As the owner, use Manage members to link your family entry.", true);
+    if (membership?.role === "owner" || membership?.person_id) {
+      toast("Your account is already linked to a family record.", true);
       return;
     }
     const personOptions = ['<option value="">Select a family member</option>'].concat(
@@ -1346,11 +1471,11 @@
           escapeHtml(person.full_name) + (person.tamil_name ? " · " + escapeHtml(person.tamil_name) : "") + '</option>')
     ).join("");
     const title = hasMembership
-      ? (state.language === "ta" ? "குடும்பப் பதிவைக் கோரு" : "Request a family record")
+      ? (state.language === "ta" ? "குடும்பப் பதிவுடன் இணைக்கக் கோரு" : "Request a record link")
       : translateUiValue("Request access to " + tree.name);
     const description = hasMembership
-      ? (state.language === "ta" ? "குடும்பப் பதிவை ஒதுக்க உரிமையாளர் உங்கள் கோரிக்கையைப் பரிசீலிப்பார்." : "The owner will review your family-record assignment request.")
-      : (state.language === "ta" ? "குடும்ப மரத்தில் இணைய அனுமதி கோருங்கள். பின்னர் உரிமையாளர் உங்களை ஒரு குடும்பப் பதிவுடன் இணைக்கலாம்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
+      ? (state.language === "ta" ? "குடும்பப் பதிவுடன் இணைக்க உங்கள் கோரிக்கையை உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்." : "The Owner or a Member linked to a family record will review your linking request.")
+      : (state.language === "ta" ? "குடும்ப மரத்தில் இணையக் கோருங்கள். உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் உங்கள் கோரிக்கையைப் பரிசீலிப்பார்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
     $("#request-modal-title").textContent = title;
     $("#request-modal-description").textContent = description;
     $("#request-modal-body").innerHTML =
@@ -1500,6 +1625,8 @@
     state.editingPersonId = null;
     $("#person-form").reset();
     syncDeathDateField();
+    syncCalendarFromText("person-birth", "person-birth-calendar");
+    syncCalendarFromText("person-death", "person-death-calendar");
     $("#person-form-title").textContent = "Add a family member";
     $("#save-person-button").textContent = "Add family member";
     $("#cancel-edit-button").hidden = true;
@@ -1515,9 +1642,11 @@
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
     $("#person-gender").value = person.gender || "";
-    $("#person-birth").value = person.birth_date_text || person.birth_date || "";
+    $("#person-birth").value = formatDateEntry(person.birth_date_text || person.birth_date || "");
+    syncCalendarFromText("person-birth", "person-birth-calendar");
     $("#person-deceased").checked = isPersonDeceased(person);
-    $("#person-death").value = person.death_date_text || person.death_date || "";
+    $("#person-death").value = formatDateEntry(person.death_date_text || person.death_date || "");
+    syncCalendarFromText("person-death", "person-death-calendar");
     syncDeathDateField();
     $("#person-notes").value = person.notes || "";
     $("#person-form-title").textContent = "Edit family member";
@@ -1695,6 +1824,7 @@
     state.activeTree = null;
     state.activeMembership = null;
     $("#tree-workspace").hidden = true;
+    $("#dashboard").classList.remove("tree-open");
     toast("Family tree deleted.");
     await refreshDashboard();
   }
@@ -1724,6 +1854,10 @@
     $("#person-form").addEventListener("submit", savePerson);
     $("#add-connection-button").addEventListener("click", addConnectionFromForm);
     $("#person-deceased").addEventListener("change", syncDeathDateField);
+    $("#person-birth").addEventListener("input", () => syncCalendarFromText("person-birth", "person-birth-calendar"));
+    $("#person-birth-calendar").addEventListener("change", () => syncTextFromCalendar("person-birth-calendar", "person-birth"));
+    $("#person-death").addEventListener("input", () => syncCalendarFromText("person-death", "person-death-calendar"));
+    $("#person-death-calendar").addEventListener("change", () => syncTextFromCalendar("person-death-calendar", "person-death"));
     $("#cancel-edit-button").addEventListener("click", clearPersonForm);
     syncDeathDateField();
     $("#request-role-button").addEventListener("click", () => {
@@ -1733,6 +1867,7 @@
       state.activeTree = null;
       state.activeMembership = null;
       $("#tree-workspace").hidden = true;
+      $("#dashboard").classList.remove("tree-open");
     });
     $("#delete-tree-button").addEventListener("click", deleteTree);
     $("#fit-tree-button").addEventListener("click", fitTreeToView);
