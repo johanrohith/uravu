@@ -342,66 +342,123 @@
   }
 
   function renderPeople() {
-    const root = $("#people-list");
+    const nodesRoot = $("#family-tree-nodes");
+    const linesRoot = $("#family-tree-lines");
+    const viewport = $("#family-tree-viewport");
+    const canvas = $("#family-tree-canvas");
+    const empty = $("#people-empty");
+    if (!nodesRoot || !linesRoot || !viewport || !canvas || !empty) return;
+
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
     const selected = state.people.filter(person => !search ||
-      [person.full_name,person.tamil_name,person.notes].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+      [person.full_name, person.tamil_name, person.notes].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+
     if (!state.people.length) {
-      root.innerHTML = '<div class="empty-state"><strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub")) + '</div>';
+      viewport.hidden = true;
+      empty.hidden = false;
+      empty.innerHTML = '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"));
+      nodesRoot.innerHTML = "";
+      linesRoot.innerHTML = "";
       return;
     }
-    if (!selected.length) { root.innerHTML = '<div class="empty-state">' + escapeHtml(t("noSearchResults")) + '</div>'; return; }
+    if (!selected.length) {
+      viewport.hidden = true;
+      empty.hidden = false;
+      empty.textContent = t("noSearchResults");
+      nodesRoot.innerHTML = "";
+      linesRoot.innerHTML = "";
+      return;
+    }
+
+    viewport.hidden = false;
+    empty.hidden = true;
+    const selectedIds = new Set(selected.map(person => person.id));
     const levels = generationMap();
     const grouped = new Map();
     levels.forEach((people, level) => {
-      const filtered = people.filter(person => selected.some(p => p.id === person.id));
+      const filtered = people.filter(person => selectedIds.has(person.id))
+        .sort((a, b) => a.full_name.localeCompare(b.full_name));
       if (filtered.length) grouped.set(level, filtered);
     });
-    const maxLevel = Math.max(0, ...Array.from(grouped.keys()));
-    root.innerHTML = Array.from(grouped.entries()).map(([level, people]) =>
-      '<section class="generation-group"><p class="generation-label">Generation ' + (level + 1) + ' of ' + (maxLevel + 1) + '</p><div class="people-grid">' +
-      people.map(renderPersonCard).join("") + '</div></section>'
-    ).join("");
+    const levelKeys = Array.from(grouped.keys()).sort((a, b) => a - b);
+    const minLevel = Math.min(...levelKeys);
+    const maxLevel = Math.max(...levelKeys);
+    const columnWidth = 252;
+    const rowHeight = 265;
+    const nodeWidth = 218;
+    const nodeHeight = 202;
+    const maxColumns = Math.max(1, ...Array.from(grouped.values()).map(group => group.length));
+    const canvasWidth = Math.max(viewport.clientWidth || 760, maxColumns * columnWidth + 45);
+    const canvasHeight = Math.max(265, (maxLevel - minLevel) * rowHeight + nodeHeight + 50);
+    canvas.style.width = canvasWidth + "px";
+    canvas.style.height = canvasHeight + "px";
+    linesRoot.setAttribute("viewBox", "0 0 " + canvasWidth + " " + canvasHeight);
+    linesRoot.setAttribute("width", String(canvasWidth));
+    linesRoot.setAttribute("height", String(canvasHeight));
+
+    const positions = new Map();
+    grouped.forEach((people, level) => {
+      people.forEach((person, index) => {
+        positions.set(person.id, {
+          x: 25 + index * columnWidth,
+          y: 22 + (level - minLevel) * rowHeight,
+          width: nodeWidth,
+          height: nodeHeight
+        });
+      });
+    });
+
+    const paths = [];
+    state.relationships.filter(relationship => relationship.relationship_type === "parent").forEach(relationship => {
+      const parent = positions.get(relationship.person_id);
+      const child = positions.get(relationship.related_person_id);
+      if (!parent || !child || child.y <= parent.y) return;
+      const startX = parent.x + nodeWidth / 2;
+      const startY = parent.y + nodeHeight;
+      const endX = child.x + nodeWidth / 2;
+      const endY = child.y;
+      const middleY = startY + Math.max(12, (endY - startY) / 2);
+      paths.push('<path class="family-line" d="M ' + startX + ' ' + startY + ' V ' + middleY + ' H ' + endX + ' V ' + endY + '"/>');
+    });
+    linesRoot.innerHTML = paths.join("");
+    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id))).join("");
+
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
   }
 
-  function renderPersonCard(person) {
-    const parents = relationNames(person, "parents");
-    const spouses = relationNames(person, "spouses");
-    const children = relationNames(person, "children");
+  function renderPersonCard(person, position) {
+    if (!position) return "";
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
+    const details = [];
+    if (person.birth_date) details.push("Born " + prettyDate(person.birth_date));
+    if (person.death_date) details.push("Died " + prettyDate(person.death_date));
+    const edges = state.relationships.filter(relationship =>
+      relationship.person_id === person.id || relationship.related_person_id === person.id
+    );
+    const relationLines = edges.map(relationship => {
+      const otherId = relationship.person_id === person.id ? relationship.related_person_id : relationship.person_id;
+      const other = state.people.find(item => item.id === otherId);
+      if (!other) return "";
+      const label = relationship.relationship_type === "spouse"
+        ? "Spouse / partner: " + other.full_name
+        : (relationship.person_id === person.id ? "Parent of: " : "Child of: ") + other.full_name;
+      return '<div class="graph-relationship"><span>' + escapeHtml(label) + '</span>' +
+        (isManager() ? '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(relationship.id) + '" aria-label="Remove connection">×</button>' : '') +
+        '</div>';
+    }).join("");
     const assigned = state.members.find(member => member.person_id === person.id);
-    const detailBits = [];
-    if (person.birth_date) detailBits.push("Born " + prettyDate(person.birth_date));
-    if (person.death_date) detailBits.push("Died " + prettyDate(person.death_date));
-    const connection = (label, related) => {
-      if (!related.length) return "";
-      return '<div class="connection-line"><strong>' + escapeHtml(label) + '</strong>' +
-        related.map(item => escapeHtml(item.full_name)).join(", ") + '</div>';
-    };
-    const relationshipChips = state.relationships.filter(r => r.person_id === person.id || r.related_person_id === person.id)
-      .map(r => {
-        const otherId = r.person_id === person.id ? r.related_person_id : r.person_id;
-        const other = state.people.find(p => p.id === otherId);
-        if (!other) return "";
-        const label = r.relationship_type === "spouse" ? "Spouse / partner: " + other.full_name :
-          (r.person_id === person.id ? "Parent of " : "Child of ") + other.full_name;
-        return '<span class="connection-line">' + escapeHtml(label) +
-          (isManager() ? ' <button type="button" class="text-action" data-remove-relationship="' + escapeHtml(r.id) + '">×</button>' : '') +
-          '</span>';
-      }).join("");
-    return '<article class="person-card"><div class="person-card-top"><span class="person-avatar ' + genderClass + '">' +
-      escapeHtml(initials(person.full_name)) + '</span><div><h4>' + escapeHtml(person.full_name) +
-      '</h4>' + (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
-      (detailBits.length ? '<div class="person-meta">' + detailBits.map(escapeHtml).join(" · ") + '</div>' : '') +
-      (person.notes ? '<div class="person-meta">' + escapeHtml(person.notes) + '</div>' : '') +
+    return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px">' +
+      '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
+      '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
+      (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
+      (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
+      (person.notes ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
       (assigned ? '<span class="unassigned-pill">Linked account: ' + escapeHtml(assigned.display_name || "Family member") + '</span>' : '') +
-      ((parents.length || spouses.length || children.length || relationshipChips) ? '<div class="person-connections">' + connection(t("parent"), parents) +
-        connection(t("spouse"), spouses) + connection(t("children"), children) + relationshipChips + '</div>' : '') +
+      '<div class="graph-relationships">' + (relationLines || '<span class="connection-line">No connections yet</span>') + '</div>' +
       (isManager() ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
-        '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
+      '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
       '</article>';
   }
 
@@ -677,6 +734,7 @@
       $("#tree-workspace").hidden = true;
     });
     $("#delete-tree-button").addEventListener("click", deleteTree);
+    $("#fit-tree-button").addEventListener("click", () => { const viewport = $("#family-tree-viewport"); viewport.scrollTo({ top:0, left:0, behavior:"smooth" }); });
     $("#language-button").addEventListener("click", setLanguage);
     $("#request-modal-close").addEventListener("click", closeRequestDialog);
     $("#request-modal").addEventListener("click", event => {
