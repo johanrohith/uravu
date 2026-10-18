@@ -19,6 +19,7 @@
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
     loadingTree: false,
+    partialDatesSupported: null,
     treeZoom: 1,
     treeBaseWidth: 0,
     treeBaseHeight: 0
@@ -77,6 +78,17 @@
     "Child":"பிள்ளை",
     "Spouse / partner":"துணைவர் / துணைவி",
     "Remove":"நீக்கு"
+  });
+
+  Object.assign(interfaceTranslations, {
+    "Date formats: YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD":"தேதி வடிவங்கள்: YYYY, YYYY-MM, YYYY-MM-DD அல்லது MM-DD",
+    "Add a connection":"இணைப்பைச் சேர்",
+    "Add connection":"இணைப்பைச் சேர்",
+    "Adding connection…":"இணைப்பு சேர்க்கப்படுகிறது…",
+    "Use YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD for dates.":"தேதிகளுக்கு YYYY, YYYY-MM, YYYY-MM-DD அல்லது MM-DD பயன்படுத்தவும்.",
+    "Run supabase/partial-dates-migration.sql in Supabase before saving partial dates or a death with an unknown date.":"பகுதி தேதிகள் அல்லது தேதி தெரியாத இறப்பு நிலையைச் சேமிக்கும் முன் Supabase-ல் supabase/partial-dates-migration.sql-ஐ இயக்கவும்.",
+    "Deceased":"இறந்தவர்",
+    "Died / status":"இறந்த தேதி / நிலை"
   });
 
   const tamilToEnglish = {};
@@ -197,6 +209,113 @@
     if (!value) return "";
     const date = new Date(value + "T00:00:00");
     return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat(state.language === "ta" ? "ta-IN" : "en-IN", { day:"numeric", month:"short", year:"numeric" }).format(date);
+  }
+
+  function parsePartialDate(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return { valid:true, value:null, date:null, precision:null };
+    let match;
+    if ((match = raw.match(/^(\\d{4})$/))) {
+      return { valid:true, value:match[1], date:null, precision:"year" };
+    }
+    if ((match = raw.match(/^(\\d{4})-(\\d{2})$/))) {
+      const month = Number(match[2]);
+      return month >= 1 && month <= 12
+        ? { valid:true, value:match[1] + "-" + match[2], date:null, precision:"month-year" }
+        : { valid:false };
+    }
+    if ((match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/))) {
+      const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      const valid = month >= 1 && month <= 12 && day >= 1 &&
+        date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+      return valid
+        ? { valid:true, value:match[1] + "-" + match[2] + "-" + match[3], date:match[1] + "-" + match[2] + "-" + match[3], precision:"day" }
+        : { valid:false };
+    }
+    if ((match = raw.match(/^(\\d{2})-(\\d{2})$/))) {
+      const month = Number(match[1]), day = Number(match[2]);
+      const date = new Date(Date.UTC(2000, month - 1, day));
+      const valid = month >= 1 && month <= 12 && day >= 1 &&
+        date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+      return valid
+        ? { valid:true, value:match[1] + "-" + match[2], date:null, precision:"month-day" }
+        : { valid:false };
+    }
+    if ((match = raw.match(/^(\\d{2})$/))) {
+      const month = Number(match[1]);
+      return month >= 1 && month <= 12
+        ? { valid:true, value:match[1], date:null, precision:"month" }
+        : { valid:false };
+    }
+    return { valid:false };
+  }
+
+  function formatFamilyDate(value) {
+    if (!value) return "";
+    const parsed = parsePartialDate(value);
+    if (!parsed.valid) return String(value);
+    const locale = state.language === "ta" ? "ta-IN" : "en-IN";
+    if (parsed.precision === "day") return prettyDate(parsed.value);
+    if (parsed.precision === "year") return parsed.value;
+    if (parsed.precision === "month-year") {
+      const [year, month] = parsed.value.split("-").map(Number);
+      return new Intl.DateTimeFormat(locale, { month:"short", year:"numeric", timeZone:"UTC" })
+        .format(new Date(Date.UTC(year, month - 1, 1)));
+    }
+    if (parsed.precision === "month-day") {
+      const [month, day] = parsed.value.split("-").map(Number);
+      return new Intl.DateTimeFormat(locale, { month:"short", day:"numeric", timeZone:"UTC" })
+        .format(new Date(Date.UTC(2000, month - 1, day)));
+    }
+    if (parsed.precision === "month") {
+      const month = Number(parsed.value);
+      return new Intl.DateTimeFormat(locale, { month:"long", timeZone:"UTC" })
+        .format(new Date(Date.UTC(2000, month - 1, 1)));
+    }
+    return parsed.value;
+  }
+
+  function isPersonDeceased(person) {
+    return Boolean(person && (person.is_deceased || person.death_date || person.death_date_text));
+  }
+
+  function collectPersonFormData() {
+    const fullName = $("#person-name").value.trim();
+    if (!fullName) { toast("A name is required.", true); return null; }
+    const birth = parsePartialDate($("#person-birth").value);
+    const deceased = $("#person-deceased").checked;
+    const death = deceased ? parsePartialDate($("#person-death").value) : { valid:true, value:null, date:null, precision:null };
+    if (!birth.valid || !death.valid) {
+      toast("Use YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD for dates.", true);
+      return null;
+    }
+    if (birth.precision === "day" && death.precision === "day" && death.date < birth.date) {
+      toast("Date of death cannot be earlier than date of birth.", true);
+      return null;
+    }
+    if (state.partialDatesSupported === false &&
+        ((birth.value && birth.precision !== "day") ||
+         (deceased && !death.value) ||
+         (death.value && death.precision !== "day"))) {
+      toast("Run supabase/partial-dates-migration.sql in Supabase before saving partial dates or a death with an unknown date.", true);
+      return null;
+    }
+
+    const data = {
+      full_name:fullName,
+      tamil_name:$("#person-tamil").value.trim() || null,
+      gender:$("#person-gender").value || null,
+      birth_date:birth.date || null,
+      death_date:deceased ? (death.date || null) : null,
+      notes:$("#person-notes").value.trim() || null
+    };
+    if (state.partialDatesSupported !== false) {
+      data.birth_date_text = birth.value;
+      data.death_date_text = deceased ? death.value : null;
+      data.is_deceased = deceased;
+    }
+    return data;
   }
   function roleLabel(role) { return t(role || "viewer"); }
   function isManager() { return Boolean(state.activeMembership && ["owner","admin"].includes(state.activeMembership.role)); }
@@ -389,12 +508,21 @@
     }
     state.loadingTree = true;
     const results = await Promise.all([
-      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
+      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,death_date,death_date_text,is_deceased,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
       db.from("uravu_relationships").select("id,tree_id,person_id,related_person_id,relationship_type,created_at").eq("tree_id", treeId),
       db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at").eq("tree_id", treeId),
       db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("tree_id", treeId).eq("status","pending").order("created_at")
     ]);
     state.loadingTree = false;
+    if (results[0].error && /(birth_date_text|death_date_text|is_deceased|schema cache)/i.test(String(results[0].error.message || results[0].error))) {
+      const legacyPeople = await db.from("uravu_people")
+        .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,notes,created_by,created_at,updated_at")
+        .eq("tree_id", treeId).order("full_name");
+      results[0] = legacyPeople;
+      state.partialDatesSupported = false;
+    } else if (!results[0].error) {
+      state.partialDatesSupported = true;
+    }
     const error = results.find(result => result.error)?.error;
     if (error) {
       showDbError(error, "tree workspace");
@@ -1080,8 +1208,11 @@
     const manager = isManager();
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
-    if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
-    if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
+    const birthValue = person.birth_date_text || person.birth_date;
+    const deathValue = person.death_date_text || person.death_date;
+    if (birthValue) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
+    if (deathValue) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
+    else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "இறந்தவர்" : "Deceased");
     const viewAttributes = manager ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
@@ -1267,8 +1398,11 @@
     setPersonDetailRow("person-detail-relation-row", "person-detail-relation", relation);
     setPersonDetailRow("person-detail-tamil-row", "person-detail-tamil", person.tamil_name || "");
     setPersonDetailRow("person-detail-gender-row", "person-detail-gender", gender);
-    setPersonDetailRow("person-detail-born-row", "person-detail-born", person.birth_date ? prettyDate(person.birth_date) : "");
-    setPersonDetailRow("person-detail-died-row", "person-detail-died", person.death_date ? prettyDate(person.death_date) : "");
+    const birthValue = person.birth_date_text || person.birth_date;
+    const deathValue = person.death_date_text || person.death_date;
+    setPersonDetailRow("person-detail-born-row", "person-detail-born", birthValue ? formatFamilyDate(birthValue) : "");
+    setPersonDetailRow("person-detail-died-row", "person-detail-died",
+      deathValue ? formatFamilyDate(deathValue) : isPersonDeceased(person) ? (state.language === "ta" ? "இறந்தவர்" : "Deceased") : "");
     setPersonDetailRow("person-detail-notes-row", "person-detail-notes", person.notes || "");
     modal.hidden = false;
     $("#person-details-close").focus();
@@ -1284,11 +1418,8 @@
   function syncDeathDateField() {
     const checkbox = $("#person-deceased");
     const field = $("#death-date-field");
-    const deathInput = $("#person-death");
-    if (!checkbox || !field || !deathInput) return;
+    if (!checkbox || !field) return;
     field.hidden = !checkbox.checked;
-    deathInput.required = checkbox.checked;
-    if (!checkbox.checked) deathInput.value = "";
   }
 
   function renderEditorConnections() {
@@ -1356,9 +1487,9 @@
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
     $("#person-gender").value = person.gender || "";
-    $("#person-birth").value = person.birth_date || "";
-    $("#person-deceased").checked = Boolean(person.death_date);
-    $("#person-death").value = person.death_date || "";
+    $("#person-birth").value = person.birth_date_text || person.birth_date || "";
+    $("#person-deceased").checked = isPersonDeceased(person);
+    $("#person-death").value = person.death_date_text || person.death_date || "";
     syncDeathDateField();
     $("#person-notes").value = person.notes || "";
     $("#person-form-title").textContent = "Edit family member";
@@ -1424,27 +1555,9 @@
   async function savePerson(event) {
     event.preventDefault();
     if (!isManager() || !state.activeTree) return;
+    const data = collectPersonFormData();
+    if (!data) return;
     const button = $("#save-person-button");
-    const data = {
-      full_name:$("#person-name").value.trim(),
-      tamil_name:$("#person-tamil").value.trim() || null,
-      gender:$("#person-gender").value || null,
-      birth_date:$("#person-birth").value || null,
-      death_date:$("#person-deceased").checked ? ($("#person-death").value || null) : null,
-      notes:$("#person-notes").value.trim() || null
-    };
-    if (!data.full_name) { toast("A name is required.", true); return; }
-    if ($("#person-deceased").checked && !$("#person-death").value) {
-      toast("Enter the date of death when Deceased is checked.", true); return;
-    }
-    if (data.birth_date && data.death_date && data.death_date < data.birth_date) {
-      toast("Date of death cannot be earlier than date of birth.", true); return;
-    }
-    const connectedId = $("#connect-person").value || null;
-    const connectionType = $("#connect-type").value || null;
-    if (Boolean(connectedId) !== Boolean(connectionType)) {
-      toast("Choose both a family member and relationship to add a connection.", true); return;
-    }
     setBusy(button, true, "Saving…");
     const wasEditing = Boolean(state.editingPersonId);
     let personId = state.editingPersonId;
@@ -1459,29 +1572,72 @@
       error = result.error;
       personId = result.data?.id;
     }
-    if (error) {
-      setBusy(button, false);
-      showDbError(error, "save family member");
-      return;
-    }
-    let linkError = null;
-    if (connectedId && personId) {
-      const linked = await callRpc("uravu_link_people", {
-        p_tree_id:state.activeTree.id, p_person_id:personId,
-        p_related_person_id:connectedId, p_relationship_type:connectionType
-      });
-      linkError = linked.error;
-      if (!linkError) linkError = await syncSpouseChildLinks(personId, connectedId, connectionType);
-    }
     setBusy(button, false);
+    if (error) { showDbError(error, "save family member"); return; }
     clearPersonForm();
-    if (linkError) {
-      showDbError(linkError, "save family connection");
-      await loadWorkspace(state.activeTree.id, false);
-      return;
-    }
     toast(wasEditing ? "Family member updated." : "Family member added.");
     await loadWorkspace(state.activeTree.id, false);
+  }
+
+  async function addConnectionFromForm() {
+    if (!isManager() || !state.activeTree) return;
+    const connectedId = $("#connect-person").value || null;
+    const relationshipType = $("#connect-type").value || null;
+    if (!connectedId || !relationshipType) {
+      toast("Choose both a family member and relationship to add a connection.", true);
+      return;
+    }
+    if (connectedId === state.editingPersonId) {
+      toast("A person cannot be connected to themselves.", true);
+      return;
+    }
+    const data = collectPersonFormData();
+    if (!data) return;
+
+    const button = $("#add-connection-button");
+    setBusy(button, true, "Adding connection…");
+    const treeId = state.activeTree.id;
+    let personId = state.editingPersonId;
+    let error = null;
+
+    // For a new entry, save it first so the relationship has a real record ID.
+    if (personId) {
+      const result = await db.from("uravu_people").update(data)
+        .eq("id", personId).eq("tree_id", treeId).select("id").single();
+      error = result.error;
+    } else {
+      const result = await db.from("uravu_people").insert({
+        tree_id:treeId, created_by:state.user.id, ...data
+      }).select("id").single();
+      error = result.error;
+      personId = result.data?.id;
+      if (!error && personId) {
+        state.editingPersonId = personId;
+        $("#person-form-title").textContent = "Edit family member";
+        $("#save-person-button").textContent = "Save changes";
+        $("#cancel-edit-button").hidden = false;
+      }
+    }
+
+    if (!error && personId) {
+      const linked = await callRpc("uravu_link_people", {
+        p_tree_id:treeId, p_person_id:personId,
+        p_related_person_id:connectedId, p_relationship_type:relationshipType
+      });
+      error = linked.error;
+      if (!error) error = await syncSpouseChildLinks(personId, connectedId, relationshipType);
+    }
+    setBusy(button, false);
+    if (error) {
+      showDbError(error, "add family connection");
+      await loadWorkspace(treeId, false);
+      return;
+    }
+    $("#connect-person").value = "";
+    $("#connect-type").value = "";
+    await loadWorkspace(treeId, false);
+    renderEditorConnections();
+    toast("Family connection added.");
   }
 
   async function deletePerson(personId) {
@@ -1538,6 +1694,7 @@
     $("#tree-search").addEventListener("input", renderTreeLists);
     $("#people-search").addEventListener("input", renderPeople);
     $("#person-form").addEventListener("submit", savePerson);
+    $("#add-connection-button").addEventListener("click", addConnectionFromForm);
     $("#person-deceased").addEventListener("change", syncDeathDateField);
     $("#cancel-edit-button").addEventListener("click", clearPersonForm);
     syncDeathDateField();
