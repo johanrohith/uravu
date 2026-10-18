@@ -4,95 +4,194 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f6f7f3">
-  <meta name="description" content="Uravu — explore your family tree and discover Tamil family relationships.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="assets/uravu-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Uravu — build and share your family tree.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/uravu-icon.svg" type="image/svg+xml">
   <title>Uravu — Family tree</title>
+  <style>body.booting{visibility:hidden}#boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}#boot-error[hidden]{display:none}</style>
+  <script>
+    (async function () {
+      const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Could not load ' + src));
+        document.body.appendChild(script);
+      });
+      try {
+        if (document.readyState === 'loading') {
+          await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+        }
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.filter(reg => {
+            try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
+            catch (_) { return false; }
+          }).map(reg => reg.unregister()));
+        }
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
+        }
+        try {
+          const staleKeys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && /^uravu-(demo|tree-cache|people-cache|request-cache)/i.test(key)) staleKeys.push(key);
+          }
+          staleKeys.forEach(key => localStorage.removeItem(key));
+        } catch (_) {}
+        const stylesheet = document.createElement('link');
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = './styles.css?v=uravu-clean-20261018';
+        document.head.appendChild(stylesheet);
+        await new Promise((resolve, reject) => {
+          stylesheet.onload = resolve;
+          stylesheet.onerror = () => reject(new Error('Could not load the app styles.'));
+        });
+        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+        await loadScript('./supabase-config.js?v=uravu-clean-20261018');
+        await loadScript('./auth.js?v=uravu-clean-20261018');
+        await loadScript('./app.js?v=uravu-clean-20261018');
+        document.body.classList.remove('booting');
+        document.documentElement.classList.add('uravu-ready');
+      } catch (error) {
+        console.error('Uravu startup error:', error);
+        document.body.classList.remove('booting');
+        const errorBox = document.getElementById('boot-error');
+        if (errorBox) {
+          errorBox.hidden = false;
+          errorBox.querySelector('[data-error-message]').textContent =
+            'Uravu could not start because a required file or service could not load. Refresh the page or try again later.';
+        }
+      }
+    })();
+  </script>
 </head>
-<body>
+<body class="booting">
+  <div id="boot-error" hidden>
+    <h1>Uravu could not start</h1>
+    <p data-error-message>One of the app files did not load.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </div>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Uravu home">
+      <a class="brand" href="./" aria-label="Uravu home">
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 30V17M20 18C12 18 9 13 9 8c7 0 11 3 11 10ZM20 23c8 0 11-5 11-10-7 0-11 3-11 10Z"/><circle cx="20" cy="31" r="3"/></svg></span>
         <span><strong>உறவு</strong><small>URAVU</small></span>
       </a>
       <div class="top-actions">
-        <span class="demo-pill"><i></i><span data-i18n="prototype">Prototype</span></span>
-        <div class="language-switch" aria-label="Language">
-          <button class="lang-button active" data-lang="en" aria-pressed="true">EN</button>
-          <button class="lang-button" data-lang="ta" aria-pressed="false">தமிழ்</button>
+        <button class="language-button" id="language-button" type="button" aria-label="Change language">தமிழ்</button>
+        <button class="google-button" id="header-signin" type="button"><span class="google-mark">G</span><span>Sign in with Google</span></button>
+        <div class="user-menu" id="user-menu" hidden>
+          <span class="user-avatar" id="user-avatar">U</span>
+          <span class="user-name" id="user-name"></span>
+          <button class="quiet-button" id="sign-out-button" type="button">Sign out</button>
         </div>
-        <button class="icon-button" id="settings-button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.1 1.8-1.7 3-2.1-.4a7.7 7.7 0 0 1-1.8 1l-.8 2h-3.4l-.8-2a7.7 7.7 0 0 1-1.8-1l-2.1.4-1.7-3 1.1-1.8A7.6 7.6 0 0 1 5.5 12c0-.6.1-1.2.2-1.8L4.6 8.4l1.7-3 2.1.4a7.7 7.7 0 0 1 1.8-1l.8-2h3.4l.8 2a7.7 7.7 0 0 1 1.8 1l2.1-.4 1.7 3-1.1 1.8c.1.6.2 1.2.2 1.8s-.1 1.2-.2 1.8Z" transform="translate(0 -1) scale(.88) translate(1.5 1.5)"/></svg></button>
-        <button class="primary-button google-signin-button" id="google-signin-button" type="button"><span aria-hidden="true">G</span><span id="google-signin-label">Sign in with Google</span></button>
-        <button class="avatar-button" id="account-button" aria-label="My profile" title="My profile">JR</button>
       </div>
     </header>
 
     <main>
-      <section class="page-heading">
-        <div>
-          <p class="eyebrow" data-i18n="workspace">YOUR FAMILY WORKSPACE</p>
-          <h1 data-i18n="familyTree">Family tree</h1>
-          <p class="subheading" data-i18n="headingSubtitle">Every generation, connected.</p>
+      <section class="signed-out" id="signed-out">
+        <div class="hero-copy">
+          <p class="eyebrow">YOUR FAMILY, CONNECTED</p>
+          <h1>Every generation has a story.</h1>
+          <p class="lead">Build your family tree, preserve names and relationships, and invite family members to contribute with the right permissions.</p>
+          <button class="google-button google-button-large" id="hero-signin" type="button"><span class="google-mark">G</span><span>Continue with Google</span></button>
+          <p class="muted-small">Your family tree is private to its members. Nothing is shown here until you sign in and open or create a tree.</p>
         </div>
-        <div class="heading-actions">
-          <button class="secondary-button" id="requests-button"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6"/></svg><span data-i18n="requests">Requests</span><span class="count-badge" id="request-count">2</span></button>
-          <button class="primary-button" id="add-person-button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="addPerson">Add person</span></button>
-        </div>
-      </section>
-
-      <section class="toolbar" aria-label="Tree tools">
-        <label class="search-box" for="member-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="member-search" autocomplete="off" placeholder="Search names or relationship..." data-i18n-placeholder="searchPlaceholder"><kbd>⌘ K</kbd></label>
-        <div class="toolbar-actions">
-          <button class="tool-button" id="fit-button" title="Fit tree"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><span data-i18n="fit">Fit</span></button>
-          <button class="tool-button" id="collapse-button" title="Collapse branches"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg><span data-i18n="collapse">Collapse</span></button>
-          <button class="tool-button" id="export-button" title="Export family tree"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><span data-i18n="export">Export</span></button>
+        <div class="hero-illustration" aria-hidden="true">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <div class="family-node node-grand">Generation<br><strong>before us</strong></div>
+          <div class="family-node node-parent">Parents &amp;<br><strong>guardians</strong></div>
+          <div class="family-node node-you">You<br><strong>and yours</strong></div>
+          <div class="family-node node-child">The next<br><strong>generation</strong></div>
+          <svg class="hero-lines" viewBox="0 0 500 420"><path d="M140 105 L238 178 L358 110 M238 178 L237 276 L352 335"/></svg>
         </div>
       </section>
 
-      <section class="content-grid">
-        <section class="tree-panel" aria-label="Interactive family tree">
-          <div class="tree-panel-top">
-            <div class="tree-name-group"><span class="tree-emblem"><svg viewBox="0 0 24 24"><path d="M12 20v-7M12 13c-4 0-6-3-6-7 4 0 6 2 6 7ZM12 16c4 0 6-3 6-7-4 0-6 2-6 7Z"/></svg></span><div><h2 data-i18n="johanFamily">Johan's family</h2><p><span id="people-count">21</span> <span data-i18n="peopleAcross">people across</span> <span id="generation-count">4</span> <span data-i18n="generations">generations</span></p></div></div>
-            <button class="subtle-button" id="tree-menu-button"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+      <section class="dashboard" id="dashboard" hidden>
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">YOUR FAMILY WORKSPACE</p>
+            <h1 id="welcome-heading">Welcome to Uravu</h1>
+            <p class="subheading">Create a tree or request access to one that already exists.</p>
           </div>
-          <div class="tree-viewport" id="tree-viewport">
-            <div class="tree-canvas" id="tree-canvas">
-              <svg class="tree-lines" id="tree-lines" viewBox="0 0 1280 760" role="presentation" aria-hidden="true"></svg>
-              <div class="tree-nodes" id="tree-nodes"></div>
-            </div>
-            <div class="empty-search" id="empty-search" hidden><span class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span><strong data-i18n="noResults">No matching family members</strong><span data-i18n="tryAnother">Try another name or relationship.</span></div>
-            <div class="empty-tree-state" id="empty-tree-state"><strong>Your family tree is empty</strong><span>Sign in, then connect a family tree to begin. No sample people are shown.</span></div>
-          </div>
-          <div class="tree-footer"><span class="tree-legend"><i class="legend-dot you-dot"></i><span data-i18n="yourEntry">Your entry</span><i class="legend-dot living-dot"></i><span data-i18n="living">Living</span><i class="legend-dot deceased-dot"></i><span data-i18n="deceased">Deceased</span></span><span class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-value">100%</span><button id="zoom-in" aria-label="Zoom in">+</button></span></div>
+          <span class="privacy-note"><span class="privacy-dot"></span> Family data is loaded from Supabase, not browser cache</span>
         </section>
 
-        <aside class="side-panel" id="side-panel">
-          <div class="side-panel-header"><div><p class="eyebrow" data-i18n="selectedPerson">SELECTED PERSON</p><h2 data-i18n="personDetails">Person details</h2></div><button class="icon-button" id="close-profile" aria-label="Close profile"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-          <div id="profile-content"></div>
-        </aside>
-      </section>
+        <div class="action-grid">
+          <section class="panel create-panel">
+            <div class="panel-heading"><span class="panel-icon">＋</span><div><h2>Create a family tree</h2><p>Start a new family space. You become its owner.</p></div></div>
+            <form id="create-tree-form">
+              <label class="field-label" for="tree-name">Family tree name</label>
+              <input class="form-input" id="tree-name" name="name" maxlength="100" placeholder="e.g. The Kumar family" required>
+              <label class="field-label" for="tree-description">Description <span class="optional">Optional</span></label>
+              <textarea class="form-input form-textarea" id="tree-description" name="description" maxlength="500" placeholder="A short note about this family tree"></textarea>
+              <label class="field-label" for="tree-language">Primary language</label>
+              <select class="form-input" id="tree-language" name="language"><option value="en">English</option><option value="ta">தமிழ்</option></select>
+              <button class="primary-button" type="submit">Create tree</button>
+            </form>
+          </section>
 
-      <section class="bottom-panels">
-        <article class="mini-panel relationship-panel"><div class="mini-panel-title"><span class="mini-icon purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m0 0H5v4m7-4h7v4"/></svg></span><div><h3 data-i18n="relationshipLookup">Relationship lookup</h3><p data-i18n="relationshipLookupSub">Names are calculated from family connections.</p></div></div><div class="lookup-row"><label for="lookup-select" data-i18n="findYourRelation">How are you related to</label><select id="lookup-select" aria-label="Select a family member"></select><button class="secondary-button small-button" id="lookup-button" data-i18n="viewRelation">View relation</button></div><div class="lookup-result" id="lookup-result" hidden></div></article>
-        <article class="mini-panel activity-panel"><div class="mini-panel-title"><span class="mini-icon green"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg></span><div><h3 data-i18n="recentActivity">Recent activity</h3><p data-i18n="recentActivitySub">A simple history of tree changes.</p></div></div><div class="activity-list" id="activity-list"></div></article>
+          <section class="panel browse-panel">
+            <div class="panel-heading"><span class="panel-icon panel-icon-gold">↗</span><div><h2>Find a family tree</h2><p>Request access and ask for the role you need.</p></div></div>
+            <label class="search-label" for="tree-search">Search trees</label>
+            <input class="form-input" id="tree-search" placeholder="Search by tree name...">
+            <div class="tree-list browse-list" id="available-tree-list"><div class="empty-state compact">Loading available trees…</div></div>
+          </section>
+        </div>
+
+        <section class="panel my-trees-panel">
+          <div class="section-heading"><div><p class="eyebrow">YOUR MEMBERSHIPS</p><h2>My family trees</h2></div><button class="quiet-button" id="refresh-button" type="button">Refresh</button></div>
+          <div class="tree-list my-tree-list" id="my-tree-list"><div class="empty-state compact">Loading your trees…</div></div>
+        </section>
+
+        <section class="tree-workspace" id="tree-workspace" hidden>
+          <div class="workspace-header">
+            <div><p class="eyebrow" id="workspace-role">TREE MEMBER</p><h2 id="workspace-title">Family tree</h2><p class="subheading" id="workspace-description"></p></div>
+            <div class="workspace-actions"><button class="secondary-button" id="request-role-button" type="button">Request role / link</button><button class="quiet-button" id="close-tree-button" type="button">Close tree</button></div>
+          </div>
+
+          <div class="workspace-stats"><div><strong id="people-count">0</strong><span>Family members</span></div><div><strong id="member-count">0</strong><span>Tree accounts</span></div><div><strong id="pending-count">0</strong><span>Pending requests</span></div></div>
+
+          <section class="panel add-person-panel" id="add-person-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">TREE EDITING</p><h3 id="person-form-title">Add a family member</h3></div><button class="quiet-button" id="cancel-edit-button" type="button" hidden>Cancel edit</button></div>
+            <form id="person-form" class="person-form">
+              <div class="form-grid">
+                <div><label class="field-label" for="person-name">Name</label><input class="form-input" id="person-name" maxlength="120" required placeholder="Full name"></div>
+                <div><label class="field-label" for="person-tamil">Tamil name <span class="optional">Optional</span></label><input class="form-input tamil-input" id="person-tamil" maxlength="120" placeholder="தமிழ்ப் பெயர்"></div>
+                <div><label class="field-label" for="person-gender">Gender <span class="optional">Optional</span></label><select class="form-input" id="person-gender"><option value="">Not specified</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
+                <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><input class="form-input" id="person-birth" type="date"></div>
+                <div><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><input class="form-input" id="person-death" type="date"></div>
+                <div><label class="field-label" for="connect-person">Connect to someone <span class="optional">Optional</span></label><select class="form-input" id="connect-person"><option value="">No connection yet</option></select></div>
+                <div><label class="field-label" for="connect-type">Relationship to them</label><select class="form-input" id="connect-type"><option value="child_of">Child of selected person</option><option value="parent_of">Parent of selected person</option><option value="spouse_of">Spouse / partner</option></select></div>
+                <div class="form-wide"><label class="field-label" for="person-notes">Notes <span class="optional">Optional</span></label><textarea class="form-input form-textarea" id="person-notes" maxlength="1000" placeholder="Additional details (avoid sensitive information)"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="primary-button" id="save-person-button" type="submit">Add family member</button></div>
+            </form>
+          </section>
+
+          <section class="panel people-panel">
+            <div class="section-heading"><div><p class="eyebrow">FAMILY DIRECTORY</p><h3>Family members</h3></div><input class="form-input people-search" id="people-search" placeholder="Search names…"></div>
+            <div class="generation-list" id="people-list"><div class="empty-state">This tree has no family members yet.</div></div>
+          </section>
+
+          <section class="panel management-panel" id="member-management-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">ACCESS CONTROL</p><h3>Manage members</h3><p class="panel-description">Change roles and link an account to a family member. Only the owner can grant or remove admin access.</p></div></div>
+            <div id="tree-members-list" class="member-list"></div>
+          </section>
+
+          <section class="panel requests-panel" id="requests-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">NEEDS REVIEW</p><h3>Access, role and linking requests</h3><p class="panel-description">Review each request and choose the role to assign. Only the owner can make someone an admin.</p></div></div>
+            <div id="tree-requests-list" class="request-list"></div>
+          </section>
+
+          <div class="danger-zone" id="delete-tree-zone" hidden><div><strong>Delete this family tree</strong><p>This permanently deletes its people, relationships, memberships and requests.</p></div><button class="danger-button" id="delete-tree-button" type="button">Delete tree</button></div>
+        </section>
       </section>
-      <p class="prototype-note"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9 1.9 18.4A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span data-i18n="prototypeNote">Interactive family-tree prototype. Sign in with Google to continue; family data is not yet connected to shared storage.</span></p>
     </main>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
-
-  <div class="modal-backdrop" id="modal-backdrop" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-header"><div><p class="eyebrow" id="modal-eyebrow">FAMILY TREE</p><h2 id="modal-title">Add person</h2></div><button class="icon-button" id="modal-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-      <div id="modal-content"></div>
-    </section>
-  </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./supabase-config.js"></script>
-<script src="app.js"></script>
-<script src="./auth.js"></script>
 </body>
 </html>
