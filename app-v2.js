@@ -1175,6 +1175,55 @@
     renderPersonConnectOptions();
   }
 
+  async function syncSpouseChildLinks(personId, connectedId, relationshipType) {
+    if (!personId || !connectedId || !state.activeTree) return null;
+    const treeId = state.activeTree.id;
+    const existingParentLinks = state.relationships.filter(edge => edge.relationship_type === "parent");
+    const hasParentLink = (parentId, childId) => existingParentLinks.some(edge =>
+      edge.person_id === parentId && edge.related_person_id === childId
+    );
+    const linkAsParent = async (parentId, childId) => {
+      if (!parentId || !childId || parentId === childId || hasParentLink(parentId, childId)) return null;
+      const result = await callRpc("uravu_link_people", {
+        p_tree_id:treeId,
+        p_person_id:parentId,
+        p_related_person_id:childId,
+        p_relationship_type:"parent_of"
+      });
+      return result.error || null;
+    };
+
+    if (relationshipType === "spouse_of") {
+      // When a spouse is added, link them to the existing children of either
+      // partner so a child's two parents stay connected in the family graph.
+      const children = new Set(existingParentLinks
+        .filter(edge => edge.person_id === personId || edge.person_id === connectedId)
+        .map(edge => edge.related_person_id));
+      for (const childId of children) {
+        for (const parentId of [personId, connectedId]) {
+          const error = await linkAsParent(parentId, childId);
+          if (error) return error;
+        }
+      }
+      return null;
+    }
+
+    const parentId = relationshipType === "child_of" ? connectedId : personId;
+    const childId = relationshipType === "child_of" ? personId : connectedId;
+    const spouseIds = new Set();
+    state.relationships.filter(edge => edge.relationship_type === "spouse" &&
+      (edge.person_id === parentId || edge.related_person_id === parentId))
+      .forEach(edge => spouseIds.add(edge.person_id === parentId ? edge.related_person_id : edge.person_id));
+
+    // If a child is connected to one parent, add the corresponding parent link
+    // for that parent's spouse as well.
+    for (const spouseId of spouseIds) {
+      const error = await linkAsParent(spouseId, childId);
+      if (error) return error;
+    }
+    return null;
+  }
+
   async function savePerson(event) {
     event.preventDefault();
     if (!isManager() || !state.activeTree) return;
@@ -1219,6 +1268,7 @@
         p_related_person_id:connectedId, p_relationship_type:connectionType
       });
       linkError = linked.error;
+      if (!linkError) linkError = await syncSpouseChildLinks(personId, connectedId, connectionType);
     }
     setBusy(button, false);
     clearPersonForm();
