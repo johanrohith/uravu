@@ -1290,20 +1290,27 @@
         '</div>';
       return;
     }
+    const owner = isOwner();
     root.innerHTML = state.requests.map(request => {
       const typeLabel = request.request_type === "join" ? t("joinRequest") :
         request.request_type === "link" ? t("linkRequest") : t("roleChange");
       const requestedPerson = state.people.find(person => person.id === request.requested_person_id);
+      const mayReview = owner || request.request_type === "join";
+      const actions = mayReview
+        ? '<div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
+          escapeHtml(request.id) + '" data-decision="approve">' + escapeHtml(t("approve")) +
+          '</button><button class="danger-button" type="button" data-review-request="' + escapeHtml(request.id) +
+          '" data-decision="reject">' + escapeHtml(t("reject")) + '</button></div>'
+        : '<p class="request-copy request-owner-only">' +
+          (state.language === "ta" ? "இந்தக் குடும்பப் பதிவுக் கோரிக்கையை உரிமையாளர் மட்டுமே பரிசீலிக்க முடியும்." : "Only the owner can review family-record assignment requests.") +
+          '</p>';
       return '<article class="request-row"><div><div class="request-identity"><span class="person-avatar">' +
         escapeHtml(initials(request.display_name)) + '</span><div><strong>' + escapeHtml(request.display_name || "Family member") +
         '</strong><small>' + escapeHtml(typeLabel) + ' · ' + escapeHtml(t("member")) + '</small></div></div>' +
         '<p class="request-copy">' + escapeHtml(request.message || (state.language === "ta" ? "செய்தி எதுவும் சேர்க்கப்படவில்லை." : "No message added.")) +
         (requestedPerson ? '<br>' + (state.language === "ta" ? "கோரிய குடும்பப் பதிவு: " : "Requested family entry: ") + '<strong>' + escapeHtml(requestedPerson.full_name) + '</strong>' :
           request.request_type === "join" ? '<br>' + (state.language === "ta" ? "இன்னும் குடும்பப் பதிவு தேர்ந்தெடுக்கப்படவில்லை." : "No family record requested yet.") : '') +
-        '</p></div><div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
-        escapeHtml(request.id) + '" data-decision="approve">' + escapeHtml(t("approve")) +
-        '</button><button class="danger-button" type="button" data-review-request="' + escapeHtml(request.id) +
-        '" data-decision="reject">' + escapeHtml(t("reject")) + '</button></div></article>';
+        '</p></div>' + actions + '</article>';
     }).join("");
     $$("[data-review-request]").forEach(button => button.addEventListener("click", () => reviewRequest(button.dataset.reviewRequest, button.dataset.decision, button)));
   }
