@@ -28,29 +28,29 @@
   const words = {
     en: {
       familyTree:"Family tree",familyMembers:"Family members",create:"Create tree",join:"Request access",
-      owner:"Owner",admin:"Admin",member:"Member",viewer:"Viewer",parent:"Parents",spouse:"Spouse / partner",
+      owner:"Owner",member:"Member",parent:"Parents",spouse:"Spouse / partner",
       children:"Children",none:"None linked yet",delete:"Delete",edit:"Edit",removeConnection:"Remove connection",
       noPeople:"This family tree is empty",noPeopleSub:"Add the first family member to begin building your tree.",
       noTrees:"You have not joined any family trees yet.",noTreesSub:"Create one or request access to an existing tree.",
       noBrowse:"No other family trees are available to request.",pending:"Request pending",requested:"Requested",
-      viewTree:"Open tree",members:"Members",requestRole:"Request role / link",sendRequest:"Send request",
-      requestSent:"Request sent for the owner or an admin to review.",roleChange:"Role change",linkRequest:"Family entry link",
+      viewTree:"Open tree",members:"Members",requestRole:"Request a family record",sendRequest:"Send request",
+      requestSent:"Request sent for the owner or a linked member to review.",roleChange:"Family record request",linkRequest:"Family entry link",
       joinRequest:"Tree access",save:"Save",cancel:"Cancel",approve:"Approve",reject:"Reject",
       noRequests:"No requests need review.",notConnected:"No connection added.",setupError:"The new Uravu database schema is not installed yet. Run supabase/schema.sql in your Supabase SQL Editor.",
       noSearchResults:"No family members match that search.",treeLoadError:"Could not load this family tree."
     },
     ta: {
       familyTree:"குடும்ப மரம்",familyMembers:"குடும்ப உறுப்பினர்கள்",create:"மரத்தை உருவாக்கு",join:"அணுகல் கோரு",
-      owner:"உரிமையாளர்",admin:"நிர்வாகி",member:"உறுப்பினர்",viewer:"பார்வையாளர்",parent:"பெற்றோர்",
+      owner:"உரிமையாளர்",member:"உறுப்பினர்",parent:"பெற்றோர்",
       spouse:"துணைவர்",children:"பிள்ளைகள்",none:"இணைப்புகள் இல்லை",delete:"நீக்கு",edit:"திருத்து",
       removeConnection:"உறவை நீக்கு",noPeople:"இந்தக் குடும்ப மரம் காலியாக உள்ளது",
       noPeopleSub:"முதல் குடும்ப உறுப்பினரைச் சேர்த்து உங்கள் மரத்தை உருவாக்கத் தொடங்குங்கள்.",
       noTrees:"நீங்கள் இன்னும் எந்தக் குடும்ப மரத்திலும் இணையவில்லை.",
       noTreesSub:"புதிய மரத்தை உருவாக்கவும் அல்லது இருக்கும் மரத்திற்கு அணுகல் கோரவும்.",
       noBrowse:"அணுகல் கோரக்கூடிய வேறு மரங்கள் இல்லை.",pending:"கோரிக்கை நிலுவையில் உள்ளது",
-      requested:"கோரப்பட்டது",viewTree:"மரத்தைத் திற",members:"உறுப்பினர்கள்",requestRole:"பங்கு / இணைப்பு கோரு",
-      sendRequest:"கோரிக்கையை அனுப்பு",requestSent:"உரிமையாளர் அல்லது நிர்வாகி பரிசீலிக்க கோரிக்கை அனுப்பப்பட்டது.",
-      roleChange:"பங்கு மாற்றம்",linkRequest:"குடும்பப் பதிவை இணை",joinRequest:"மர அணுகல்",
+      requested:"கோரப்பட்டது",viewTree:"மரத்தைத் திற",members:"உறுப்பினர்கள்",requestRole:"குடும்பப் பதிவைக் கோரு",
+      sendRequest:"கோரிக்கையை அனுப்பு",requestSent:"உரிமையாளர் அல்லது இணைக்கப்பட்ட உறுப்பினர் பரிசீலிக்கக் கோரிக்கை அனுப்பப்பட்டது.",
+      roleChange:"குடும்பப் பதிவு கோரிக்கை",linkRequest:"குடும்பப் பதிவை இணை",joinRequest:"மர அணுகல்",
       save:"சேமி",cancel:"ரத்து",approve:"ஏற்கவும்",reject:"நிராகரி",noRequests:"பரிசீலிக்க கோரிக்கைகள் இல்லை.",
       notConnected:"உறவு இணைப்பு சேர்க்கப்படவில்லை.",
       setupError:"புதிய Uravu தரவுத்தளம் இன்னும் அமைக்கப்படவில்லை. Supabase SQL Editor-ல் supabase/schema.sql-ஐ இயக்கவும்.",
@@ -89,6 +89,24 @@
     "Run supabase/partial-dates-migration.sql in Supabase before saving partial dates or a death with an unknown date.":"பகுதி தேதிகள் அல்லது தேதி தெரியாத இறப்பு நிலையைச் சேமிக்கும் முன் Supabase-ல் supabase/partial-dates-migration.sql-ஐ இயக்கவும்.",
     "Deceased":"இறந்தவர்",
     "Died / status":"இறந்த தேதி / நிலை"
+  });
+
+  Object.assign(interfaceTranslations, {
+    "English Name":"ஆங்கிலப் பெயர்",
+    "Full English name":"முழு ஆங்கிலப் பெயர்",
+    "Request a family record":"குடும்பப் பதிவைக் கோரு",
+    "The owner or a linked member will review this request.":"இந்தக் கோரிக்கையை உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
+    "The owner or a member already linked to a family record can review your request.":"கோரிக்கையை உரிமையாளர் அல்லது ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
+    "Request to join this family tree. The owner can assign your family record when approving your request.":"இந்தக் குடும்ப மரத்தில் இணையக் கோருங்கள். கோரிக்கையை ஏற்கும்போது உரிமையாளர் உங்களுக்குக் குடும்பப் பதிவை ஒதுக்கலாம்.",
+    "As the owner, use Manage members to link your family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.",
+    "No family record requested yet.":"இதுவரை குடும்பப் பதிவு கோரப்படவில்லை.",
+    "Family record to link to your account":"உங்கள் கணக்குடன் இணைக்க வேண்டிய குடும்பப் பதிவு",
+    "Select a family record to request.":"கோருவதற்கு ஒரு குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்.",
+    "The tree owner or an admin will review this request.":"இந்தக் கோரிக்கையை உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
+    "Only the tree owner can grant or remove admin access.":"உரிமையாளர் மட்டுமே உறுப்பினர்களை நிர்வகிக்க முடியும்.",
+    "Review each request and choose the role to assign. Only the owner can make someone an admin.":"ஒவ்வொரு கோரிக்கையையும் உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிக்கலாம்.",
+    "Change roles and link an account to a family member. Only the owner can grant or remove admin access.":"கணக்குகளை குடும்பப் பதிவுகளுடன் இணைக்கவும். உறுப்பினர் கணக்குகளுக்குப் பதிவை ஒதுக்குவது உரிமையாளரின் பணி.",
+    "Add a family member":"குடும்ப உறுப்பினரைச் சேர்"
   });
 
   const tamilToEnglish = {};
@@ -318,7 +336,11 @@
     return data;
   }
   function roleLabel(role) { return t(role || "viewer"); }
-  function isManager() { return Boolean(state.activeMembership && ["owner","admin"].includes(state.activeMembership.role)); }
+  function isOwner() { return Boolean(state.activeMembership && state.activeMembership.role === "owner"); }
+  function isManager() {
+    const member = state.activeMembership;
+    return Boolean(member && (member.role === "owner" || (member.role === "member" && member.person_id)));
+  }
   function toast(message, isError) {
     const node = $("#toast");
     if (!node) return;
@@ -587,7 +609,7 @@
   function renderWorkspace() {
     if (!state.activeTree || !state.activeMembership) return;
     const manager = isManager();
-    const owner = state.activeMembership.role === "owner";
+    const owner = isOwner();
     $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(state.activeMembership.role).toUpperCase();
     $("#workspace-title").textContent = state.activeTree.name;
     $("#workspace-description").textContent = state.activeTree.description || "Family connections across generations.";
@@ -601,10 +623,11 @@
       ? "Your " + (ownPending.request_type === "join" ? "tree access" : ownPending.request_type === "link" ? "family-entry link" : "role-change") + " request is awaiting review. You can submit an updated request if needed."
       : "";
     $("#add-person-panel").hidden = !manager;
-    $("#member-management-panel").hidden = !manager;
+    $("#member-management-panel").hidden = !owner;
     $("#requests-panel").hidden = !manager;
     $("#delete-tree-zone").hidden = !owner;
     $("#request-role-button").hidden = owner;
+    $("#request-role-button").textContent = translateUiValue("Request a family record");
     renderPersonConnectOptions();
     renderEditorConnections();
     renderPeople();
@@ -907,20 +930,27 @@
       const used = new Set();
       const units = [];
 
+      // Every connected spouse group gets one adjacent block in its generation.
+      // This keeps grandparents, parents, aunts/uncles and every other couple aligned.
       people.forEach(person => {
         if (used.has(person.id)) return;
-        const partner = spouseOf(person.id)
-          .map(id => visibleById.get(id))
-          .find(candidate => candidate && !used.has(candidate.id) && candidate.id !== person.id);
-        if (partner) {
-          used.add(person.id);
-          used.add(partner.id);
-          const pair = [person, partner].sort((a, b) => a.full_name.localeCompare(b.full_name));
-          units.push({ people: pair, width: nodeWidth * 2 + coupleGap, sortName: pair[0].full_name });
-        } else {
-          used.add(person.id);
-          units.push({ people: [person], width: nodeWidth, sortName: person.full_name });
+        const groupIds = [];
+        const pending = [person.id];
+        used.add(person.id);
+        while (pending.length) {
+          const currentId = pending.pop();
+          groupIds.push(currentId);
+          spouseOf(currentId).forEach(partnerId => {
+            if (visibleById.has(partnerId) && !used.has(partnerId)) {
+              used.add(partnerId);
+              pending.push(partnerId);
+            }
+          });
         }
+        const group = groupIds.map(id => visibleById.get(id)).filter(Boolean)
+          .sort((a, b) => a.full_name.localeCompare(b.full_name));
+        const width = group.length * nodeWidth + Math.max(0, group.length - 1) * coupleGap;
+        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name });
       });
 
       // Use the centre of the parents' couple where possible. This keeps each
@@ -1023,7 +1053,6 @@
       if (!first || !second || first.y !== second.y) return;
       const left = first.x < second.x ? first : second;
       const right = first.x < second.x ? second : first;
-      if (Math.abs((left.x + left.width) - right.x) > coupleGap + 2) return;
       paths.push('<path class="family-line spouse-line" d="M ' +
         (left.x + left.width) + ' ' + (left.y + 36) + ' H ' + right.x + '"/>');
     });
@@ -1230,17 +1259,11 @@
 
   function renderMembers() {
     const root = $("#tree-members-list");
-    if (!isManager()) { root.innerHTML = ""; return; }
-    const owner = state.activeMembership.role === "owner";
+    if (!isOwner()) { root.innerHTML = ""; return; }
+    const owner = true;
     if (!state.members.length) { root.innerHTML = '<div class="empty-state">No members yet.</div>'; return; }
     root.innerHTML = state.members.map(member => {
-      const targetIsOwner = member.role === "owner";
-      const targetIsAdmin = member.role === "admin";
-      const roleControl = targetIsOwner || (!owner && targetIsAdmin)
-        ? '<span class="role-pill role-' + escapeHtml(member.role) + '">' + escapeHtml(roleLabel(member.role)) + '</span>'
-        : '<label class="inline-control"><span class="tiny-label">Role</span><select class="form-input" data-member-role="' + escapeHtml(member.user_id) + '">' +
-          ['viewer','member'].concat(owner ? ['admin'] : []).map(role => '<option value="' + role + '"' + (role === member.role ? ' selected' : '') + '>' + escapeHtml(roleLabel(role)) + '</option>').join("") +
-          '</select></label>';
+      const roleControl = '<span class="role-pill role-' + escapeHtml(member.role) + '">' + escapeHtml(roleLabel(member.role)) + '</span>';
       const assignedId = member.person_id || "";
       const assignedControl = '<label class="inline-control"><span class="tiny-label">Assigned family entry</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '">' +
         '<option value="">Not linked</option>' + state.people.filter(person => !state.members.some(other => other.person_id === person.id && other.user_id !== member.user_id))
@@ -1251,14 +1274,6 @@
         (member.user_id === state.user.id ? "You · " : "") + escapeHtml(member.user_id === state.user.id ? (state.user.email || "Signed in") : "Approved member") +
         '</small></div></div>' + roleControl + '<div class="member-controls">' + assignedControl + '</div></div>';
     }).join("");
-    $$("[data-member-role]").forEach(select => select.addEventListener("change", async () => {
-      const { error } = await callRpc("uravu_set_member_role", {
-        p_tree_id:state.activeTree.id, p_user_id:select.dataset.memberRole, p_role:select.value
-      });
-      if (error) { showDbError(error, "change role"); await loadWorkspace(state.activeTree.id, false); return; }
-      toast("Member role updated.");
-      await refreshDashboard();
-    }));
     $$("[data-member-person]").forEach(select => select.addEventListener("change", async () => {
       const value = select.value || null;
       const { error } = await callRpc("uravu_assign_member_person", {
@@ -1274,26 +1289,22 @@
     const root = $("#tree-requests-list");
     if (!isManager()) { root.innerHTML = ""; return; }
     if (!state.requests.length) {
-      root.innerHTML = '<div class="empty-state"><strong>' + escapeHtml(t("noRequests")) + '</strong>New join, role and linking requests will appear here.</div>';
+      root.innerHTML = '<div class="empty-state"><strong>' + escapeHtml(t("noRequests")) + '</strong>' +
+        (state.language === "ta" ? "புதிய உறுப்பினர் மற்றும் குடும்பப் பதிவு கோரிக்கைகள் இங்கே தோன்றும்." : "New membership and family-record requests will appear here.") +
+        '</div>';
       return;
     }
-    const owner = state.activeMembership.role === "owner";
     root.innerHTML = state.requests.map(request => {
-      let typeLabel = request.request_type === "join" ? t("joinRequest") :
+      const typeLabel = request.request_type === "join" ? t("joinRequest") :
         request.request_type === "link" ? t("linkRequest") : t("roleChange");
       const requestedPerson = state.people.find(person => person.id === request.requested_person_id);
-      const requestedRole = request.requested_role || "viewer";
-      const roleOptions = ['viewer','member'].concat(owner ? ['admin'] : []);
-      const roleSelect = '<label class="inline-control"><span class="tiny-label">Assign role</span><select class="form-input" data-review-role="' +
-        escapeHtml(request.id) + '">' + roleOptions.map(role => '<option value="' + role + '"' +
-        (role === ((!owner && requestedRole === "admin") ? "member" : requestedRole) ? ' selected' : '') + '>' +
-        escapeHtml(roleLabel(role)) + '</option>').join("") + '</select></label>';
       return '<article class="request-row"><div><div class="request-identity"><span class="person-avatar">' +
         escapeHtml(initials(request.display_name)) + '</span><div><strong>' + escapeHtml(request.display_name || "Family member") +
-        '</strong><small>' + escapeHtml(typeLabel) + ' · ' + escapeHtml(roleLabel(requestedRole)) + '</small></div></div>' +
-        '<p class="request-copy">' + escapeHtml(request.message || "No message added.") +
-        (requestedPerson ? '<br>Requested family entry: <strong>' + escapeHtml(requestedPerson.full_name) + '</strong>' : '') +
-        '</p></div>' + roleSelect + '<div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
+        '</strong><small>' + escapeHtml(typeLabel) + ' · ' + escapeHtml(t("member")) + '</small></div></div>' +
+        '<p class="request-copy">' + escapeHtml(request.message || (state.language === "ta" ? "செய்தி எதுவும் சேர்க்கப்படவில்லை." : "No message added.")) +
+        (requestedPerson ? '<br>' + (state.language === "ta" ? "கோரிய குடும்பப் பதிவு: " : "Requested family entry: ") + '<strong>' + escapeHtml(requestedPerson.full_name) + '</strong>' :
+          request.request_type === "join" ? '<br>' + (state.language === "ta" ? "இன்னும் குடும்பப் பதிவு தேர்ந்தெடுக்கப்படவில்லை." : "No family record requested yet.") : '') +
+        '</p></div><div class="request-actions"><button class="primary-button" type="button" data-review-request="' +
         escapeHtml(request.id) + '" data-decision="approve">' + escapeHtml(t("approve")) +
         '</button><button class="danger-button" type="button" data-review-request="' + escapeHtml(request.id) +
         '" data-decision="reject">' + escapeHtml(t("reject")) + '</button></div></article>';
@@ -1303,7 +1314,7 @@
 
   async function reviewRequest(requestId, decision, button) {
     const select = $('[data-review-role="' + CSS.escape(requestId) + '"]');
-    const role = select?.value || "viewer";
+    const role = "member";
     setBusy(button, true, decision === "approve" ? "Approving…" : "Rejecting…");
     const { error } = await callRpc("uravu_review_tree_request", {
       p_request_id:requestId, p_decision:decision, p_role:role
@@ -1318,25 +1329,34 @@
     const tree = state.trees.find(item => item.id === treeId);
     if (!tree) { toast("Family tree not found.", true); return; }
     const membership = state.memberships.find(item => item.tree_id === treeId);
-    const currentRole = membership?.role || "viewer";
-    if (membership?.role === "owner") { toast("As the owner, use Manage members to link your own family entry.", true); return; }
-    const roleOptions = ['viewer','member','admin'].map(role =>
-      '<option value="' + role + '"' + (role === currentRole ? ' selected' : '') + '>' + escapeHtml(roleLabel(role)) + '</option>').join("");
-    const personOptions = ['<option value="">No entry selected</option>'].concat(
-      state.people.filter(person => !state.members.some(member => member.person_id === person.id && member.user_id !== state.user.id))
-        .map(person => '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.full_name) + '</option>')
+    const hasMembership = Boolean(membership);
+    if (membership?.role === "owner") {
+      toast("As the owner, use Manage members to link your family entry.", true);
+      return;
+    }
+    const personOptions = ['<option value="">Select a family member</option>'].concat(
+      state.people.filter(person => !state.members.some(member =>
+        member.person_id === person.id && member.user_id !== state.user.id))
+        .map(person => '<option value="' + escapeHtml(person.id) + '">' +
+          escapeHtml(person.full_name) + (person.tamil_name ? " · " + escapeHtml(person.tamil_name) : "") + '</option>')
     ).join("");
-    $("#request-modal-title").textContent = isMember ? t("Request a role change or family-entry link") : translateUiValue("Request access to " + tree.name);
-    $("#request-modal-description").textContent = isMember
-      ? "The tree owner or an admin will review this request."
-      : "Choose the role you want to request. The owner or an admin decides what to approve.";
+    const title = hasMembership
+      ? (state.language === "ta" ? "குடும்பப் பதிவைக் கோரு" : "Request a family record")
+      : translateUiValue("Request access to " + tree.name);
+    const description = hasMembership
+      ? (state.language === "ta" ? "கோரிக்கையை உரிமையாளர் அல்லது ஏற்கனவே பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்." : "The owner or a member already linked to a family record can review your request.")
+      : (state.language === "ta" ? "குடும்ப மரத்தில் இணைய அனுமதி கோருங்கள். பின்னர் உரிமையாளர் உங்களை ஒரு குடும்பப் பதிவுடன் இணைக்கலாம்." : "Request to join this family tree. The owner can assign your family record when approving your request.");
+    $("#request-modal-title").textContent = title;
+    $("#request-modal-description").textContent = description;
     $("#request-modal-body").innerHTML =
       '<form id="access-request-form">' +
-      '<label class="field-label" for="request-role">Requested role</label><select class="form-input" id="request-role" required>' +
-      roleOptions + '</select>' +
-      (isMember ? '<label class="field-label" for="request-person">Request to link your account to a family member</label><select class="form-input" id="request-person">' +
-        personOptions + '</select>' : '') +
-      '<label class="field-label" for="request-message">Message <span class="optional">Optional</span></label><textarea class="form-input form-textarea" id="request-message" maxlength="1000" placeholder="Explain your request briefly"></textarea>' +
+      (hasMembership ? '<label class="field-label" for="request-person">' +
+        (state.language === "ta" ? "உங்கள் கணக்கை இணைக்க வேண்டிய குடும்பப் பதிவு" : "Family record to link to your account") +
+        '</label><select class="form-input" id="request-person" required>' + personOptions + '</select>' : '') +
+      '<label class="field-label" for="request-message">' + (state.language === "ta" ? "செய்தி" : "Message") +
+        ' <span class="optional">' + escapeHtml(t("Optional")) + '</span></label>' +
+      '<textarea class="form-input form-textarea" id="request-message" maxlength="1000" placeholder="' +
+        (state.language === "ta" ? "உங்கள் கோரிக்கையைச் சுருக்கமாக விளக்குங்கள்" : "Explain your request briefly") + '"></textarea>' +
       '<div class="modal-actions"><button class="secondary-button" id="cancel-access-request" type="button">' + escapeHtml(t("cancel")) +
       '</button><button class="primary-button" type="submit">' + escapeHtml(t("sendRequest")) + '</button></div></form>';
     $("#request-modal").hidden = false;
@@ -1344,12 +1364,15 @@
     $("#access-request-form").addEventListener("submit", async event => {
       event.preventDefault();
       const submitButton = event.currentTarget.querySelector('button[type="submit"]');
-      const requestedRole = $("#request-role").value;
-      const requestedPerson = isMember ? ($("#request-person").value || null) : null;
+      const requestedPerson = hasMembership ? ($("#request-person").value || null) : null;
+      if (hasMembership && !requestedPerson) {
+        toast(state.language === "ta" ? "குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்." : "Select a family record to request.", true);
+        return;
+      }
       const message = $("#request-message").value.trim();
       setBusy(submitButton, true, "Sending…");
       const { error } = await callRpc("uravu_request_tree_access", {
-        p_tree_id:treeId, p_message:message, p_requested_role:requestedRole, p_requested_person_id:requestedPerson
+        p_tree_id:treeId, p_message:message, p_requested_role:"member", p_requested_person_id:requestedPerson
       });
       setBusy(submitButton, false);
       if (error) { showDbError(error, "request access"); return; }
