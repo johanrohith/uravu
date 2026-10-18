@@ -57,6 +57,20 @@
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
         await loadScript('./app-v2.js');
+        // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
+        try {
+          if ('caches' in window) {
+            const names = await caches.keys();
+            await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
+          }
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.filter(reg => {
+              try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
+              catch (_) { return false; }
+            }).map(reg => reg.unregister()));
+          }
+        } catch (finalCleanupError) { console.warn('Uravu final cache cleanup:', finalCleanupError); }
         document.body.classList.remove('booting');
         document.documentElement.classList.add('uravu-ready');
       } catch (error) {
