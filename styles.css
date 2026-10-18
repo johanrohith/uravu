@@ -185,3 +185,8 @@
   .connection-add-actions .primary-button{width:100%}
   .field-help{font-size:9px}
 }
+
+
+/* Spouse connectors share one visual style in every generation. */
+.family-tree-lines .spouse-line{stroke:#a9c9b0;stroke-width:2.5;stroke-linecap:round;opacity:1}
+.family-tree-lines .family-line{vector-effect:non-scaling-stroke}
