@@ -170,7 +170,8 @@ begin
   if not public.uravu_can_edit_tree(v_req.tree_id) then
     raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
-  if v_reviewer_role <> 'owner' and v_req.request_type <> 'join' then
+  if v_reviewer_role <> 'owner'
+     and (v_req.request_type <> 'join' or v_req.requested_person_id is not null) then
     raise exception 'Only the tree owner can review family-record assignment requests.';
   end if;
 
