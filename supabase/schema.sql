@@ -190,7 +190,7 @@ declare
   v_request_id uuid;
 begin
   if v_user is null then raise exception 'Sign in before making a request.'; end if;
-  if p_requested_role not in ('viewer', 'member', 'admin') then
+  if p_requested_role is null or p_requested_role not in ('viewer', 'member', 'admin') then
     raise exception 'The requested role must be viewer, member, or admin.';
   end if;
   if not exists(select 1 from public.uravu_family_trees t where t.id = p_tree_id) then
@@ -265,8 +265,8 @@ declare
   v_current_role text;
 begin
   if v_user is null then raise exception 'Sign in before reviewing requests.'; end if;
-  if p_decision not in ('approve','reject') then raise exception 'Decision must be approve or reject.'; end if;
-  if p_role not in ('viewer','member','admin') then raise exception 'Invalid assigned role.'; end if;
+  if p_decision is null or p_decision not in ('approve','reject') then raise exception 'Decision must be approve or reject.'; end if;
+  if p_role is null or p_role not in ('viewer','member','admin') then raise exception 'Invalid assigned role.'; end if;
 
   select * into v_req from public.uravu_access_requests r where r.id=p_request_id for update;
   if not found then raise exception 'Request not found.'; end if;
@@ -275,7 +275,7 @@ begin
 
   select m.role into v_reviewer_role from public.uravu_tree_members m
   where m.tree_id=v_req.tree_id and m.user_id=v_user;
-  if v_reviewer_role not in ('owner','admin') then
+  if coalesce(v_reviewer_role,'') not in ('owner','admin') then
     raise exception 'Only the tree owner or an admin can review requests.';
   end if;
   if p_role='admin' and v_reviewer_role <> 'owner' then
@@ -369,7 +369,7 @@ begin
 
   select m.role into v_actor_role from public.uravu_tree_members m
   where m.tree_id=p_tree_id and m.user_id=auth.uid();
-  if v_actor_role not in ('owner','admin') then
+  if coalesce(v_actor_role,'') not in ('owner','admin') then
     raise exception 'Only the tree owner or an admin can change roles.';
   end if;
   select m.role into v_target_role from public.uravu_tree_members m
@@ -406,7 +406,7 @@ begin
   if not public.uravu_has_tree_role(p_tree_id, array['owner','admin']) then
     raise exception 'Only the tree owner or an admin can edit family connections.';
   end if;
-  if p_relationship_type not in ('parent_of','child_of','spouse_of') then
+  if p_relationship_type is null or p_relationship_type not in ('parent_of','child_of','spouse_of') then
     raise exception 'Choose a valid family relationship.';
   end if;
   if p_person_id=p_related_person_id then raise exception 'A person cannot be connected to themselves.'; end if;
