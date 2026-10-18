@@ -13,6 +13,9 @@ const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8"
 assert.match(html, /id="signed-out"/);
 assert.match(html, /id="dashboard"/);
 assert.match(html, /id="request-modal"/);
+assert.match(html, /id="family-tree-viewport"/);
+assert.match(html, /id="family-tree-lines"/);
+assert.match(html, /id="family-tree-nodes"/);
 assert.match(html, /styles-v2\.css/);
 assert.match(html, /app-v2\.js/);
 assert.match(html, /Sign in with Google/);
@@ -29,6 +32,9 @@ assert.match(app, /uravu_review_tree_request/);
 assert.match(app, /uravu_assign_member_person/);
 assert.match(app, /uravu_set_member_role/);
 assert.match(app, /uravu_delete_tree/);
+assert.match(app, /family-tree-lines/);
+assert.match(app, /family-node-card/);
+assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
 assert.match(styles, /\.person-card/);
 
@@ -41,5 +47,6 @@ assert.match(schema, /enable row level security/ig);
 assert.match(schema, /Only the tree owner can grant admin access/);
 assert.match(schema, /Only the tree owner or an admin can assign family entries/);
 assert.match(schema, /uravu_one_pending_request_per_user_tree/);
+assert.match(schema, /would create a family-tree cycle/);
 
 console.log("Uravu clean-app smoke checks passed.");
