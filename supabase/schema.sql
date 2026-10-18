@@ -124,7 +124,7 @@ create or replace function public.uravu_can_edit_tree(p_tree_id uuid)
 returns boolean
 language sql stable security definer
 set search_path = pg_catalog, pg_temp
-as $
+as $function$
   select exists (
     select 1
     from public.uravu_tree_members m
@@ -135,7 +135,7 @@ as $
         or (m.role = 'member' and m.person_id is not null)
       )
   );
-$;
+$function$;
 
 create or replace function public.uravu_touch_updated_at()
 returns trigger
@@ -288,7 +288,6 @@ as $$
 declare
   v_user uuid := auth.uid();
   v_req public.uravu_access_requests%rowtype;
-  v_reviewer_role text;
   v_current_role text;
 begin
   if v_user is null then raise exception 'Sign in before reviewing requests.'; end if;
@@ -300,8 +299,6 @@ begin
   if v_req.status <> 'pending' then raise exception 'This request has already been reviewed.'; end if;
   if v_req.user_id = v_user then raise exception 'You cannot review your own request.'; end if;
 
-  select m.role into v_reviewer_role from public.uravu_tree_members m
-  where m.tree_id=v_req.tree_id and m.user_id=v_user;
   if not public.uravu_can_edit_tree(v_req.tree_id) then
     raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
