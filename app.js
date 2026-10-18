@@ -128,7 +128,7 @@
     "English name is required.":"ஆங்கிலப் பெயர் அவசியம்.",
     "Tamil name is required.":"தமிழ்ப் பெயர் அவசியம்.",
     "Select a gender.":"பாலினத்தைத் தேர்ந்தெடுக்கவும்.",
-    "Use DD-MM-YYYY for full dates. Partial dates may be entered as MM-YYYY, YYYY, DD-MM or MM.":"முழுத் தேதிக்கு DD-MM-YYYY வடிவத்தைப் பயன்படுத்தவும். பகுதி தேதிகளுக்கு MM-YYYY, YYYY, DD-MM அல்லது MM பயன்படுத்தலாம்.",
+    "Enter full dates as DD-MM-YYYY. Partial dates may be entered as MM-YYYY, YYYY, DD-MM or MM.":"முழுத் தேதிக்கு DD-MM-YYYY வடிவத்தைப் பயன்படுத்தவும். பகுதி தேதிகளுக்கு MM-YYYY, YYYY, DD-MM அல்லது MM பயன்படுத்தலாம்.",
     "Your account is already linked to a family record.":"உங்கள் கணக்கு ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்டுள்ளது.",
     "Manage member accounts":"உறுப்பினர் கணக்குகளை நிர்வகி",
     "Link member accounts to family records. The owner assigns records; members can edit once their account is linked.":"உறுப்பினர் கணக்குகளை குடும்பப் பதிவுகளுடன் இணைக்கவும். இணைக்கப்பட்ட உறுப்பினர்கள் குடும்ப விவரங்களைத் திருத்தலாம்.",
