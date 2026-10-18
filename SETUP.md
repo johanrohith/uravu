@@ -28,8 +28,8 @@ Never put the Google OAuth Client Secret or a Supabase service-role key in this 
 - The tree creator is the **Owner**.
 - Other accounts request access. The owner can approve the request and assign a family record, or approve access first and assign a record later.
 - A **Member with no assigned family record is view-only** and can request a record assignment.
-- Once the owner links a Member's account to a family record, that Member can add/edit/delete family records, update connections, and approve or reject new membership and record-link requests.
-- Only the Owner can assign or unlink member accounts directly in **Manage members** and delete the tree.
+- Once the owner links a Member's account to a family record, that Member can add/edit/delete family records, update connections, and approve or reject new membership (join) requests.
+- Only the Owner can assign or unlink member accounts, approve family-record assignment/link requests, and delete the tree.
 - There is no Admin or Viewer role.
 
 These permissions are enforced by Supabase Row Level Security and server-side functions, not just by hiding buttons.
