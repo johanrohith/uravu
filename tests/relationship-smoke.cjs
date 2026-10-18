@@ -59,7 +59,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app-v2\.js\?v=uravu-editor-connections-20261018-9/);
+assert.match(html, /app-v2\.js\?v=uravu-editor-connections-20261018-10/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
