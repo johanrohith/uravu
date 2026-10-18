@@ -1,47 +1,42 @@
 # Uravu setup
 
-Uravu stores family trees, records, connections and membership assignments in Supabase. Google sign-in is used for accounts; family data is not stored in browser cache.
+Uravu stores family trees, records, relationships and membership assignments in Supabase. Sign-in uses Google OAuth.
 
-## 1. Database
+## 1. Database setup
 
-For a **new Supabase project**, open the [Supabase SQL Editor](https://supabase.com/dashboard/project/rtecswdjrwgsiwaonekf/sql/new), open [supabase/schema.sql](./supabase/schema.sql), paste the whole file and run it.
+For a **new Supabase project**, open the [Supabase SQL Editor](https://supabase.com/dashboard/project/rtecswdjrwgsiwaonekf/sql/new), open [supabase/schema.sql](./supabase/schema.sql), paste the entire file and run it.
 
-For an **existing Uravu database**, run these additive migrations in the SQL Editor:
+For an **existing Uravu database**, run the migrations in this order if they have not already been applied:
 
-1. [Partial dates migration](./supabase/partial-dates-migration.sql) — if you have not already run it. It enables year-only/month-only birth dates and a deceased status even when the death date is unknown.
-2. [Owner and Member permissions migration](./supabase/member-permissions-migration.sql) — run once to replace the previous role model with **Owner** and **Member**, convert existing memberships, and install the updated server-side permissions.
+1. [Partial dates migration](./supabase/partial-dates-migration.sql) — enables partial birthdays, partial death dates and a deceased status when the date is unknown.
+2. [Owner and Member permissions migration](./supabase/member-permissions-migration.sql) — replaces the earlier roles with Owner and Member and enables editing for Members whose accounts are linked to family records.
+3. [Linking requests migration](./supabase/linking-requests-migration.sql) — use this if the Owner and Member migration was already applied before this linking update. It lets assigned Members link **unlinked** accounts to available records and review linking requests. Only the Owner can change or remove an existing account assignment.
 
-Do not rerun the entire schema merely to change roles; use the migration above for an existing database. These migrations preserve existing people and relationship links.
+These migrations preserve existing people and family relationships. Do not rerun the full schema on an existing database.
 
 ## 2. Google sign-in
 
 In Supabase Authentication settings:
 - Enable the Google provider and enter the OAuth Client ID and Client Secret from Google Cloud.
-- Supabase callback URL: `https://rtecswdjrwgsiwaonekf.supabase.co/auth/v1/callback`
+- Callback URL: `https://rtecswdjrwgsiwaonekf.supabase.co/auth/v1/callback`
 - Site URL: `https://johanrohith.me/uravu/`
 - Redirect URL allow list: `https://johanrohith.me/uravu/**`
 
-Never put the Google OAuth Client Secret or a Supabase service-role key in this repository. `supabase-config.js` must contain only the public/publishable Supabase key.
+Never commit the Google OAuth Client Secret or a Supabase service-role key. `supabase-config.js` should contain only the public/publishable Supabase key.
 
-## 3. Membership and permissions
+## 3. Membership and linking
 
-- The tree creator is the **Owner**.
-- Other accounts request access. The owner can approve the request and assign a family record, or approve access first and assign a record later.
-- A **Member with no assigned family record is view-only** and can request a record assignment.
-- Once the owner links a Member's account to a family record, that Member can add/edit/delete family records, update connections, and approve or reject new membership (join) requests.
-- Only the Owner can assign or unlink member accounts, approve family-record assignment/link requests, and delete the tree.
-- There is no Admin or Viewer role.
+- The person who creates the tree is its **Owner**.
+- Other people request access. The Owner or a Member linked to a family record can review requests to join.
+- An unlinked Member can request to connect their account to an existing, unassigned family record.
+- The Owner or a linked Member can link an unlinked account to an available record from **Member accounts**. If the person does not yet have a record, create it in the family editor first, then link the account.
+- The Owner alone can reassign or unlink an already-linked account and delete the tree.
+- There are no Admin or Viewer roles. Unlinked Members can view records and request a link; linked Members can maintain the family tree.
 
-These permissions are enforced by Supabase Row Level Security and server-side functions, not just by hiding buttons.
+## 4. Open the updated app
 
-## 4. Clear the old app cache
-
-After GitHub Pages deploys the latest version, open:
-
-`https://johanrohith.me/uravu/clear-cache.html`
-
-It clears Uravu's old Cache Storage and unregisters the old cache-first service worker, while preserving the Google-auth session.
+After GitHub Pages deploys the latest commit, visit `https://johanrohith.me/uravu/clear-cache.html` once to clear the old app cache. This preserves the Google sign-in session.
 
 ## Troubleshooting
 
-If the app reports a database permission error after a code update, check that the existing-database migrations above have been run successfully. If Google login reports an OAuth redirect error, check the callback URL and redirect allow list exactly.
+If a current database rejects a linking action, check that the migrations above have been applied in order. If Google login reports an OAuth redirect error, confirm the callback URL and redirect allow list exactly.
