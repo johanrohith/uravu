@@ -192,8 +192,8 @@
           </section>
 
           <section class="panel people-panel">
-            <div class="section-heading"><div><p class="eyebrow">FAMILY DIRECTORY</p><h3>Family members</h3></div><input class="form-input people-search" id="people-search" placeholder="Search names…"></div>
-            <div class="generation-list" id="people-list"><div class="empty-state">This tree has no family members yet.</div></div>
+            <div class="section-heading"><div><p class="eyebrow">FAMILY TREE</p><h3>Family tree</h3></div><div class="tree-view-controls"><input class="form-input people-search" id="people-search" placeholder="Search names…"><button class="secondary-button" id="fit-tree-button" type="button">Fit tree</button></div></div>
+            <div class="empty-state" id="people-empty" hidden></div><div class="family-tree-viewport" id="family-tree-viewport" hidden><div class="family-tree-canvas" id="family-tree-canvas"><svg class="family-tree-lines" id="family-tree-lines" aria-hidden="true"></svg><div class="family-tree-nodes" id="family-tree-nodes"></div></div></div>
           </section>
 
           <section class="panel management-panel" id="member-management-panel" hidden>
