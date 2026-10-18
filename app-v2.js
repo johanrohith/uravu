@@ -18,7 +18,10 @@
     editingPersonId: null,
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
-    loadingTree: false
+    loadingTree: false,
+    treeZoom: 1,
+    treeBaseWidth: 0,
+    treeBaseHeight: 0
   };
 
   const words = {
@@ -510,18 +513,12 @@
     const selected = state.people.filter(person => !search ||
       [person.full_name, person.tamil_name, person.notes].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
 
-    if (!state.people.length) {
+    if (!state.people.length || !selected.length) {
       viewport.hidden = true;
       empty.hidden = false;
-      empty.innerHTML = '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"));
-      nodesRoot.innerHTML = "";
-      linesRoot.innerHTML = "";
-      return;
-    }
-    if (!selected.length) {
-      viewport.hidden = true;
-      empty.hidden = false;
-      empty.textContent = t("noSearchResults");
+      empty.innerHTML = !state.people.length
+        ? '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"))
+        : escapeHtml(t("noSearchResults"));
       nodesRoot.innerHTML = "";
       linesRoot.innerHTML = "";
       return;
@@ -529,77 +526,102 @@
 
     viewport.hidden = false;
     empty.hidden = true;
+
+    // Lay out all visible entries into generation rows, treating married/partner
+    // people as a single unit before ordering each row.
     const selectedIds = new Set(selected.map(person => person.id));
     const levels = generationMap();
     const grouped = new Map();
     levels.forEach((people, level) => {
-      const filtered = people.filter(person => selectedIds.has(person.id));
-      if (filtered.length) grouped.set(level, filtered);
+      const visible = people.filter(person => selectedIds.has(person.id));
+      if (visible.length) grouped.set(level, visible);
     });
     const levelKeys = Array.from(grouped.keys()).sort((a, b) => a - b);
-    const minLevel = Math.min(...levelKeys);
-    const maxLevel = Math.max(...levelKeys);
-    const nodeWidth = 218;
-    const nodeHeight = 202;
-    const columnGap = 34;
-    const coupleGap = 16;
-    const rowHeight = 286;
+    if (!levelKeys.length) return;
+
+    const minLevel = levelKeys[0];
+    const maxLevel = levelKeys[levelKeys.length - 1];
+    const nodeWidth = 236;
+    const nodeHeight = 210;
+    const columnGap = 44;
+    const coupleGap = 18;
+    const rowHeight = 302;
     const levelUnits = new Map();
     const positions = new Map();
+    const byId = new Map(state.people.map(person => [person.id, person]));
+    const spouseOf = id => state.relationships
+      .filter(edge => edge.relationship_type === "spouse" && (edge.person_id === id || edge.related_person_id === id))
+      .map(edge => edge.person_id === id ? edge.related_person_id : edge.person_id);
 
-    // Treat partners as one layout unit so they always sit beside one another
-    // on the same generation row, instead of being separated by alphabetical order.
     levelKeys.forEach(level => {
       const people = grouped.get(level).slice().sort((a, b) => a.full_name.localeCompare(b.full_name));
-      const peopleById = new Map(people.map(person => [person.id, person]));
-      const paired = new Set();
+      const visibleById = new Map(people.map(person => [person.id, person]));
+      const used = new Set();
       const units = [];
+
       people.forEach(person => {
-        if (paired.has(person.id)) return;
-        const spouseIds = state.relationships
-          .filter(r => r.relationship_type === "spouse" && (r.person_id === person.id || r.related_person_id === person.id))
-          .map(r => r.person_id === person.id ? r.related_person_id : r.person_id);
-        const spouse = spouseIds.map(id => peopleById.get(id)).find(candidate => candidate && !paired.has(candidate.id) && candidate.id !== person.id);
-        if (spouse) {
-          paired.add(person.id);
-          paired.add(spouse.id);
-          const pair = [person, spouse].sort((a, b) => a.full_name.localeCompare(b.full_name));
+        if (used.has(person.id)) return;
+        const partner = spouseOf(person.id)
+          .map(id => visibleById.get(id))
+          .find(candidate => candidate && !used.has(candidate.id) && candidate.id !== person.id);
+        if (partner) {
+          used.add(person.id);
+          used.add(partner.id);
+          const pair = [person, partner].sort((a, b) => a.full_name.localeCompare(b.full_name));
           units.push({ people: pair, width: nodeWidth * 2 + coupleGap, sortName: pair[0].full_name });
         } else {
-          paired.add(person.id);
+          used.add(person.id);
           units.push({ people: [person], width: nodeWidth, sortName: person.full_name });
         }
       });
 
-      // Keep sibling branches near their parents, rather than letting one global
-      // alphabetical sort scatter cousins and children across the canvas.
+      // Use the centre of the parents' couple where possible. This keeps each
+      // sibling branch underneath its family instead of scattering all cousins
+      // in alphabetical order across the generation.
       const parentCenter = unit => {
         const centers = [];
+        const seenParentIds = new Set();
         unit.people.forEach(person => {
-          state.relationships.filter(r => r.relationship_type === "parent" && r.related_person_id === person.id)
+          state.relationships
+            .filter(edge => edge.relationship_type === "parent" && edge.related_person_id === person.id)
             .forEach(edge => {
-              const parent = positions.get(edge.person_id);
-              if (parent) centers.push(parent.x + parent.width / 2);
+              const parentPerson = byId.get(edge.person_id);
+              if (!parentPerson || seenParentIds.has(parentPerson.id)) return;
+              const parentPosition = positions.get(parentPerson.id);
+              if (!parentPosition) return;
+              const partners = spouseOf(parentPerson.id)
+                .map(id => ({ id, position: positions.get(id) }))
+                .filter(item => item.position && item.position.y === parentPosition.y);
+              if (partners.length) {
+                const couplePeople = [parentPosition, ...partners.map(item => item.position)];
+                couplePeople.forEach(() => {});
+                const ids = [parentPerson.id, ...partners.map(item => item.id)];
+                ids.forEach(id => seenParentIds.add(id));
+                centers.push(couplePeople.reduce((sum, pos) => sum + pos.x + pos.width / 2, 0) / couplePeople.length);
+              } else {
+                seenParentIds.add(parentPerson.id);
+                centers.push(parentPosition.x + parentPosition.width / 2);
+              }
             });
         });
-        return centers.length ? centers.reduce((sum, value) => sum + value, 0) / centers.length : null;
+        return centers.length ? centers.reduce((sum, center) => sum + center, 0) / centers.length : null;
       };
+
       units.sort((a, b) => {
         const ac = parentCenter(a), bc = parentCenter(b);
-        if (ac != null && bc != null && ac !== bc) return ac - bc;
+        if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
         if (ac != null && bc == null) return -1;
         if (ac == null && bc != null) return 1;
         return a.sortName.localeCompare(b.sortName);
       });
       levelUnits.set(level, units);
 
-      let cursorX = 25;
+      let cursorX = 26;
       units.forEach(unit => {
         unit.people.forEach((person, index) => {
-          const x = cursorX + index * (nodeWidth + coupleGap);
           positions.set(person.id, {
-            x,
-            y: 22 + (level - minLevel) * rowHeight,
+            x: cursorX + index * (nodeWidth + coupleGap),
+            y: 24 + (level - minLevel) * rowHeight,
             width: nodeWidth,
             height: nodeHeight
           });
@@ -611,43 +633,218 @@
     const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
       units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
     ));
-    const canvasWidth = Math.max(viewport.clientWidth || 760, widestLevel + 50);
-    const canvasHeight = Math.max(265, (maxLevel - minLevel) * rowHeight + nodeHeight + 50);
-    canvas.style.width = canvasWidth + "px";
-    canvas.style.height = canvasHeight + "px";
-    linesRoot.setAttribute("viewBox", "0 0 " + canvasWidth + " " + canvasHeight);
-    linesRoot.setAttribute("width", String(canvasWidth));
-    linesRoot.setAttribute("height", String(canvasHeight));
+    const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 52);
+    const baseHeight = Math.max(290, (maxLevel - minLevel) * rowHeight + nodeHeight + 54);
+    state.treeBaseWidth = baseWidth;
+    state.treeBaseHeight = baseHeight;
+
+    // The canvas is a scrollable spacer; its two layers scale together so
+    // scrollbars, card hit targets, and relationship lines stay aligned.
+    canvas.style.minWidth = "0";
+    canvas.style.minHeight = "0";
+    nodesRoot.style.left = "0";
+    nodesRoot.style.top = "0";
+    nodesRoot.style.right = "auto";
+    nodesRoot.style.bottom = "auto";
+    nodesRoot.style.width = baseWidth + "px";
+    nodesRoot.style.height = baseHeight + "px";
+    linesRoot.style.left = "0";
+    linesRoot.style.top = "0";
+    linesRoot.style.right = "auto";
+    linesRoot.style.bottom = "auto";
+    linesRoot.style.width = baseWidth + "px";
+    linesRoot.style.height = baseHeight + "px";
+    linesRoot.setAttribute("viewBox", "0 0 " + baseWidth + " " + baseHeight);
+    linesRoot.setAttribute("width", String(baseWidth));
+    linesRoot.setAttribute("height", String(baseHeight));
 
     const paths = [];
-    state.relationships.filter(relationship => relationship.relationship_type === "parent").forEach(relationship => {
-      const parent = positions.get(relationship.person_id);
-      const child = positions.get(relationship.related_person_id);
+    state.relationships.filter(edge => edge.relationship_type === "parent").forEach(edge => {
+      const parent = positions.get(edge.person_id);
+      const child = positions.get(edge.related_person_id);
       if (!parent || !child || child.y <= parent.y) return;
-      const startX = parent.x + nodeWidth / 2;
-      const startY = parent.y + nodeHeight;
-      const endX = child.x + nodeWidth / 2;
+      const startX = parent.x + parent.width / 2;
+      const startY = parent.y + parent.height;
+      const endX = child.x + child.width / 2;
       const endY = child.y;
-      const middleY = startY + Math.max(12, (endY - startY) / 2);
+      const middleY = startY + Math.max(14, (endY - startY) / 2);
       paths.push('<path class="family-line" d="M ' + startX + ' ' + startY + ' V ' + middleY + ' H ' + endX + ' V ' + endY + '"/>');
     });
-    state.relationships.filter(relationship => relationship.relationship_type === "spouse").forEach(relationship => {
-      const first = positions.get(relationship.person_id);
-      const second = positions.get(relationship.related_person_id);
+    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
+      const first = positions.get(edge.person_id);
+      const second = positions.get(edge.related_person_id);
       if (!first || !second || first.y !== second.y) return;
       const left = first.x < second.x ? first : second;
       const right = first.x < second.x ? second : first;
-      if (Math.abs((left.x + nodeWidth) - right.x) > coupleGap + 2) return;
-      const y = left.y + 35;
-      paths.push('<path class="family-line spouse-line" d="M ' + (left.x + nodeWidth) + ' ' + y + ' H ' + right.x + '"/>');
+      if (Math.abs((left.x + left.width) - right.x) > coupleGap + 2) return;
+      paths.push('<path class="family-line spouse-line" d="M ' +
+        (left.x + left.width) + ' ' + (left.y + 36) + ' H ' + right.x + '"/>');
     });
+
     linesRoot.innerHTML = paths.join("");
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id))).join("");
+    applyTreeCanvasScale(false);
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
   }
+
+  function applyTreeCanvasScale(preservePosition = true, anchorX, anchorY) {
+    const viewport = $("#family-tree-viewport");
+    const canvas = $("#family-tree-canvas");
+    const nodesRoot = $("#family-tree-nodes");
+    const linesRoot = $("#family-tree-lines");
+    if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
+    const scale = Math.max(0.25, Math.min(2.5, state.treeZoom || 1));
+    const oldWidth = Number(canvas.dataset.scaledWidth || state.treeBaseWidth * scale);
+    const oldScale = oldWidth / state.treeBaseWidth;
+    const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
+    const ay = Number.isFinite(anchorY) ? anchorY : viewport.clientHeight / 2;
+    const worldX = (viewport.scrollLeft + ax) / (oldScale || 1);
+    const worldY = (viewport.scrollTop + ay) / (oldScale || 1);
+
+    state.treeZoom = scale;
+    nodesRoot.style.transformOrigin = "0 0";
+    nodesRoot.style.transform = "scale(" + scale + ")";
+    linesRoot.style.transformOrigin = "0 0";
+    linesRoot.style.transform = "scale(" + scale + ")";
+    canvas.style.width = Math.ceil(state.treeBaseWidth * scale) + "px";
+    canvas.style.height = Math.ceil(state.treeBaseHeight * scale) + "px";
+    canvas.dataset.scaledWidth = String(state.treeBaseWidth * scale);
+    const level = $("#tree-zoom-level");
+    if (level) level.textContent = Math.round(scale * 100) + "%";
+
+    if (preservePosition) {
+      viewport.scrollLeft = Math.max(0, worldX * scale - ax);
+      viewport.scrollTop = Math.max(0, worldY * scale - ay);
+    }
+  }
+
+  function setTreeZoom(nextScale, anchorX, anchorY) {
+    state.treeZoom = Math.max(0.25, Math.min(2.5, Number(nextScale) || 1));
+    applyTreeCanvasScale(true, anchorX, anchorY);
+  }
+
+  function fitTreeToView() {
+    const viewport = $("#family-tree-viewport");
+    if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return;
+    const availableWidth = Math.max(100, viewport.clientWidth - 36);
+    const availableHeight = Math.max(100, viewport.clientHeight - 36);
+    const fitScale = Math.max(0.25, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
+    state.treeZoom = fitScale;
+    applyTreeCanvasScale(false);
+    viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+  }
+
+  function toggleTreeFullscreen() {
+    const panel = $(".people-panel");
+    if (!panel) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+      return;
+    }
+    if (panel.requestFullscreen) {
+      panel.requestFullscreen().catch(error => {
+        console.warn("Uravu fullscreen is unavailable:", error);
+        toast("Full screen is not available in this browser.", true);
+      });
+    } else {
+      toast("Full screen is not available in this browser.", true);
+    }
+  }
+
+  function bindTreeGestures() {
+    const viewport = $("#family-tree-viewport");
+    if (!viewport || viewport.dataset.gesturesBound === "1") return;
+    viewport.dataset.gesturesBound = "1";
+    const pointers = new Map();
+    let lastDragPoint = null;
+    let pinchStartDistance = 0;
+    let pinchStartScale = 1;
+    let moved = false;
+    let suppressClickUntil = 0;
+
+    const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    const localPoint = event => {
+      const rect = viewport.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    };
+
+    viewport.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (event.target.closest("button,input,select,textarea,a")) return;
+      const point = localPoint(event);
+      pointers.set(event.pointerId, point);
+      try { viewport.setPointerCapture(event.pointerId); } catch (_) {}
+      moved = false;
+      if (pointers.size === 1) {
+        lastDragPoint = point;
+      } else if (pointers.size === 2) {
+        const pair = Array.from(pointers.values());
+        pinchStartDistance = Math.max(1, distance(pair[0], pair[1]));
+        pinchStartScale = state.treeZoom;
+        lastDragPoint = null;
+      }
+    });
+
+    viewport.addEventListener("pointermove", event => {
+      if (!pointers.has(event.pointerId)) return;
+      const point = localPoint(event);
+      pointers.set(event.pointerId, point);
+      if (pointers.size >= 2) {
+        const pair = Array.from(pointers.values()).slice(0, 2);
+        const middle = midpoint(pair[0], pair[1]);
+        const rect = viewport.getBoundingClientRect();
+        const nextScale = pinchStartScale * distance(pair[0], pair[1]) / pinchStartDistance;
+        setTreeZoom(nextScale, middle.x, middle.y);
+        moved = true;
+        suppressClickUntil = Date.now() + 350;
+        event.preventDefault();
+      } else if (pointers.size === 1 && lastDragPoint) {
+        const dx = point.x - lastDragPoint.x;
+        const dy = point.y - lastDragPoint.y;
+        if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+        if (moved) {
+          viewport.scrollLeft -= dx;
+          viewport.scrollTop -= dy;
+          suppressClickUntil = Date.now() + 350;
+          event.preventDefault();
+        }
+        lastDragPoint = point;
+      }
+    });
+
+    const finishPointer = event => {
+      pointers.delete(event.pointerId);
+      try { if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId); } catch (_) {}
+      if (pointers.size === 1) {
+        lastDragPoint = Array.from(pointers.values())[0];
+        pinchStartDistance = 0;
+      } else {
+        lastDragPoint = null;
+        pinchStartDistance = 0;
+      }
+    };
+    viewport.addEventListener("pointerup", finishPointer);
+    viewport.addEventListener("pointercancel", finishPointer);
+    viewport.addEventListener("lostpointercapture", finishPointer);
+    viewport.addEventListener("click", event => {
+      if (Date.now() < suppressClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClickUntil = 0;
+      }
+    }, true);
+    viewport.addEventListener("wheel", event => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      const rect = viewport.getBoundingClientRect();
+      setTreeZoom(state.treeZoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1), event.clientX - rect.left, event.clientY - rect.top);
+    }, { passive: false });
+  }
+
 
   function renderPersonCard(person, position) {
     if (!position) return "";
@@ -964,7 +1161,22 @@
       $("#tree-workspace").hidden = true;
     });
     $("#delete-tree-button").addEventListener("click", deleteTree);
-    $("#fit-tree-button").addEventListener("click", () => { const viewport = $("#family-tree-viewport"); viewport.scrollTo({ top:0, left:0, behavior:"smooth" }); });
+    $("#fit-tree-button").addEventListener("click", fitTreeToView);
+    $("#tree-zoom-out").addEventListener("click", () => setTreeZoom(state.treeZoom / 1.2));
+    $("#tree-zoom-in").addEventListener("click", () => setTreeZoom(state.treeZoom * 1.2));
+    $("#tree-fullscreen-button").addEventListener("click", toggleTreeFullscreen);
+    document.addEventListener("fullscreenchange", () => {
+      const button = $("#tree-fullscreen-button");
+      if (button) {
+        const active = document.fullscreenElement === $(".people-panel");
+        button.textContent = active ? "Exit full screen" : "Full screen";
+        button.setAttribute("aria-label", active ? "Exit full screen" : "Full screen");
+      }
+      window.requestAnimationFrame(() => {
+        if (state.treeBaseWidth) applyTreeCanvasScale(false);
+      });
+    });
+    bindTreeGestures();
     $("#language-button").addEventListener("click", setLanguage);
     $("#request-modal-close").addEventListener("click", closeRequestDialog);
     $("#request-modal").addEventListener("click", event => {
