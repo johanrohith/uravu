@@ -1,43 +1,47 @@
-# Uravu setup (clean database-backed version)
+# Uravu setup
 
-The application source now reads family trees from Supabase. It does not include or store demo family members in the app, browser cookies, or a tree cache.
+Uravu stores family trees, records, connections and membership assignments in Supabase. Google sign-in is used for accounts; family data is not stored in browser cache.
 
-## 1. Install the clean database schema
+## 1. Database
 
-Open the [Supabase SQL Editor](https://supabase.com/dashboard/project/rtecswdjrwgsiwaonekf/sql/new). Open [supabase/schema.sql](./supabase/schema.sql) from this repository, copy the whole file into a new SQL query, then click **Run**.
+For a **new Supabase project**, open the [Supabase SQL Editor](https://supabase.com/dashboard/project/rtecswdjrwgsiwaonekf/sql/new), open [supabase/schema.sql](./supabase/schema.sql), paste the whole file and run it.
 
-This migration creates the new uravu_* tables and their Row Level Security policies and server-side role-management functions. It does not drop or overwrite the older tables from the prototype. The app uses only the new tables.
+For an **existing Uravu database**, run these additive migrations in the SQL Editor:
 
-## 2. Confirm Google sign-in settings
+1. [Partial dates migration](./supabase/partial-dates-migration.sql) — if you have not already run it. It enables year-only/month-only birth dates and a deceased status even when the death date is unknown.
+2. [Owner and Member permissions migration](./supabase/member-permissions-migration.sql) — run once to replace the previous role model with **Owner** and **Member**, convert existing memberships, and install the updated server-side permissions.
+
+Do not rerun the entire schema merely to change roles; use the migration above for an existing database. These migrations preserve existing people and relationship links.
+
+## 2. Google sign-in
 
 In Supabase Authentication settings:
-- Google provider must be enabled and contain the OAuth Client ID and Client Secret from Google Cloud.
-- The Supabase callback URL is https://rtecswdjrwgsiwaonekf.supabase.co/auth/v1/callback.
-- The site URL should be https://johanrohith.me/uravu/.
-- Add https://johanrohith.me/uravu/** to the redirect URL allow list.
+- Enable the Google provider and enter the OAuth Client ID and Client Secret from Google Cloud.
+- Supabase callback URL: `https://rtecswdjrwgsiwaonekf.supabase.co/auth/v1/callback`
+- Site URL: `https://johanrohith.me/uravu/`
+- Redirect URL allow list: `https://johanrohith.me/uravu/**`
 
-Never put the Google OAuth Client Secret or a Supabase service-role key in this repository. supabase-config.js should contain only the public/publishable Supabase key.
+Never put the Google OAuth Client Secret or a Supabase service-role key in this repository. `supabase-config.js` must contain only the public/publishable Supabase key.
 
-## 3. Clear the old prototype cache once
+## 3. Membership and permissions
 
-After GitHub Pages has deployed the latest commit, open:
+- The tree creator is the **Owner**.
+- Other accounts request access. The owner can approve the request and assign a family record, or approve access first and assign a record later.
+- A **Member with no assigned family record is view-only** and can request a record assignment.
+- Once the owner links a Member's account to a family record, that Member can add/edit/delete family records, update connections, and approve or reject new membership and record-link requests.
+- Only the Owner can assign or unlink member accounts directly in **Manage members** and delete the tree.
+- There is no Admin or Viewer role.
 
-https://johanrohith.me/uravu/clear-cache.html
+These permissions are enforced by Supabase Row Level Security and server-side functions, not just by hiding buttons.
 
-It clears Uravu's old Cache Storage and unregisters the old cache-first service worker, then redirects to the app. It intentionally preserves the Supabase Google-auth session. The new app loads versioned paths (app-v2.js, styles-v2.css) and never caches family-tree data in the browser.
+## 4. Clear the old app cache
 
-## 4. Use the app
+After GitHub Pages deploys the latest version, open:
 
-1. Sign in with Google.
-2. Choose **Create a family tree** to create a tree and become its owner, or request access to a tree in **Find a family tree**.
-3. A tree owner or admin reviews join requests and chooses the role to assign.
-4. Owner/admin users can add family entries and their relationships, change eligible member roles, and directly assign or unlink a member's account from a family entry.
-5. Only the owner can grant admin access. An admin cannot promote another admin or take ownership.
+`https://johanrohith.me/uravu/clear-cache.html`
 
-## What is persisted
-
-Supabase is the source of truth for trees, people, relationships, roles, memberships and requests. The browser's Supabase client persists the sign-in session using its standard auth storage; the app does not write family data to cookies, local storage or Cache Storage.
+It clears Uravu's old Cache Storage and unregisters the old cache-first service worker, while preserving the Google-auth session.
 
 ## Troubleshooting
 
-If the dashboard says the database schema is missing, step 1 has not completed successfully. Return to the SQL Editor, run the entire supabase/schema.sql, and refresh Uravu. If Google login returns an OAuth redirect error, compare the callback URL and redirect allow list in step 2 exactly.
+If the app reports a database permission error after a code update, check that the existing-database migrations above have been run successfully. If Google login reports an OAuth redirect error, check the callback URL and redirect allow list exactly.
