@@ -47,7 +47,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles-v2.css?v=uravu-owner-member-20261018-16';
+        stylesheet.href = './styles-v2.css?v=uravu-record-entry-20261018-17';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -56,7 +56,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app-v2.js?v=uravu-owner-member-20261018-16');
+        await loadScript('./app-v2.js?v=uravu-record-entry-20261018-17');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
@@ -133,9 +133,8 @@
           <div>
             <p class="eyebrow">YOUR FAMILY WORKSPACE</p>
             <h1 id="welcome-heading">Welcome to Uravu</h1>
-            <p class="subheading">Create a tree or request access to one that already exists.</p>
+            <p class="subheading">Manage family records, relationships and membership.</p>
           </div>
-          <span class="privacy-note"><span class="privacy-dot"></span> Family data is loaded from Supabase, not browser cache</span>
         </section>
 
         <div class="action-grid">
@@ -153,7 +152,7 @@
           </section>
 
           <section class="panel browse-panel">
-            <div class="panel-heading"><span class="panel-icon panel-icon-gold">↗</span><div><h2>Find a family tree</h2><p>Request access and ask for the role you need.</p></div></div>
+            <div class="panel-heading"><span class="panel-icon panel-icon-gold">↗</span><div><h2>Find a family tree</h2><p>Search for a family tree and request membership.</p></div></div>
             <label class="search-label" for="tree-search">Search trees</label>
             <input class="form-input" id="tree-search" placeholder="Search by tree name...">
             <div class="tree-list browse-list" id="available-tree-list"><div class="empty-state compact">Loading available trees…</div></div>
@@ -168,7 +167,7 @@
         <section class="tree-workspace" id="tree-workspace" hidden>
           <div class="workspace-header">
             <div><p class="eyebrow" id="workspace-role">TREE MEMBER</p><h2 id="workspace-title">Family tree</h2><p class="subheading" id="workspace-description"></p></div>
-            <div class="workspace-actions"><button class="secondary-button" id="request-role-button" type="button">Request role / link</button><button class="quiet-button" id="close-tree-button" type="button">Close tree</button></div>
+            <div class="workspace-actions"><button class="secondary-button" id="request-role-button" type="button">Request a record link</button><button class="quiet-button" id="close-tree-button" type="button">Close tree</button></div>
           </div>
 
           <p class="status-message" id="member-request-status" hidden></p>
@@ -179,11 +178,11 @@
             <form id="person-form" class="person-form">
               <div class="form-grid">
                 <div><label class="field-label" for="person-name">English Name</label><input class="form-input" id="person-name" maxlength="120" required placeholder="Full English name"></div>
-                <div><label class="field-label" for="person-tamil">Tamil name <span class="optional">Optional</span></label><input class="form-input tamil-input" id="person-tamil" maxlength="120" placeholder="தமிழ்ப் பெயர்"></div>
-                <div><label class="field-label" for="person-gender">Gender <span class="optional">Optional</span></label><select class="form-input" id="person-gender"><option value="">Not specified</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
-                <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><input class="form-input partial-date-input" id="person-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY or YYYY-MM-DD" autocomplete="off"><p class="field-help">Date formats: YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD</p></div>
+                <div><label class="field-label" for="person-tamil">Tamil name</label><input class="form-input tamil-input" id="person-tamil" maxlength="120" required aria-required="true" placeholder="தமிழ்ப் பெயர்"></div>
+                <div><label class="field-label" for="person-gender">Gender</label><select class="form-input" id="person-gender" required aria-required="true"><option value="">Select gender</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
+                <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><div class="date-entry-row"><input class="form-input partial-date-input" id="person-birth" type="text" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="off" aria-describedby="birth-date-help"><label class="calendar-picker" for="person-birth-calendar" aria-label="Choose date of birth"><span aria-hidden="true">▦</span><span>Calendar</span><input class="native-calendar-input" id="person-birth-calendar" type="date" aria-label="Choose date of birth"></label></div><p class="field-help" id="birth-date-help">Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.</p></div>
                 <div class="deceased-field"><label class="checkbox-label" for="person-deceased"><input id="person-deceased" type="checkbox"><span>Deceased</span></label></div>
-                <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><input class="form-input partial-date-input" id="person-death" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY or YYYY-MM-DD" autocomplete="off"><p class="field-help">Date formats: YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD</p></div>
+                <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><div class="date-entry-row"><input class="form-input partial-date-input" id="person-death" type="text" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="off" aria-describedby="death-date-help"><label class="calendar-picker" for="person-death-calendar" aria-label="Choose date of death"><span aria-hidden="true">▦</span><span>Calendar</span><input class="native-calendar-input" id="person-death-calendar" type="date" aria-label="Choose date of death"></label></div><p class="field-help" id="death-date-help">Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.</p></div>
                 <section class="form-wide connection-input-group" aria-labelledby="add-connection-heading">
                   <h4 class="connection-group-title" id="add-connection-heading">Add a connection</h4>
                   <div><label class="field-label" for="connect-person">Connect to someone</label><select class="form-input" id="connect-person"><option value="">Select a family member</option></select></div>
@@ -207,13 +206,17 @@
           </section>
 
           <section class="panel management-panel" id="member-management-panel" hidden>
-            <div class="section-heading"><div><p class="eyebrow">ACCESS CONTROL</p><h3>Manage members</h3><p class="panel-description">Link member accounts to family records. The owner assigns records; members can edit once their account is linked.</p></div></div>
+            <div class="section-heading"><div><p class="eyebrow">MEMBERSHIP</p><h3>Member accounts</h3><p class="panel-description">Link an account to an existing family record, or add a new record above and link it here. Linked members can maintain family records and relationships.</p></div></div>
             <div id="tree-members-list" class="member-list"></div>
           </section>
 
-          <section class="panel requests-panel" id="requests-panel" hidden>
-            <div class="section-heading"><div><p class="eyebrow">NEEDS REVIEW</p><h3>Access, role and linking requests</h3><p class="panel-description">The owner or a member linked to a family record can approve or reject requests.</p></div></div>
-            <div id="tree-requests-list" class="request-list"></div>
+          <section class="panel requests-panel" id="access-requests-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">MEMBERSHIP</p><h3>Access Requests</h3><p class="panel-description">Review requests to join this family tree.</p></div></div>
+            <div id="access-requests-list" class="request-list"></div>
+          </section>
+          <section class="panel requests-panel" id="linking-requests-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">FAMILY RECORDS</p><h3>Linking Requests</h3><p class="panel-description">Review requests to link an account to an existing family record.</p></div></div>
+            <div id="linking-requests-list" class="request-list"></div>
           </section>
 
           <div class="danger-zone" id="delete-tree-zone" hidden><div><strong>Delete this family tree</strong><p>This permanently deletes its people, relationships, memberships and requests.</p></div><button class="danger-button" id="delete-tree-button" type="button">Delete tree</button></div>
