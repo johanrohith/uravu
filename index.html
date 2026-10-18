@@ -47,7 +47,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles-v2.css?v=uravu-editor-connections-20261018-10';
+        stylesheet.href = './styles-v2.css?v=uravu-partial-dates-20261018-11';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -56,7 +56,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app-v2.js?v=uravu-editor-connections-20261018-10');
+        await loadScript('./app-v2.js?v=uravu-partial-dates-20261018-11');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
@@ -181,13 +181,15 @@
                 <div><label class="field-label" for="person-name">Name</label><input class="form-input" id="person-name" maxlength="120" required placeholder="Full name"></div>
                 <div><label class="field-label" for="person-tamil">Tamil name <span class="optional">Optional</span></label><input class="form-input tamil-input" id="person-tamil" maxlength="120" placeholder="தமிழ்ப் பெயர்"></div>
                 <div><label class="field-label" for="person-gender">Gender <span class="optional">Optional</span></label><select class="form-input" id="person-gender"><option value="">Not specified</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
-                <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><input class="form-input" id="person-birth" type="date"></div>
+                <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><input class="form-input partial-date-input" id="person-birth" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY or YYYY-MM-DD" autocomplete="off"><p class="field-help">Date formats: YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD</p></div>
                 <div class="deceased-field"><label class="checkbox-label" for="person-deceased"><input id="person-deceased" type="checkbox"><span>Deceased</span></label></div>
-                <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death</label><input class="form-input" id="person-death" type="date"></div>
-                <div class="form-wide connection-input-group">
+                <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><input class="form-input partial-date-input" id="person-death" type="text" inputmode="numeric" maxlength="10" placeholder="YYYY or YYYY-MM-DD" autocomplete="off"><p class="field-help">Date formats: YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD</p></div>
+                <section class="form-wide connection-input-group" aria-labelledby="add-connection-heading">
+                  <h4 class="connection-group-title" id="add-connection-heading">Add a connection</h4>
                   <div><label class="field-label" for="connect-person">Connect to someone</label><select class="form-input" id="connect-person"><option value="">Select a family member</option></select></div>
                   <div><label class="field-label" for="connect-type">Relationship to them</label><select class="form-input" id="connect-type"><option value="">Select relationship</option><option value="child_of">Child of selected person</option><option value="parent_of">Parent of selected person</option><option value="spouse_of">Spouse / partner</option></select></div>
-                </div>
+                  <div class="connection-add-actions"><button class="primary-button" id="add-connection-button" type="button">Add connection</button></div>
+                </section>
                 <div class="form-wide person-connections-section" id="person-connections-section" hidden>
                   <h4 id="person-connections-heading">Connections</h4>
                   <div id="person-connections-list" class="person-connections-list"></div>
