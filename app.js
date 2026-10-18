@@ -282,7 +282,13 @@
     $("#workspace-description").textContent = state.activeTree.description || "Family connections across generations.";
     $("#people-count").textContent = String(state.people.length);
     $("#member-count").textContent = String(state.members.length);
-    $("#pending-count").textContent = String(state.requests.length);
+    $("#pending-count").textContent = String(manager ? state.requests.length : state.ownRequests.filter(request => request.tree_id === state.activeTree.id && request.status === "pending").length);
+    const ownPending = state.ownRequests.find(request => request.tree_id === state.activeTree.id && request.status === "pending");
+    const ownStatus = $("#member-request-status");
+    ownStatus.hidden = !ownPending;
+    ownStatus.textContent = ownPending
+      ? "Your " + (ownPending.request_type === "join" ? "tree access" : ownPending.request_type === "link" ? "family-entry link" : "role-change") + " request is awaiting review. You can submit an updated request if needed."
+      : "";
     $("#add-person-panel").hidden = !manager;
     $("#member-management-panel").hidden = !manager;
     $("#requests-panel").hidden = !manager;
