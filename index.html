@@ -47,7 +47,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles-v2.css?v=uravu-kinship-20261018-6';
+        stylesheet.href = './styles-v2.css?v=uravu-member-details-20261018-7';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -56,7 +56,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app-v2.js?v=uravu-kinship-20261018-6');
+        await loadScript('./app-v2.js?v=uravu-member-details-20261018-7');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
@@ -215,6 +215,23 @@
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="request-modal-title">
         <div class="modal-heading"><div><p class="eyebrow">FAMILY TREE REQUEST</p><h2 id="request-modal-title">Request access</h2><p class="subheading" id="request-modal-description"></p></div><button class="quiet-button" id="request-modal-close" type="button" aria-label="Close">×</button></div>
         <div id="request-modal-body"></div>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="person-details-modal" hidden>
+      <section class="modal person-details-modal" role="dialog" aria-modal="true" aria-labelledby="person-details-title">
+        <div class="modal-heading">
+          <div><p class="eyebrow" id="person-details-eyebrow">FAMILY MEMBER</p><h2 id="person-details-title">Member details</h2></div>
+          <button class="quiet-button" id="person-details-close" type="button" aria-label="Close">×</button>
+        </div>
+        <dl class="person-details-list">
+          <div id="person-detail-relation-row" hidden><dt id="person-detail-relation-label">Relationship</dt><dd id="person-detail-relation"></dd></div>
+          <div id="person-detail-tamil-row" hidden><dt id="person-detail-tamil-label">Tamil name</dt><dd id="person-detail-tamil"></dd></div>
+          <div id="person-detail-gender-row" hidden><dt id="person-detail-gender-label">Gender</dt><dd id="person-detail-gender"></dd></div>
+          <div id="person-detail-born-row" hidden><dt id="person-detail-born-label">Born</dt><dd id="person-detail-born"></dd></div>
+          <div id="person-detail-died-row" hidden><dt id="person-detail-died-label">Died</dt><dd id="person-detail-died"></dd></div>
+          <div id="person-detail-notes-row" hidden><dt id="person-detail-notes-label">Notes</dt><dd id="person-detail-notes"></dd></div>
+        </dl>
+        <div class="modal-actions"><button class="secondary-button" id="person-details-close-footer" type="button">Close</button></div>
       </section>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
