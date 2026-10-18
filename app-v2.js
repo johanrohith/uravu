@@ -593,6 +593,16 @@
       const middleY = startY + Math.max(12, (endY - startY) / 2);
       paths.push('<path class="family-line" d="M ' + startX + ' ' + startY + ' V ' + middleY + ' H ' + endX + ' V ' + endY + '"/>');
     });
+    state.relationships.filter(relationship => relationship.relationship_type === "spouse").forEach(relationship => {
+      const first = positions.get(relationship.person_id);
+      const second = positions.get(relationship.related_person_id);
+      if (!first || !second || first.y !== second.y) return;
+      const left = first.x < second.x ? first : second;
+      const right = first.x < second.x ? second : first;
+      if (Math.abs((left.x + nodeWidth) - right.x) > coupleGap + 2) return;
+      const y = left.y + 35;
+      paths.push('<path class="family-line spouse-line" d="M ' + (left.x + nodeWidth) + ' ' + y + ' H ' + right.x + '"/>');
+    });
     linesRoot.innerHTML = paths.join("");
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id))).join("");
 
