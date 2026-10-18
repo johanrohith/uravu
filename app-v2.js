@@ -103,9 +103,6 @@
     "Family record to link to your account":"உங்கள் கணக்குடன் இணைக்க வேண்டிய குடும்பப் பதிவு",
     "Select a family record to request.":"கோருவதற்கு ஒரு குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்.",
     "The owner or a member linked to a family record will review this request.":"இந்தக் கோரிக்கையை உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிப்பார்.",
-    "Only the tree owner can grant or remove admin access.":"உரிமையாளர் மட்டுமே உறுப்பினர்களை நிர்வகிக்க முடியும்.",
-    "Review each request and choose the role to assign. Only the owner can make someone an admin.":"ஒவ்வொரு கோரிக்கையையும் உரிமையாளர் அல்லது பதிவுடன் இணைக்கப்பட்ட உறுப்பினர் பரிசீலிக்கலாம்.",
-    "Change roles and link an account to a family member. Only the owner can grant or remove admin access.":"கணக்குகளை குடும்பப் பதிவுகளுடன் இணைக்கவும். உறுப்பினர் கணக்குகளுக்குப் பதிவை ஒதுக்குவது உரிமையாளரின் பணி.",
     "Add a family member":"குடும்ப உறுப்பினரைச் சேர்"
   });
 
