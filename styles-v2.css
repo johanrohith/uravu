@@ -115,3 +115,27 @@
 /* Compact unlink tools retain relationship editing without showing raw edge labels */
 .graph-relationship-tools{display:flex;flex-wrap:wrap;align-items:center;gap:3px;min-height:0;margin-top:1px}
 .graph-relationship-tools .text-action{flex:0 0 auto;min-width:17px;height:18px;padding:0 4px;border:1px solid #e7d9d5;border-radius:5px;background:#fff8f6;color:#9b554c;font-size:12px;line-height:1}
+
+
+/* Keep connection-removal controls hidden until the card's Edit button is pressed */
+.family-node-card[data-view-person]{cursor:pointer}
+.family-node-card[data-view-person]:focus-visible{outline:3px solid #a4cdb5;outline-offset:3px}
+.family-node-card[data-view-person]:hover{border-color:#b7d0bc}
+.family-node-card.is-editing-connections{overflow:visible;z-index:3}
+.graph-relationship-tools{display:grid;gap:4px;margin-top:4px;padding-top:5px;border-top:1px solid #eef2ec;max-height:64px;overflow:auto}
+.graph-relationship-tools-title{font-size:9px;font-weight:800;letter-spacing:.5px;color:#758277}
+.graph-edit-connection{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;color:#56685b;font-size:10px;line-height:1.3}
+.graph-edit-connection>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.graph-edit-connection .text-action{flex:0 0 auto;min-width:21px;height:21px;padding:0 5px;border:1px solid #e7d9d5;border-radius:6px;background:#fff8f6;color:#9b554c;font-size:13px;line-height:1}
+.graph-no-connections{font-size:10px;color:#879187}
+.person-details-modal{max-width:440px}
+.person-details-list{display:grid;gap:0;margin:4px 0 0}
+.person-details-list>div{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(0,1.3fr);gap:12px;padding:12px 0;border-bottom:1px solid #edf1eb}
+.person-details-list>div[hidden]{display:none}
+.person-details-list dt{font-size:12px;color:#778279;font-weight:600}
+.person-details-list dd{margin:0;font-size:13px;color:#263b2d;font-weight:600;overflow-wrap:anywhere;white-space:pre-wrap}
+.person-details-modal .modal-actions{margin-top:18px}
+@media(max-width:450px){
+  .person-details-modal{padding:18px}
+  .person-details-list>div{grid-template-columns:minmax(86px,.7fr) minmax(0,1.3fr);gap:8px}
+}
