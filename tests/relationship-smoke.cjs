@@ -45,7 +45,7 @@ assert.match(html, /id="person-connections-section" hidden/);
 assert.match(html, /connection-input-group/);
 assert.match(app, /function syncDeathDateField/);
 assert.match(app, /function renderEditorConnections/);
-assert.match(app, /Boolean(connectedId) !== Boolean(connectionType)/);
+assert.ok(app.includes("Boolean(connectedId) !== Boolean(connectionType)"));
 assert.match(app, /person-connections-list/);
 assert.match(styles, /person-connection-row/);
 assert.match(styles, /connection-input-group/);
