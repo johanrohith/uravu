@@ -39,7 +39,7 @@ assert.match(app, /function syncSpouseChildLinks/);
 assert.match(app, /function backfillExistingSpouseChildren/);
 assert.match(app, /"Wife"; tamil = "மனைவி"/);
 assert.match(app, /graph-relationship-label/);
-assert.match(html, /app-v2\.js\?v=uravu-kinship-20261018-5/);
+assert.match(html, /app-v2\.js\?v=uravu-kinship-20261018-6/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
