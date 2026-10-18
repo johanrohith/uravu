@@ -8,3 +8,4 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 .google-signin-button{padding:9px 12px;font-size:11px;border-radius:11px;gap:7px}.google-signin-button>span:first-child{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#fff;color:#4285f4;font-weight:800;font-size:12px;flex-shrink:0}@media(max-width:520px){.google-signin-button{padding:8px 9px;font-size:10px;gap:5px}.google-signin-button>span:first-child{width:15px;height:15px}}
+.empty-tree-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center;pointer-events:none;color:#758077}.empty-tree-state[hidden]{display:none}.empty-tree-state strong{font-size:15px;color:#35443a}.empty-tree-state span{max-width:290px;font-size:11px;line-height:1.6}
