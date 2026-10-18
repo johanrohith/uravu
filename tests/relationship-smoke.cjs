@@ -64,8 +64,8 @@ assert.match(html, /id="person-death" type="text"[^>]*placeholder="DD-MM-YYYY"/)
 assert.ok(!app.includes("Family data is loaded from Supabase, not browser cache"));
 assert.match(schema, /tamil_name text not null/);
 assert.match(schema, /gender text not null/);
-assert.match(permissionsMigration, /alter table public\\.uravu_people alter column tamil_name set not null/);
-assert.match(permissionsMigration, /alter table public\\.uravu_people alter column gender set not null/);
+assert.ok(permissionsMigration.includes("alter table public.uravu_people alter column tamil_name set not null"));
+assert.ok(permissionsMigration.includes("alter table public.uravu_people alter column gender set not null"));
 assert.match(html, /id="access-requests-list"/);
 assert.match(html, /id="linking-requests-list"/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
