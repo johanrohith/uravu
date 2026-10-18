@@ -66,7 +66,7 @@ assert.match(permissionsMigration, /Only the tree owner or a member linked to a 
 assert.match(linkingMigration, /Only the owner or a member linked to a family record can link accounts/);
 assert.match(linkingMigration, /Only the tree owner can unlink an account/);
 assert.match(app, /state\.requests\.filter\(request => request\.request_type === "join"\)/);
-assert.match(schema, /v_req\.request_type <> 'join' or v_req\.requested_person_id is not null/);
+assert.ok(!schema.includes("Only the tree owner can review family-record assignment requests"));
 assert.match(html, /id="person-deceased"/);
 
 assert.match(html, /id="person-tamil"[^>]*required/);
