@@ -420,26 +420,64 @@
   }
 
   function generationMap() {
-    const depths = new Map(state.people.map(p => [p.id, 0]));
-    const parentEdges = state.relationships.filter(r => r.relationship_type === "parent");
-    for (let round = 0; round < state.people.length; round++) {
+    // A spouse pair is a single generation unit. Resolve partner groups first,
+    // then calculate generations from parent -> child edges between those groups.
+    const parent = new Map(state.people.map(person => [person.id, person.id]));
+    const find = id => {
+      let root = id;
+      while (parent.get(root) !== root) root = parent.get(root);
+      while (parent.get(id) !== id) {
+        const next = parent.get(id);
+        parent.set(id, root);
+        id = next;
+      }
+      return root;
+    };
+    const unite = (a, b) => {
+      if (!parent.has(a) || !parent.has(b)) return;
+      const rootA = find(a), rootB = find(b);
+      if (rootA !== rootB) parent.set(rootB, rootA);
+    };
+
+    state.relationships
+      .filter(edge => edge.relationship_type === "spouse")
+      .forEach(edge => unite(edge.person_id, edge.related_person_id));
+
+    const groups = new Map();
+    state.people.forEach(person => {
+      const root = find(person.id);
+      if (!groups.has(root)) groups.set(root, []);
+      groups.get(root).push(person.id);
+    });
+
+    const depths = new Map(Array.from(groups.keys(), id => [id, 0]));
+    const parentEdges = state.relationships.filter(edge =>
+      edge.relationship_type === "parent" && parent.has(edge.person_id) && parent.has(edge.related_person_id)
+    );
+    // Relax only across distinct spouse groups. The bounded passes avoid hanging
+    // on malformed/cyclic data while still placing descendants below ancestors.
+    for (let round = 0; round < groups.size; round++) {
       let changed = false;
       parentEdges.forEach(edge => {
-        const next = Math.min(state.people.length, (depths.get(edge.person_id) || 0) + 1);
-        if (depths.has(edge.related_person_id) && next > depths.get(edge.related_person_id)) {
-          depths.set(edge.related_person_id, next);
+        const parentGroup = find(edge.person_id);
+        const childGroup = find(edge.related_person_id);
+        if (parentGroup === childGroup) return;
+        const next = Math.min(groups.size, (depths.get(parentGroup) || 0) + 1);
+        if (next > (depths.get(childGroup) || 0)) {
+          depths.set(childGroup, next);
           changed = true;
         }
       });
       if (!changed) break;
     }
-    const map = new Map();
-    state.people.forEach(p => {
-      const level = depths.get(p.id) || 0;
-      if (!map.has(level)) map.set(level, []);
-      map.get(level).push(p);
+
+    const result = new Map();
+    state.people.forEach(person => {
+      const level = depths.get(find(person.id)) || 0;
+      if (!result.has(level)) result.set(level, []);
+      result.get(level).push(person);
     });
-    return new Map(Array.from(map.entries()).sort((a,b) => a[0]-b[0]));
+    return new Map(Array.from(result.entries()).sort((a, b) => a[0] - b[0]));
   }
 
   function relationNames(person, type) {
