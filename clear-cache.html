@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Refreshing Uravu</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#243228;background:#f6f7f3}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box}.card{width:min(100%,470px);background:#fff;border:1px solid #e2e9e0;border-radius:18px;padding:28px;box-shadow:0 12px 34px #1f3f2b0d}.mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#dcece2;color:#235d47;font-weight:800}.muted{color:#778279;font-size:13px;line-height:1.7}.spinner{width:16px;height:16px;display:inline-block;vertical-align:middle;border:2px solid #235d47;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px}@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<main class="card">
+<div class="mark">உற</div>
+<h1>Refreshing Uravu</h1>
+<p class="muted" id="status"><span class="spinner"></span>Removing the old saved app files so the latest family-tree version can load. Your Google sign-in session will be preserved.</p>
+</main>
+<script>
+(async function () {
+  const status = document.getElementById('status');
+  try {
+    if ('caches' in window) {
+      const names = await caches.keys();
+      await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
+    }
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.filter(registration => {
+        try { return new URL(registration.scope).pathname.startsWith('/uravu/'); }
+        catch (_) { return false; }
+      }).map(registration => registration.unregister()));
+    }
+    try {
+      const staleKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && /^uravu-(demo|tree-cache|people-cache|request-cache)/i.test(key)) staleKeys.push(key);
+      }
+      staleKeys.forEach(key => localStorage.removeItem(key));
+      document.cookie.split(';').map(value => value.trim().split('=')[0]).filter(name => /^uravu-(demo|tree-cache|people-cache|request-cache)/i.test(name)).forEach(name => {
+        document.cookie = name + '=; Max-Age=0; path=/uravu/';
+        document.cookie = name + '=; Max-Age=0; path=/';
+      });
+    } catch (_) {}
+    status.textContent = 'Old Uravu caches have been cleared. Opening the latest version…';
+    window.location.replace('./?fresh=' + Date.now());
+  } catch (error) {
+    console.error('Uravu cache reset failed:', error);
+    status.textContent = 'The cache reset could not finish automatically. Reload this page and try once more.';
+  }
+})();
+</script>
+</body>
+</html>
