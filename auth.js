@@ -1,13 +1,14 @@
 (() => {
   const supabase = window.supabaseClient;
   const AUTH_EVENT = "uravu:auth";
+  const translate = value => typeof window.uravuTranslate === "function" ? window.uravuTranslate(value) : value;
 
   const auth = {
     user: null,
     loading: true,
     async signIn() {
       if (!supabase) {
-        alert("Uravu could not connect to Supabase. Check supabase-config.js.");
+        alert(translate("Uravu could not connect to Supabase. Check supabase-config.js."));
         return;
       }
       const { error } = await supabase.auth.signInWithOAuth({
@@ -16,7 +17,7 @@
       });
       if (error) {
         console.error("Uravu Google sign-in:", error);
-        alert("Google sign-in failed: " + error.message);
+        alert(translate("Google sign-in failed: " + error.message));
       }
     },
     async signOut() {
@@ -27,7 +28,7 @@
       if (button) button.disabled = false;
       if (error) {
         console.error("Uravu sign-out:", error);
-        alert("Sign-out failed: " + error.message);
+        alert(translate("Sign-out failed: " + error.message));
         return;
       }
       auth.user = null;
