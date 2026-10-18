@@ -132,7 +132,12 @@
     "Your account is already linked to a family record.":"உங்கள் கணக்கு ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்டுள்ளது.",
     "Manage member accounts":"உறுப்பினர் கணக்குகளை நிர்வகி",
     "Link member accounts to family records. The owner assigns records; members can edit once their account is linked.":"உறுப்பினர் கணக்குகளை குடும்பப் பதிவுகளுடன் இணைக்கவும். இணைக்கப்பட்ட உறுப்பினர்கள் குடும்ப விவரங்களைத் திருத்தலாம்.",
-    "Review membership and record-link requests.":"உறுப்பினர் மற்றும் குடும்பப் பதிவு இணைப்புக் கோரிக்கைகளைப் பரிசீலிக்கவும்."
+    "Review membership and record-link requests.":"உறுப்பினர் மற்றும் குடும்பப் பதிவு இணைப்புக் கோரிக்கைகளைப் பரிசீலிக்கவும்.",
+    "Select gender":"பாலினத்தைத் தேர்ந்தெடுக்கவும்",
+    "Family tree access":"குடும்ப மர அணுகல்",
+    "Family record linking":"குடும்பப் பதிவு இணைப்பு",
+    "Your access request is awaiting review.":"உங்கள் அணுகல் கோரிக்கை பரிசீலனையில் உள்ளது.",
+    "Your family-record linking request is awaiting review.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனையில் உள்ளது."
   });
 
   const tamilToEnglish = {};
@@ -267,12 +272,12 @@
     if (!raw) return { valid:true, value:null, date:null, precision:null };
     let match;
 
-    if ((match = raw.match(/^(\\d{4})$/))) {
+    if ((match = raw.match(/^(\d{4})$/))) {
       return { valid:true, value:match[1], date:null, precision:"year" };
     }
 
     // New preferred input format: DD-MM-YYYY.
-    if (!stored && (match = raw.match(/^(\\d{2})-(\\d{2})-(\\d{4})$/))) {
+    if (!stored && (match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/))) {
       const day = Number(match[1]), month = Number(match[2]), year = Number(match[3]);
       if (!datePartsValid(year, month, day)) return { valid:false };
       const canonical = match[3] + "-" + match[2] + "-" + match[1];
@@ -280,27 +285,27 @@
     }
 
     // ISO full date is accepted for calendar inputs and compatibility with previously saved entries.
-    if ((match = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/))) {
+    if ((match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
       const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
       if (!datePartsValid(year, month, day)) return { valid:false };
       return { valid:true, value:match[1] + "-" + match[2] + "-" + match[3], date:match[1] + "-" + match[2] + "-" + match[3], precision:"day" };
     }
 
     // Canonical month/year (YYYY-MM) and user-facing month/year (MM-YYYY).
-    if ((match = raw.match(/^(\\d{4})-(\\d{2})$/))) {
+    if ((match = raw.match(/^(\d{4})-(\d{2})$/))) {
       const month = Number(match[2]);
       return month >= 1 && month <= 12
         ? { valid:true, value:match[1] + "-" + match[2], date:null, precision:"month-year" }
         : { valid:false };
     }
-    if (!stored && (match = raw.match(/^(\\d{2})-(\\d{4})$/))) {
+    if (!stored && (match = raw.match(/^(\d{2})-(\d{4})$/))) {
       const month = Number(match[1]);
       return month >= 1 && month <= 12
         ? { valid:true, value:match[2] + "-" + match[1], date:null, precision:"month-year" }
         : { valid:false };
     }
 
-    if ((match = raw.match(/^(\\d{2})-(\\d{2})$/))) {
+    if ((match = raw.match(/^(\d{2})-(\d{2})$/))) {
       const first = Number(match[1]), second = Number(match[2]);
       let month, day;
       if (stored) {
@@ -319,7 +324,7 @@
       return { valid:true, value:String(month).padStart(2,"0") + "-" + String(day).padStart(2,"0"), date:null, precision:"month-day" };
     }
 
-    if ((match = raw.match(/^(\\d{2})$/))) {
+    if ((match = raw.match(/^(\d{2})$/))) {
       const month = Number(match[1]);
       return month >= 1 && month <= 12
         ? { valid:true, value:match[1], date:null, precision:"month" }
@@ -724,11 +729,12 @@
     const ownStatus = $("#member-request-status");
     ownStatus.hidden = !ownPending;
     ownStatus.textContent = ownPending
-      ? "Your " + (ownPending.request_type === "join" ? "tree access" : ownPending.request_type === "link" ? "family-entry link" : "role-change") + " request is awaiting review. You can submit an updated request if needed."
+      ? (ownPending.request_type === "join" ? "Your access request is awaiting review." : "Your family-record linking request is awaiting review.")
       : "";
     $("#add-person-panel").hidden = !manager;
     $("#member-management-panel").hidden = !manager;
-    $("#requests-panel").hidden = !manager;
+    $("#access-requests-panel").hidden = !manager;
+    $("#linking-requests-panel").hidden = !manager;
     $("#delete-tree-zone").hidden = !owner;
     $("#request-role-button").hidden = owner;
     $("#request-role-button").textContent = translateUiValue("Request a record link");
@@ -1384,7 +1390,8 @@
     }).join("");
     $$("[data-member-person]").forEach(select => select.addEventListener("change", async () => {
       const value = select.value || null;
-      if (!value && !isOwner()) {
+      const target = state.members.find(member => member.user_id === select.dataset.memberPerson);
+      if (!value && target?.person_id && !isOwner()) {
         toast("Only the owner can unlink a member account.", true);
         await loadWorkspace(state.activeTree.id, false);
         return;
@@ -1615,6 +1622,8 @@
     state.editingPersonId = null;
     $("#person-form").reset();
     syncDeathDateField();
+    syncCalendarFromText("person-birth", "person-birth-calendar");
+    syncCalendarFromText("person-death", "person-death-calendar");
     $("#person-form-title").textContent = "Add a family member";
     $("#save-person-button").textContent = "Add family member";
     $("#cancel-edit-button").hidden = true;
