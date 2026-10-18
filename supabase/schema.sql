@@ -292,6 +292,10 @@ begin
     select 1 from public.uravu_people p
     where p.id=v_req.requested_person_id and p.tree_id=v_req.tree_id
   ) then raise exception 'The requested family member no longer exists in this tree.'; end if;
+  if v_req.requested_person_id is not null and exists(
+    select 1 from public.uravu_tree_members m
+    where m.tree_id=v_req.tree_id and m.person_id=v_req.requested_person_id and m.user_id<>v_req.user_id
+  ) then raise exception 'That family entry is already assigned to another account. Choose an unassigned entry.'; end if;
 
   select m.role into v_current_role from public.uravu_tree_members m
   where m.tree_id=v_req.tree_id and m.user_id=v_req.user_id;
