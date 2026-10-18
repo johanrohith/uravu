@@ -4,6 +4,18 @@
 
 begin;
 
+-- Require Tamil name and gender for all future records. Preserve old records by
+-- filling blank Tamil names from the existing English name and unknown genders as Other.
+update public.uravu_people set tamil_name = full_name
+where tamil_name is null or length(trim(tamil_name)) = 0;
+update public.uravu_people set gender = 'other' where gender is null;
+alter table public.uravu_people alter column tamil_name set not null;
+alter table public.uravu_people alter column gender set not null;
+alter table public.uravu_people drop constraint if exists uravu_people_tamil_name_check;
+alter table public.uravu_people add constraint uravu_people_tamil_name_check check (length(trim(tamil_name)) > 0);
+alter table public.uravu_people drop constraint if exists uravu_people_gender_check;
+alter table public.uravu_people add constraint uravu_people_gender_check check (gender in ('male', 'female', 'other'));
+
 -- Normalize old roles without changing which user owns a tree.
 alter table public.uravu_tree_members
   alter column role set default 'member';
