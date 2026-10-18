@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f3">
+  <meta name="description" content="Uravu — explore your family tree and discover Tamil family relationships.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/uravu-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Uravu — Family tree</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Uravu home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 30V17M20 18C12 18 9 13 9 8c7 0 11 3 11 10ZM20 23c8 0 11-5 11-10-7 0-11 3-11 10Z"/><circle cx="20" cy="31" r="3"/></svg></span>
+        <span><strong>உறவு</strong><small>URAVU</small></span>
+      </a>
+      <div class="top-actions">
+        <span class="demo-pill"><i></i><span data-i18n="prototype">Prototype</span></span>
+        <div class="language-switch" aria-label="Language">
+          <button class="lang-button active" data-lang="en" aria-pressed="true">EN</button>
+          <button class="lang-button" data-lang="ta" aria-pressed="false">தமிழ்</button>
+        </div>
+        <button class="icon-button" id="settings-button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.1 1.8-1.7 3-2.1-.4a7.7 7.7 0 0 1-1.8 1l-.8 2h-3.4l-.8-2a7.7 7.7 0 0 1-1.8-1l-2.1.4-1.7-3 1.1-1.8A7.6 7.6 0 0 1 5.5 12c0-.6.1-1.2.2-1.8L4.6 8.4l1.7-3 2.1.4a7.7 7.7 0 0 1 1.8-1l.8-2h3.4l.8 2a7.7 7.7 0 0 1 1.8 1l2.1-.4 1.7 3-1.1 1.8c.1.6.2 1.2.2 1.8s-.1 1.2-.2 1.8Z" transform="translate(0 -1) scale(.88) translate(1.5 1.5)"/></svg></button>
+        <button class="avatar-button" id="account-button" aria-label="My profile">JR</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow" data-i18n="workspace">YOUR FAMILY WORKSPACE</p>
+          <h1 data-i18n="familyTree">Family tree</h1>
+          <p class="subheading" data-i18n="headingSubtitle">Every generation, connected.</p>
+        </div>
+        <div class="heading-actions">
+          <button class="secondary-button" id="requests-button"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6"/></svg><span data-i18n="requests">Requests</span><span class="count-badge" id="request-count">2</span></button>
+          <button class="primary-button" id="add-person-button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="addPerson">Add person</span></button>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="Tree tools">
+        <label class="search-box" for="member-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="member-search" autocomplete="off" placeholder="Search names or relationship..." data-i18n-placeholder="searchPlaceholder"><kbd>⌘ K</kbd></label>
+        <div class="toolbar-actions">
+          <button class="tool-button" id="fit-button" title="Fit tree"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><span data-i18n="fit">Fit</span></button>
+          <button class="tool-button" id="collapse-button" title="Collapse branches"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg><span data-i18n="collapse">Collapse</span></button>
+          <button class="tool-button" id="export-button" title="Export family tree"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><span data-i18n="export">Export</span></button>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <section class="tree-panel" aria-label="Interactive family tree">
+          <div class="tree-panel-top">
+            <div class="tree-name-group"><span class="tree-emblem"><svg viewBox="0 0 24 24"><path d="M12 20v-7M12 13c-4 0-6-3-6-7 4 0 6 2 6 7ZM12 16c4 0 6-3 6-7-4 0-6 2-6 7Z"/></svg></span><div><h2 data-i18n="johanFamily">Johan's family</h2><p><span id="people-count">21</span> <span data-i18n="peopleAcross">people across</span> <span id="generation-count">4</span> <span data-i18n="generations">generations</span></p></div></div>
+            <button class="subtle-button" id="tree-menu-button"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+          </div>
+          <div class="tree-viewport" id="tree-viewport">
+            <div class="tree-canvas" id="tree-canvas">
+              <svg class="tree-lines" id="tree-lines" viewBox="0 0 1280 760" role="presentation" aria-hidden="true"></svg>
+              <div class="tree-nodes" id="tree-nodes"></div>
+            </div>
+            <div class="empty-search" id="empty-search" hidden><span class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span><strong data-i18n="noResults">No matching family members</strong><span data-i18n="tryAnother">Try another name or relationship.</span></div>
+          </div>
+          <div class="tree-footer"><span class="tree-legend"><i class="legend-dot you-dot"></i><span data-i18n="yourEntry">Your entry</span><i class="legend-dot living-dot"></i><span data-i18n="living">Living</span><i class="legend-dot deceased-dot"></i><span data-i18n="deceased">Deceased</span></span><span class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-value">100%</span><button id="zoom-in" aria-label="Zoom in">+</button></span></div>
+        </section>
+
+        <aside class="side-panel" id="side-panel">
+          <div class="side-panel-header"><div><p class="eyebrow" data-i18n="selectedPerson">SELECTED PERSON</p><h2 data-i18n="personDetails">Person details</h2></div><button class="icon-button" id="close-profile" aria-label="Close profile"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+          <div id="profile-content"></div>
+        </aside>
+      </section>
+
+      <section class="bottom-panels">
+        <article class="mini-panel relationship-panel"><div class="mini-panel-title"><span class="mini-icon purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m0 0H5v4m7-4h7v4"/></svg></span><div><h3 data-i18n="relationshipLookup">Relationship lookup</h3><p data-i18n="relationshipLookupSub">Names are calculated from family connections.</p></div></div><div class="lookup-row"><label for="lookup-select" data-i18n="findYourRelation">How are you related to</label><select id="lookup-select" aria-label="Select a family member"></select><button class="secondary-button small-button" id="lookup-button" data-i18n="viewRelation">View relation</button></div><div class="lookup-result" id="lookup-result" hidden></div></article>
+        <article class="mini-panel activity-panel"><div class="mini-panel-title"><span class="mini-icon green"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg></span><div><h3 data-i18n="recentActivity">Recent activity</h3><p data-i18n="recentActivitySub">A simple history of tree changes.</p></div></div><div class="activity-list" id="activity-list"></div></article>
+      </section>
+      <p class="prototype-note"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9 1.9 18.4A2 2 0 0 0 3.6 21h16.8a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span data-i18n="prototypeNote">Interactive prototype using sample family data. Phone OTP, shared storage and server-enforced permissions need backend configuration before launch.</span></p>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header"><div><p class="eyebrow" id="modal-eyebrow">FAMILY TREE</p><h2 id="modal-title">Add person</h2></div><button class="icon-button" id="modal-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <div id="modal-content"></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
