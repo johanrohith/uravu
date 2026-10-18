@@ -3,15 +3,18 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
+const app = fs.readFileSync(path.join(root, "app-v2.js"), "utf8");
 const auth = fs.readFileSync(path.join(root, "auth.js"), "utf8");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
+const styles = fs.readFileSync(path.join(root, "styles-v2.css"), "utf8");
 const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8");
 
 assert.match(html, /id="signed-out"/);
 assert.match(html, /id="dashboard"/);
 assert.match(html, /id="request-modal"/);
+assert.match(html, /styles-v2\.css/);
+assert.match(html, /app-v2\.js/);
 assert.match(html, /Sign in with Google/);
 assert.match(auth, /signInWithOAuth/);
 assert.match(auth, /provider:\s*"google"/);
@@ -26,6 +29,8 @@ assert.match(app, /uravu_review_tree_request/);
 assert.match(app, /uravu_assign_member_person/);
 assert.match(app, /uravu_set_member_role/);
 assert.match(app, /uravu_delete_tree/);
+assert.match(styles, /\.modal-backdrop/);
+assert.match(styles, /\.person-card/);
 
 assert.doesNotMatch(app, /Johan Rohith|S\. Priya|ggf-p|cousin-p1|demo family data/i);
 assert.doesNotMatch(app, /localStorage\.(setItem|getItem).*tree/i);
