@@ -16,7 +16,7 @@
     members: [],
     requests: [],
     editingPersonId: null,
-    language: "en",
+    language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
     loadingTree: false
   };
@@ -54,7 +54,110 @@
     }
   };
 
-  function t(key) { return (words[state.language] && words[state.language][key]) || words.en[key] || key; }
+
+  const interfaceTranslations = {"Uravu — Family tree":"உறவு — குடும்ப மரம்","Uravu home":"உறவு முகப்பு","Change language":"மொழியை மாற்று","Sign in with Google":"Google மூலம் உள்நுழைக","Sign out":"வெளியேறு","YOUR FAMILY, CONNECTED":"உங்கள் குடும்பம், ஒன்றிணைந்து","Every generation has a story.":"ஒவ்வொரு தலைமுறைக்கும் ஒரு கதை உண்டு.","Build your family tree, preserve names and relationships, and invite family members to contribute with the right permissions.":"உங்கள் குடும்ப மரத்தை உருவாக்கி, பெயர்களையும் உறவுகளையும் பாதுகாத்து, சரியான அனுமதிகளுடன் குடும்ப உறுப்பினர்களைப் பங்களிக்க அழைக்கவும்.","Continue with Google":"Google மூலம் தொடரவும்","Your family tree is private to its members. Nothing is shown here until you sign in and open or create a tree.":"உங்கள் குடும்ப மரத்தை அதன் உறுப்பினர்கள் மட்டுமே பார்க்க முடியும். உள்நுழைந்து ஒரு மரத்தைத் திறக்கும் அல்லது உருவாக்கும் வரை இங்கு எதுவும் காட்டப்படாது.","Generation":"தலைமுறை","before us":"நமக்கு முன்","Parents &":"பெற்றோர் மற்றும்","guardians":"பாதுகாவலர்கள்","You":"நீங்கள்","and yours":"உங்கள் குடும்பம்","The next":"அடுத்த","generation":"தலைமுறை","YOUR FAMILY WORKSPACE":"உங்கள் குடும்பப் பணியிடம்","Welcome to Uravu":"உறவுக்கு வரவேற்கிறோம்","Create a tree or request access to one that already exists.":"புதிய குடும்ப மரத்தை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள மரத்திற்கு அணுகலைக் கோரவும்.","Family data is loaded from Supabase, not browser cache":"குடும்பத் தரவு உலாவி தற்காலிக நினைவகத்திலிருந்து அல்ல, Supabase-இலிருந்து ஏற்றப்படுகிறது","Create a family tree":"குடும்ப மரத்தை உருவாக்கு","Start a new family space. You become its owner.":"புதிய குடும்ப இடத்தைத் தொடங்குங்கள். அதன் உரிமையாளர் நீங்களாக இருப்பீர்கள்.","Family tree name":"குடும்ப மரத்தின் பெயர்","e.g. The Kumar family":"எ.கா. குமார் குடும்பம்","Description":"விளக்கம்","Optional":"விருப்பத்தேர்வு","A short note about this family tree":"இந்தக் குடும்ப மரத்தைப் பற்றிய சிறு குறிப்பு","Primary language":"முதன்மை மொழி","Create tree":"மரத்தை உருவாக்கு","Find a family tree":"குடும்ப மரத்தைக் கண்டுபிடி","Request access and ask for the role you need.":"அணுகலைக் கோரி, உங்களுக்குத் தேவையான பங்கைக் கேளுங்கள்.","Search trees":"குடும்ப மரங்களைத் தேடு","Search by tree name...":"குடும்ப மரத்தின் பெயரால் தேடுங்கள்...","Loading available trees…":"கிடைக்கும் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","YOUR MEMBERSHIPS":"உங்கள் உறுப்பினர் நிலைகள்","My family trees":"எனது குடும்ப மரங்கள்","Refresh":"புதுப்பி","Loading your trees…":"உங்கள் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","Loading trees…":"குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","TREE MEMBER":"குடும்ப மர உறுப்பினர்","Family tree":"குடும்ப மரம்","Request role / link":"பங்கு / இணைப்பைக் கோரு","Close tree":"மரத்தை மூடு","Tree accounts":"மரக் கணக்குகள்","Pending requests":"நிலுவையிலுள்ள கோரிக்கைகள்","TREE EDITING":"குடும்ப மரத் திருத்தம்","Add a family member":"குடும்ப உறுப்பினரைச் சேர்","Cancel edit":"திருத்தத்தை ரத்து செய்","Name":"பெயர்","Full name":"முழுப் பெயர்","Tamil name":"தமிழ்ப் பெயர்","Gender":"பாலினம்","Not specified":"குறிப்பிடப்படவில்லை","Male":"ஆண்","Female":"பெண்","Other / prefer not to say":"மற்றவை / தெரிவிக்க விருப்பமில்லை","Date of birth":"பிறந்த தேதி","Date of death":"இறந்த தேதி","Connect to someone":"ஒருவருடன் இணை","No connection yet":"இன்னும் உறவு இணைக்கப்படவில்லை","Relationship to them":"அவருடனான உறவு","Child of selected person":"தேர்ந்தெடுத்த நபரின் பிள்ளை","Parent of selected person":"தேர்ந்தெடுத்த நபரின் பெற்றோர்","Spouse / partner":"துணைவர் / துணைவி","Notes":"குறிப்புகள்","Additional details (avoid sensitive information)":"கூடுதல் விவரங்கள் (முக்கியமான தனிப்பட்ட தகவல்களைத் தவிர்க்கவும்)","FAMILY TREE":"குடும்ப மரம்","Search names…":"பெயர்களைத் தேடு…","Reset view":"காட்சியை மீட்டமை","ACCESS CONTROL":"அணுகல் கட்டுப்பாடு","Manage members":"உறுப்பினர்களை நிர்வகி","Change roles and link an account to a family member. Only the owner can grant or remove admin access.":"பங்குகளை மாற்றி, கணக்கை குடும்ப உறுப்பினருடன் இணைக்கவும். நிர்வாகி அணுகலை வழங்கவோ நீக்கவோ உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","NEEDS REVIEW":"பரிசீலனை தேவை","Access, role and linking requests":"அணுகல், பங்கு மற்றும் இணைப்புக் கோரிக்கைகள்","Review each request and choose the role to assign. Only the owner can make someone an admin.":"ஒவ்வொரு கோரிக்கையையும் பரிசீலித்து வழங்க வேண்டிய பங்கைத் தேர்ந்தெடுக்கவும். ஒருவரை நிர்வாகியாக்க உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","Delete this family tree":"இந்தக் குடும்ப மரத்தை நீக்கு","This permanently deletes its people, relationships, memberships and requests.":"இதனால் அதன் உறுப்பினர்கள், உறவுகள், உறுப்பினர் நிலைகள் மற்றும் கோரிக்கைகள் நிரந்தரமாக நீக்கப்படும்.","FAMILY TREE REQUEST":"குடும்ப மரக் கோரிக்கை","Request access":"அணுகலைக் கோரு","Close":"மூடு","Uravu could not start":"உறவைத் தொடங்க முடியவில்லை","One of the app files did not load.":"செயலியின் கோப்புகளில் ஒன்று ஏற்றப்படவில்லை.","Try again":"மீண்டும் முயற்சி செய்","Uravu could not start because a required file or service could not load. Refresh the page or try again later.":"தேவையான கோப்பு அல்லது சேவை ஏற்றப்படாததால் உறவைத் தொடங்க முடியவில்லை. பக்கத்தைப் புதுப்பிக்கவும் அல்லது சிறிது நேரம் கழித்து முயற்சிக்கவும்.","Could not load family trees":"குடும்ப மரங்களை ஏற்ற முடியவில்லை","Database setup or permissions need attention.":"தரவுத்தள அமைப்பு அல்லது அனுமதிகளைச் சரிபார்க்க வேண்டும்.","No description provided.":"விளக்கம் வழங்கப்படவில்லை.","Loading family members from Supabase…":"Supabase-இலிருந்து குடும்ப உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","Loading members…":"உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","No members yet.":"இதுவரை உறுப்பினர்கள் இல்லை.","Role":"பங்கு","Assigned family entry":"ஒதுக்கப்பட்ட குடும்பப் பதிவு","Not linked":"இணைக்கப்படவில்லை","Family member":"குடும்ப உறுப்பினர்","Signed in":"உள்நுழைந்துள்ளார்","Approved member":"ஒப்புதல் பெற்ற உறுப்பினர்","Assign role":"பங்கை ஒதுக்கு","No message added.":"செய்தி எதுவும் சேர்க்கப்படவில்லை.","Requested family entry:":"கோரப்பட்ட குடும்பப் பதிவு:","New join, role and linking requests will appear here.":"புதிய இணைப்பு, பங்கு மற்றும் இணைப்புக் கோரிக்கைகள் இங்கே தோன்றும்.","Remove connection":"உறவு இணைப்பை நீக்கு","No connections yet":"இன்னும் உறவுகள் இல்லை","Linked account:":"இணைக்கப்பட்ட கணக்கு:","Born":"பிறப்பு","Died":"இறப்பு","Spouse / partner:":"துணைவர் / துணைவி:","Parent of:":"பெற்றோர்:","Child of:":"பிள்ளை:","Request approved and role assigned.":"கோரிக்கை ஏற்கப்பட்டு பங்கு ஒதுக்கப்பட்டது.","Request rejected.":"கோரிக்கை நிராகரிக்கப்பட்டது.","Member role updated.":"உறுப்பினரின் பங்கு புதுப்பிக்கப்பட்டது.","Family entry assigned to the account.":"குடும்பப் பதிவு கணக்குடன் இணைக்கப்பட்டது.","Family entry unlinked.":"குடும்பப் பதிவு கணக்கிலிருந்து துண்டிக்கப்பட்டது.","Family member updated.":"குடும்ப உறுப்பினர் விவரங்கள் புதுப்பிக்கப்பட்டன.","Family member added.":"குடும்ப உறுப்பினர் சேர்க்கப்பட்டார்.","Family member and connections deleted.":"குடும்ப உறுப்பினரும் அவருடைய உறவு இணைப்புகளும் நீக்கப்பட்டன.","Family connection removed.":"குடும்ப உறவு இணைப்பு நீக்கப்பட்டது.","Family tree deleted.":"குடும்ப மரம் நீக்கப்பட்டது.","Enter a family tree name with at least 2 characters.":"குடும்ப மரத்தின் பெயர் குறைந்தது 2 எழுத்துகள் கொண்டிருக்க வேண்டும்.","Creating…":"உருவாக்கப்படுகிறது…","Family tree created. You are the owner.":"குடும்ப மரம் உருவாக்கப்பட்டது. நீங்கள் அதன் உரிமையாளர்.","You must be an approved member to open this tree.":"இந்த மரத்தைத் திறக்க ஒப்புதல் பெற்ற உறுப்பினராக இருக்க வேண்டும்.","Family connections across generations.":"தலைமுறைகளைக் கடந்து இணையும் குடும்ப உறவுகள்.","Your tree access request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்ப மர அணுகல் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your family-entry link request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your role-change request is awaiting review. You can submit an updated request if needed.":"உங்கள் பங்கு மாற்றக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","A name is required.":"பெயர் அவசியம்.","Date of death cannot be earlier than date of birth.":"இறந்த தேதி, பிறந்த தேதிக்கு முந்தையதாக இருக்க முடியாது.","Saving…":"சேமிக்கப்படுகிறது…","Approving…":"ஏற்கப்படுகிறது…","Rejecting…":"நிராகரிக்கப்படுகிறது…","Sending…":"அனுப்பப்படுகிறது…","Request a role change or family-entry link":"பங்கு மாற்றம் அல்லது குடும்பப் பதிவு இணைப்பைக் கோரு","The tree owner or an admin will review this request.":"இந்தக் கோரிக்கையை குடும்ப மர உரிமையாளர் அல்லது நிர்வாகி பரிசீலிப்பார்.","Choose the role you want to request. The owner or an admin decides what to approve.":"நீங்கள் கோர விரும்பும் பங்கைத் தேர்ந்தெடுக்கவும். எதை ஏற்க வேண்டும் என்பதை உரிமையாளர் அல்லது நிர்வாகி தீர்மானிப்பார்.","Requested role":"கோரப்படும் பங்கு","Request to link your account to a family member":"உங்கள் கணக்கை ஒரு குடும்ப உறுப்பினருடன் இணைக்கக் கோரு","Message":"செய்தி","Explain your request briefly":"உங்கள் கோரிக்கையைச் சுருக்கமாக விளக்குங்கள்","Send request":"கோரிக்கையை அனுப்பு","Request sent for the owner or an admin to review.":"உரிமையாளர் அல்லது நிர்வாகி பரிசீலிக்கக் கோரிக்கை அனுப்பப்பட்டது.","Add family member":"குடும்ப உறுப்பினரைச் சேர்","Edit family member":"குடும்ப உறுப்பினரைத் திருத்து","Save changes":"மாற்றங்களைச் சேமி","This family tree is empty":"இந்தக் குடும்ப மரம் காலியாக உள்ளது","Add the first family member to begin building your tree.":"குடும்ப மரத்தை உருவாக்கத் தொடங்க முதல் உறுப்பினரைச் சேர்க்கவும்.","You have not joined any family trees yet.":"நீங்கள் இன்னும் எந்தக் குடும்ப மரத்திலும் இணையவில்லை.","Create one or request access to an existing tree.":"புதிய மரத்தை உருவாக்கவும் அல்லது இருக்கும் மரத்திற்கு அணுகலைக் கோரவும்.","No other family trees are available to request.":"அணுகல் கோர வேறு குடும்ப மரங்கள் இல்லை.","Request pending":"கோரிக்கை நிலுவையில் உள்ளது","Requested":"கோரப்பட்டது","Open tree":"மரத்தைத் திற","Members":"உறுப்பினர்கள்","Save":"சேமி","Cancel":"ரத்து செய்","Approve":"ஏற்கவும்","Reject":"நிராகரி","No requests need review.":"பரிசீலிக்க வேண்டிய கோரிக்கைகள் இல்லை.","No connection added.":"உறவு இணைப்பு சேர்க்கப்படவில்லை.","The new Uravu database schema is not installed yet. Run supabase/schema.sql in your Supabase SQL Editor.":"Uravu-வின் புதிய தரவுத்தள அமைப்பு இன்னும் நிறுவப்படவில்லை. Supabase SQL Editor-ல் supabase/schema.sql-ஐ இயக்கவும்.","Database permission blocked this action. Check the Supabase policies in supabase/schema.sql.":"தரவுத்தள அனுமதி இந்தச் செயலைத் தடுத்தது. supabase/schema.sql-இல் உள்ள Supabase கொள்கைகளைச் சரிபார்க்கவும்.","Something went wrong. Please try again.":"ஏதோ தவறு ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.","Sign in with Google to continue.":"தொடர Google மூலம் உள்நுழைக.","Supabase client is not initialized.":"Supabase கிளையன்ட் தொடங்கப்படவில்லை.","Supabase client is missing. Check supabase-config.js.":"Supabase கிளையன்ட் இல்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Uravu could not connect to Supabase. Check supabase-config.js.":"Uravu-வால் Supabase-உடன் இணைக்க முடியவில்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Delete this family connection?":"இந்தக் குடும்ப உறவு இணைப்பை நீக்கவா?","As the owner, use Manage members to link your own family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.","Family tree not found.":"குடும்ப மரத்தைக் காணவில்லை.","Could not load this family tree.":"இந்தக் குடும்ப மரத்தை ஏற்ற முடியவில்லை."};
+  const tamilToEnglish = Object.fromEntries(Object.entries(interfaceTranslations).map(([english, tamil]) => [tamil, english]));
+
+  function translateUiValue(value) {
+    const raw = String(value == null ? "" : value);
+    const trimmed = raw.trim();
+    const leading = raw.match(/^\s*/)?.[0] || "";
+    const trailing = raw.match(/\s*$/)?.[0] || "";
+    if (!trimmed) return raw;
+    let translated = state.language === "ta" ? (interfaceTranslations[trimmed] || trimmed) : (tamilToEnglish[trimmed] || trimmed);
+    if (translated === trimmed) {
+      if (state.language === "ta") {
+        const patterns = [
+          [/^Welcome, (.+)$/, "வணக்கம், $1"],
+          [/^Request access to (.+)$/, "$1 அணுகலைக் கோரு"],
+          [/^Linked account: (.+)$/, "இணைக்கப்பட்ட கணக்கு: $1"],
+          [/^Spouse \/ partner: (.+)$/, "துணைவர் / துணைவி: $1"],
+          [/^Parent of: (.+)$/, "பெற்றோர்: $1"],
+          [/^Child of: (.+)$/, "பிள்ளை: $1"],
+          [/^Born (.+)$/, "பிறப்பு $1"],
+          [/^Died (.+)$/, "இறப்பு $1"],
+          [/^Google sign-in failed: (.+)$/, "Google உள்நுழைவு தோல்வியடைந்தது: $1"],
+          [/^Sign-out failed: (.+)$/, "வெளியேறுதல் தோல்வியடைந்தது: $1"],
+          [/^You · (.+)$/, "நீங்கள் · $1"],
+          [/^Delete (.+) and their family connections\? Accounts linked to this entry will be unlinked\.$/, "$1 மற்றும் அவர்களின் குடும்ப உறவுகளை நீக்கவா? இந்தப் பதிவுடன் இணைக்கப்பட்ட கணக்குகள் துண்டிக்கப்படும்."],
+          [/^Permanently delete "(.+)" and all of its family members, relationships, member assignments, and requests\? This cannot be undone\.$/, '"$1" மற்றும் அதன் அனைத்து குடும்ப உறுப்பினர்கள், உறவுகள், உறுப்பினர் ஒதுக்கீடுகள், கோரிக்கைகள் அனைத்தையும் நிரந்தரமாக நீக்கவா? இதை மீட்டெடுக்க முடியாது.']
+        ];
+        for (const [pattern, replacement] of patterns) if (pattern.test(trimmed)) { translated = trimmed.replace(pattern, replacement); break; }
+        if (/^YOUR ROLE · (.+)$/.test(trimmed)) {
+          const role = trimmed.slice("YOUR ROLE · ".length);
+          translated = "உங்கள் பங்கு · " + (interfaceTranslations[role] || role);
+        }
+      } else {
+        const patterns = [
+          [/^வணக்கம், (.+)$/, "Welcome, $1"],
+          [/^(.+) அணுகலைக் கோரு$/, "Request access to $1"],
+          [/^இணைக்கப்பட்ட கணக்கு: (.+)$/, "Linked account: $1"],
+          [/^துணைவர் \/ துணைவி: (.+)$/, "Spouse / partner: $1"],
+          [/^பெற்றோர்: (.+)$/, "Parent of: $1"],
+          [/^பிள்ளை: (.+)$/, "Child of: $1"],
+          [/^பிறப்பு (.+)$/, "Born $1"],
+          [/^இறப்பு (.+)$/, "Died $1"],
+          [/^Google உள்நுழைவு தோல்வியடைந்தது: (.+)$/, "Google sign-in failed: $1"],
+          [/^வெளியேறுதல் தோல்வியடைந்தது: (.+)$/, "Sign-out failed: $1"],
+          [/^நீங்கள் · (.+)$/, "You · $1"],
+          [/^(.+) மற்றும் அவர்களின் குடும்ப உறவுகளை நீக்கவா\? இந்தப் பதிவுடன் இணைக்கப்பட்ட கணக்குகள் துண்டிக்கப்படும்\.$/, "Delete $1 and their family connections? Accounts linked to this entry will be unlinked."],
+          [/^"(.+)" மற்றும் அதன் அனைத்து குடும்ப உறுப்பினர்கள், உறவுகள், உறுப்பினர் ஒதுக்கீடுகள், கோரிக்கைகள் அனைத்தையும் நிரந்தரமாக நீக்கவா\? இதை மீட்டெடுக்க முடியாது\.$/, 'Permanently delete "$1" and all of its family members, relationships, member assignments, and requests? This cannot be undone.']
+        ];
+        for (const [pattern, replacement] of patterns) if (pattern.test(trimmed)) { translated = trimmed.replace(pattern, replacement); break; }
+        if (/^உங்கள் பங்கு · (.+)$/.test(trimmed)) {
+          const role = trimmed.slice("உங்கள் பங்கு · ".length);
+          translated = "YOUR ROLE · " + (tamilToEnglish[role] || role);
+        }
+      }
+    }
+    return leading + translated + trailing;
+  }
+
+  function localizeDom(root) {
+    if (!root) return;
+    const doc = root.ownerDocument || document;
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.parentElement && /^(SCRIPT|STYLE|NOSCRIPT)$/i.test(node.parentElement.tagName)) continue;
+      const next = translateUiValue(node.nodeValue);
+      if (next !== node.nodeValue) node.nodeValue = next;
+    }
+    root.querySelectorAll?.("*").forEach(element => ["placeholder", "aria-label", "title"].forEach(attribute => {
+      if (!element.hasAttribute(attribute)) return;
+      const value = element.getAttribute(attribute);
+      const next = translateUiValue(value);
+      if (next !== value) element.setAttribute(attribute, next);
+    }));
+  }
+
+  function installLanguageObserver() {
+    if (window.uravuLanguageObserver || !document.body) return;
+    window.uravuLanguageObserver = new MutationObserver(records => records.forEach(record => {
+      if (record.type === "characterData") {
+        const target = record.target;
+        if (target.parentElement && !/^(SCRIPT|STYLE|NOSCRIPT)$/i.test(target.parentElement.tagName)) {
+          const next = translateUiValue(target.nodeValue);
+          if (next !== target.nodeValue) target.nodeValue = next;
+        }
+      } else if (record.type === "childList") {
+        record.addedNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const next = translateUiValue(node.nodeValue);
+            if (next !== node.nodeValue) node.nodeValue = next;
+          } else if (node.nodeType === Node.ELEMENT_NODE && !/^(SCRIPT|STYLE|NOSCRIPT)$/i.test(node.tagName)) localizeDom(node);
+        });
+      } else if (record.type === "attributes") {
+        const current = record.target.getAttribute(record.attributeName);
+        const next = translateUiValue(current);
+        if (next !== current) record.target.setAttribute(record.attributeName, next);
+      }
+    }));
+    window.uravuLanguageObserver.observe(document.body, {subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:["placeholder","aria-label","title"]});
+  }
+
+
+  function t(key) { return translateUiValue((words[state.language] && words[state.language][key]) || words.en[key] || key); }
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, char => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -73,7 +176,7 @@
   function toast(message, isError) {
     const node = $("#toast");
     if (!node) return;
-    node.textContent = message;
+    node.textContent = translateUiValue(message);
     node.classList.toggle("error", Boolean(isError));
     node.classList.add("show");
     if (state.toastTimer) clearTimeout(state.toastTimer);
@@ -84,7 +187,7 @@
     if (busy) {
       button.dataset.originalText = button.textContent;
       button.disabled = true;
-      button.textContent = label || "Working…";
+      button.textContent = translateUiValue(label || "Working…");
     } else {
       button.disabled = false;
       if (button.dataset.originalText) button.textContent = button.dataset.originalText;
@@ -99,13 +202,13 @@
         /could not find the table|schema cache|function .*uravu_|relation .* does not exist/i.test(message)) {
       toast(t("setupError"), true);
     } else if (/row-level security|permission denied|not allowed/i.test(message)) {
-      toast("Database permission blocked this action. Check the Supabase policies in supabase/schema.sql.", true);
+      toast(translateUiValue("Database permission blocked this action. Check the Supabase policies in supabase/schema.sql."), true);
     } else {
       toast(message || "Something went wrong. Please try again.", true);
     }
   }
   function requireSignedIn() {
-    if (!state.user) { toast("Sign in with Google to continue.", true); return false; }
+    if (!state.user) { toast(t("Sign in with Google to continue."), true); return false; }
     return true;
   }
   function callRpc(name, args) {
@@ -120,8 +223,8 @@
     $("#header-signin").hidden = Boolean(state.user);
     $("#user-menu").hidden = !state.user;
     $("#welcome-heading").textContent = state.user
-      ? "Welcome, " + ((state.user.user_metadata?.full_name || state.user.user_metadata?.name || state.user.email || "there").split(/\s+/)[0])
-      : "Welcome to Uravu";
+      ? translateUiValue("Welcome, " + ((state.user.user_metadata?.full_name || state.user.user_metadata?.name || state.user.email || "there").split(/\s+/)[0]))
+      : t("Welcome to Uravu");
     if (!state.user) {
       state.trees = [];
       state.memberships = [];
@@ -243,7 +346,7 @@
     $("#tree-workspace").hidden = false;
     $("#workspace-title").textContent = tree.name;
     $("#workspace-description").textContent = tree.description || "Family connections across generations.";
-    $("#workspace-role").textContent = "YOUR ROLE · " + roleLabel(membership.role).toUpperCase();
+    $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(membership.role).toUpperCase();
     $("#tree-workspace").scrollIntoView({ behavior:"smooth", block:"start" });
     await loadWorkspace(treeId, true);
   }
@@ -285,7 +388,7 @@
     if (!state.activeTree || !state.activeMembership) return;
     const manager = isManager();
     const owner = state.activeMembership.role === "owner";
-    $("#workspace-role").textContent = "YOUR ROLE · " + roleLabel(state.activeMembership.role).toUpperCase();
+    $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(state.activeMembership.role).toUpperCase();
     $("#workspace-title").textContent = state.activeTree.name;
     $("#workspace-description").textContent = state.activeTree.description || "Family connections across generations.";
     $("#people-count").textContent = String(state.people.length);
@@ -440,8 +543,8 @@
     if (!position) return "";
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
-    if (person.birth_date) details.push("Born " + prettyDate(person.birth_date));
-    if (person.death_date) details.push("Died " + prettyDate(person.death_date));
+    if (person.birth_date) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + prettyDate(person.birth_date));
+    if (person.death_date) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + prettyDate(person.death_date));
     const edges = state.relationships.filter(relationship =>
       relationship.person_id === person.id || relationship.related_person_id === person.id
     );
@@ -450,8 +553,8 @@
       const other = state.people.find(item => item.id === otherId);
       if (!other) return "";
       const label = relationship.relationship_type === "spouse"
-        ? "Spouse / partner: " + other.full_name
-        : (relationship.person_id === person.id ? "Parent of: " : "Child of: ") + other.full_name;
+        ? (state.language === "ta" ? "துணைவர் / துணைவி: " : "Spouse / partner: ") + other.full_name
+        : (state.language === "ta" ? (relationship.person_id === person.id ? "பெற்றோர்: " : "பிள்ளை: ") : (relationship.person_id === person.id ? "Parent of: " : "Child of: ")) + other.full_name;
       return '<div class="graph-relationship"><span>' + escapeHtml(label) + '</span>' +
         (isManager() ? '<button type="button" class="text-action" data-remove-relationship="' + escapeHtml(relationship.id) + '" aria-label="Remove connection">×</button>' : '') +
         '</div>';
@@ -568,7 +671,7 @@
       state.people.filter(person => !state.members.some(member => member.person_id === person.id && member.user_id !== state.user.id))
         .map(person => '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.full_name) + '</option>')
     ).join("");
-    $("#request-modal-title").textContent = isMember ? "Request a role change or family-entry link" : "Request access to " + tree.name;
+    $("#request-modal-title").textContent = isMember ? t("Request a role change or family-entry link") : translateUiValue("Request access to " + tree.name);
     $("#request-modal-description").textContent = isMember
       ? "The tree owner or an admin will review this request."
       : "Choose the role you want to request. The owner or an admin decides what to approve.";
@@ -690,7 +793,7 @@
   async function deletePerson(personId) {
     const person = state.people.find(item => item.id === personId);
     if (!person || !isManager()) return;
-    if (!window.confirm("Delete " + person.full_name + " and their family connections? Accounts linked to this entry will be unlinked.")) return;
+    if (!window.confirm(translateUiValue("Delete " + person.full_name + " and their family connections? Accounts linked to this entry will be unlinked."))) return;
     const { error } = await db.from("uravu_people").delete().eq("id", personId).eq("tree_id", state.activeTree.id);
     if (error) { showDbError(error, "delete person"); return; }
     toast("Family member and connections deleted.");
@@ -708,7 +811,7 @@
   async function deleteTree() {
     if (!state.activeTree || state.activeMembership?.role !== "owner") return;
     const name = state.activeTree.name;
-    if (!window.confirm('Permanently delete "' + name + '" and all of its family members, relationships, member assignments, and requests? This cannot be undone.')) return;
+    if (!window.confirm(translateUiValue('Permanently delete "' + name + '" and all of its family members, relationships, member assignments, and requests? This cannot be undone.'))) return;
     const { error } = await callRpc("uravu_delete_tree", { p_tree_id:state.activeTree.id });
     if (error) { showDbError(error, "delete tree"); return; }
     state.activeTree = null;
@@ -718,12 +821,21 @@
     await refreshDashboard();
   }
 
+  function applyLanguage() {
+    document.documentElement.lang = state.language;
+    document.title = state.language === "ta" ? "உறவு — குடும்ப மரம்" : "Uravu — Family tree";
+    $("#language-button").textContent = state.language === "en" ? "தமிழ்" : "English";
+    $("#language-button").setAttribute("aria-label", state.language === "ta" ? "மொழியை மாற்று" : "Change language");
+    localizeDom(document.body);
+  }
+
   function setLanguage() {
     state.language = state.language === "en" ? "ta" : "en";
-    document.documentElement.lang = state.language;
-    $("#language-button").textContent = state.language === "en" ? "தமிழ்" : "English";
+    try { localStorage.setItem("uravu-language", state.language); } catch (_) {}
+    applyLanguage();
     renderTreeLists();
     if (state.activeTree) renderWorkspace();
+    localizeDom(document.body);
   }
 
   function bindEvents() {
@@ -758,6 +870,9 @@
       return;
     }
     bindEvents();
+    installLanguageObserver();
+    applyLanguage();
+    window.uravuTranslate = translateUiValue;
     document.addEventListener("uravu:auth", event => renderAuth(event.detail?.user || null));
     if (window.uravuAuth?.ready) {
       const user = await window.uravuAuth.ready;
