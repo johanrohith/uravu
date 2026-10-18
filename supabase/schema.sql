@@ -418,6 +418,23 @@ begin
     v_a := p_related_person_id; v_b := p_person_id;
   end if;
 
+  -- Prevent a parent-child edge from introducing a cycle into the ancestry graph.
+  if p_relationship_type <> 'spouse_of' then
+    if exists (
+      with recursive descendants(person_id) as (
+        select v_b
+        union
+        select r.related_person_id
+        from public.uravu_relationships r
+        join descendants d on r.person_id=d.person_id
+        where r.tree_id=p_tree_id and r.relationship_type='parent'
+      )
+      select 1 from descendants where person_id=v_a
+    ) then
+      raise exception 'That connection would create a family-tree cycle. Check the parent and child selection.';
+    end if;
+  end if;
+
   insert into public.uravu_relationships(tree_id,person_id,related_person_id,relationship_type,created_by)
   values (p_tree_id,v_a,v_b,case when p_relationship_type='spouse_of' then 'spouse' else 'parent' end,auth.uid())
   on conflict (tree_id,person_id,related_person_id,relationship_type) do update set relationship_type=excluded.relationship_type
