@@ -95,7 +95,7 @@ assert.match(worker, /Deliberately no fetch handler/);
 assert.doesNotMatch(worker, /caches\.match\(event\.request\)/i);
 
 assert.match(schema, /enable row level security/ig);
-assert.match(schema, /role in \\(\'owner\', \'member\'\\)/);
+assert.ok(schema.includes("role text not null default 'member' check (role in ('owner', 'member'))"));
 assert.match(schema, /Only the tree owner can assign family entries/);
 assert.match(schema, /uravu_one_pending_request_per_user_tree/);
 assert.match(schema, /would create a family-tree cycle/);
