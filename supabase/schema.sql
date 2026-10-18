@@ -305,10 +305,7 @@ begin
   if not public.uravu_can_edit_tree(v_req.tree_id) then
     raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
-  if v_reviewer_role <> 'owner'
-     and (v_req.request_type <> 'join' or v_req.requested_person_id is not null) then
-    raise exception 'Only the tree owner can review family-record assignment requests.';
-  end if;
+
 
   if p_decision='reject' then
     update public.uravu_access_requests set status='rejected', reviewed_by=v_user, reviewed_at=now()
@@ -361,13 +358,32 @@ returns void
 language plpgsql security definer
 set search_path = pg_catalog, pg_temp
 as $$
+declare
+  v_actor_role text;
+  v_target_role text;
+  v_target_person uuid;
 begin
-  if auth.uid() is null then raise exception 'Sign in before managing members.'; end if;
-  if not public.uravu_has_tree_role(p_tree_id, array['owner']) then
-    raise exception 'Only the tree owner can assign family entries.';
+  if auth.uid() is null then raise exception 'Sign in before managing member links.'; end if;
+  select m.role into v_actor_role from public.uravu_tree_members m
+  where m.tree_id=p_tree_id and m.user_id=auth.uid();
+
+  if not public.uravu_can_edit_tree(p_tree_id) then
+    raise exception 'Only the owner or a member linked to a family record can link accounts.';
   end if;
-  if not exists(select 1 from public.uravu_tree_members m where m.tree_id=p_tree_id and m.user_id=p_user_id) then
-    raise exception 'That account is not a member of this tree.';
+
+  select m.role, m.person_id into v_target_role, v_target_person
+  from public.uravu_tree_members m
+  where m.tree_id=p_tree_id and m.user_id=p_user_id;
+  if v_target_role is null then raise exception 'That account is not a member of this tree.'; end if;
+  if v_target_role='owner' and v_actor_role <> 'owner' then
+    raise exception 'Only the tree owner can change the owner account link.';
+  end if;
+  if v_actor_role <> 'owner' and v_target_person is not null
+     and v_target_person is distinct from p_person_id then
+    raise exception 'Only the tree owner can change or remove an existing account link.';
+  end if;
+  if v_actor_role <> 'owner' and p_person_id is null and v_target_person is not null then
+    raise exception 'Only the tree owner can unlink an account.';
   end if;
   if p_person_id is not null and not exists(
     select 1 from public.uravu_people p where p.id=p_person_id and p.tree_id=p_tree_id
@@ -375,7 +391,7 @@ begin
   if p_person_id is not null and exists(
     select 1 from public.uravu_tree_members m
     where m.tree_id=p_tree_id and m.person_id=p_person_id and m.user_id<>p_user_id
-  ) then raise exception 'That family entry is already linked to another account. Unlink it first.'; end if;
+  ) then raise exception 'That family entry is already linked to another account.'; end if;
 
   update public.uravu_tree_members set person_id=p_person_id
   where tree_id=p_tree_id and user_id=p_user_id;
