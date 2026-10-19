@@ -167,7 +167,7 @@ assert.match(singleTreeMigration, /Only a member already linked to a family reco
 assert.match(singleTreeMigration, /grant update \(/);
 assert.match(singleTreeMigration, /uravu_main_tree_id/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
-assert.match(app, /Only explicit spouse links share a generation unit/);
+assert.match(app, /Parents of one child share a generation row/);
 assert.ok(!app.includes("coupleGap + 2"));
 assert.match(app, /function isManager\(\) \{\s*return Boolean\(state.activeMembership && state.activeMembership.person_id\);/);
 assert.match(schema, /public.uravu_can_edit_tree/);
