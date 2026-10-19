@@ -76,8 +76,13 @@ const familyBlockTargetCenter = new Function(
   const spouseUnit = { width:560, parentCenter:490 };
   assert.equal(
     familyBlockTargetCenter([spouseUnit], [{ x:80, width:270 }]),
-    490,
-    "A spouse unit should be centered between both partners' ancestral branches, not only under its primary family bucket"
+    215,
+    "A child's sibling block should centre on its recorded parent family, not the spouse's separate ancestral branch"
+  );
+  assert.equal(
+    familyBlockTargetCenter([spouseUnit], [{ x:80, width:270 }, { x:900, width:270 }]),
+    625,
+    "A two-parent family block should centre directly between those parent records even when a spouse has a distant branch"
   );
   assert.equal(
     familyBlockTargetCenter([{ width:270, parentCenter:null }], [{ x:100, width:270 }, { x:500, width:270 }]),
@@ -337,7 +342,10 @@ assert.match(html, /id="link-existing-form"/);
 assert.match(app, /function displayTreeName/);
 assert.match(app, /const selected = state\.people\.slice\(\)/);
 assert.match(app, /function highlightSearchMatch/);
-assert.match(app, /const columnGap = 84/);
+assert.match(app, /const columnGap = 112/);
+assert.match(app, /const coupleGap = 36/);
+assert.match(app, /const familySiblingGap = 76/);
+assert.match(app, /const familyBlockGap = 190/);
 assert.match(app, /is_self_record:!isManager\(\)/);
 assert.match(app, /நினைவில் வாழ்பவர்/);
 assert.match(app, /Living in Memory/);
@@ -353,8 +361,8 @@ assert.match(app, /Parents of one child share a generation row/);
 assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = new Map()"), "Child connectors should be grouped by their actual parent set");
-assert.ok(app.includes("outgoingFamilies.size * 26 + 44"), "Reserve vertical space for distinct family connector lanes");
-assert.ok(app.includes("parentRowBottom + 26 + laneIndex * 24"), "Give each family bus its own vertical lane");
+assert.ok(app.includes("Math.max(220, outgoingFamilies.size * 44 + 96)"), "Reserve enough vertical space for separated family connector lanes");
+assert.ok(app.includes("parentRowBottom + 36 + laneIndex * 38"), "Give each family bus a larger vertical lane");
 assert.ok(!app.includes("V ' + laneY + ' H ' + endX + ' V ' + endY"), "Parent-child links should not be drawn as separate H-shaped routes");
 assert.ok(styles.includes(".family-node-card .person-meta.record-meta"), "Card metadata must not be clamped to one line");
 assert.ok(!app.includes("coupleGap + 2"));

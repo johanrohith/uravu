@@ -1103,13 +1103,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function familyBlockTargetCenter(units, parentPositions) {
+    // A sibling block belongs to its recorded parent set, not to the average
+    // ancestry of every spouse attached to those children. Using spouse-side
+    // parent centres here pulls children away from their own parents and makes
+    // great-grandparent buses travel across unrelated family branches.
+    if (parentPositions.length) {
+      return parentPositions.reduce(
+        (sum, position) => sum + position.x + position.width / 2, 0
+      ) / parentPositions.length;
+    }
     const alignedUnits = units.filter(unit => unit.parentCenter != null);
     const alignedWidth = alignedUnits.reduce((sum, unit) => sum + unit.width, 0);
-    if (alignedWidth) {
-      return alignedUnits.reduce((sum, unit) => sum + unit.parentCenter * unit.width, 0) / alignedWidth;
-    }
-    return parentPositions.length
-      ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
+    return alignedWidth
+      ? alignedUnits.reduce((sum, unit) => sum + unit.parentCenter * unit.width, 0) / alignedWidth
       : null;
   }
 
@@ -1202,8 +1208,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const minLevel = levelKeys[0];
     const maxLevel = levelKeys[levelKeys.length - 1];
     const nodeWidth = 270;
-    const columnGap = 84;
-    const coupleGap = 28;
+    const columnGap = 112;
+    const coupleGap = 36;
     const levelUnits = new Map();
     const positions = new Map();
     const byId = new Map(state.people.map(person => [person.id, person]));
@@ -1275,7 +1281,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
       // Reserve a separate empty vertical lane for each family bus so unrelated
       // connector lines do not overlap or run through the same visual row.
-      nextRowY += tallest + Math.max(168, outgoingFamilies.size * 26 + 44);
+      nextRowY += tallest + Math.max(220, outgoingFamilies.size * 44 + 96);
     });
 
     const layoutPartners = new Map(state.people.map(person => [person.id, new Set()]));
@@ -1449,8 +1455,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    const familySiblingGap = 58;
-    const familyBlockGap = 138;
+    const familySiblingGap = 76;
+    const familyBlockGap = 190;
     levelKeys.forEach(level => {
       const rowY = rowYByLevel.get(level) || 24;
       const buckets = familyBucketsByLevel.get(level) || new Map();
@@ -1628,7 +1634,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const rowPairKey = parentRowY + "|" + childTop;
       const laneIndex = nextLaneByRowPair.get(rowPairKey) || 0;
       nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
-      const busY = Math.min(childTop - 18, parentRowBottom + 26 + laneIndex * 24);
+      const busY = Math.min(childTop - 26, parentRowBottom + 36 + laneIndex * 38);
 
       // One vertical trunk flows down from the partner link (or parent group),
       // meets a single horizontal child bus, then drops vertically to each child.
