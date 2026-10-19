@@ -592,6 +592,10 @@ assert.match(app, /data-toggle-partner-family/);
 assert.match(app, /familyColorForParentIds/);
 assert.match(app, /rootFamilyColorByKey/);
 assert.match(app, /expandedFamilyKey/);
+assert.match(app, /const collapsedInLaw = unit\.people\.find/);
+assert.match(app, /const collapsedFamilyKey = collapsedToggle && parentFamilyByPerson\.get\(collapsedToggle\.spouseId\)/);
+assert.match(app, /primaryFamilyByUnit\.set\(unit, collapsedFamilyKey\)/);
+
 assert.match(styles, /\.family-branch-legend/);
 assert.match(styles, /\.partner-family-toggle/);
 
