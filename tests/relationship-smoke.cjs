@@ -23,6 +23,62 @@ assert.deepEqual(parsePartialDate("24-06"), { valid:true, value:"06-24", date:nu
 assert.deepEqual(parsePartialDate("06"), { valid:true, value:"06", date:null, precision:"month" });
 assert.equal(parsePartialDate("31-02-1985").valid, false);
 
+function extractFunction(source, startMarker, endMarker) {
+  const start = source.indexOf(startMarker);
+  const end = source.indexOf(endMarker, start);
+  assert.ok(start >= 0 && end > start, "Could not extract " + startMarker);
+  return source.slice(start, end);
+}
+
+const generationMapSource = extractFunction(app, "function generationMap() {", "\n  function relationNames");
+const relationshipLabelsSource = extractFunction(
+  app,
+  "function relationshipLabelsForCurrentUser() {",
+  "\n  function renderPersonConnectOptions"
+);
+const familyState = {
+  user: { id:"current-user" },
+  language: "en",
+  members: [{ user_id:"current-user", person_id:"me" }],
+  people: [
+    { id:"great-grandfather", full_name:"Great Grandpa", gender:"male" },
+    { id:"great-grandmother", full_name:"Great Grandma", gender:"female" },
+    { id:"grandfather", full_name:"Grandpa", gender:"male" },
+    { id:"grandmother", full_name:"Grandma", gender:"female" },
+    { id:"parent", full_name:"Parent", gender:"other" },
+    { id:"me", full_name:"Me", gender:"other" },
+    { id:"child", full_name:"Child", gender:"other" },
+    { id:"grandchild", full_name:"Grandchild", gender:"other" },
+    { id:"great-grandchild", full_name:"Great Grandchild", gender:"other" }
+  ],
+  relationships: [
+    { person_id:"great-grandfather", related_person_id:"grandfather", relationship_type:"parent" },
+    { person_id:"great-grandmother", related_person_id:"grandmother", relationship_type:"parent" },
+    { person_id:"grandfather", related_person_id:"parent", relationship_type:"parent" },
+    { person_id:"grandmother", related_person_id:"parent", relationship_type:"parent" },
+    { person_id:"parent", related_person_id:"me", relationship_type:"parent" },
+    { person_id:"me", related_person_id:"child", relationship_type:"parent" },
+    { person_id:"child", related_person_id:"grandchild", relationship_type:"parent" },
+    { person_id:"grandchild", related_person_id:"great-grandchild", relationship_type:"parent" }
+  ]
+};
+const createGenerationMap = new Function("state", generationMapSource + "\nreturn generationMap;");
+const familyLevels = createGenerationMap(familyState)();
+const levelOf = id => Array.from(familyLevels.entries()).find(([, people]) => people.some(person => person.id === id))?.[0];
+assert.equal(levelOf("grandfather"), levelOf("grandmother"), "Co-parents should share a generation");
+
+const createRelationshipLabeler = new Function("state", relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
+const labels = createRelationshipLabeler(familyState)();
+assert.equal(labels.get("grandfather"), "Grandfather");
+assert.equal(labels.get("grandmother"), "Grandmother");
+assert.equal(labels.get("great-grandfather"), "Great-grandfather");
+assert.equal(labels.get("great-grandmother"), "Great-grandmother");
+assert.equal(labels.get("great-grandchild"), "Great-grandchild");
+
+familyState.language = "ta";
+const tamilLabels = createRelationshipLabeler(familyState)();
+assert.equal(tamilLabels.get("great-grandfather"), "கொள்ளுத்தாத்தா");
+assert.equal(tamilLabels.get("great-grandmother"), "கொள்ளுப்பாட்டி");
 
 assert.match(html, /id="signed-out"/);
 assert.match(html, /id="dashboard"/);
@@ -52,6 +108,10 @@ assert.match(app, /family-node-card/);
 assert.match(app, /relationshipLabelsForCurrentUser/);
 assert.match(app, /function syncSpouseChildLinks/);
 assert.match(app, /function backfillExistingSpouseChildren/);
+assert.match(app, /clearPersonForm\(\);\s*toast\(wasEditing \? "Family member updated\." : "Family member added\."/);
+assert.match(app, /clearPersonForm\(\);\s*await loadWorkspace\(treeId, false\);\s*toast\("Family connection added\."/);
+assert.match(app, /const layoutPartners = new Map/);
+assert.match(app, /addLayoutPartner\(parentId, otherId\)/);
 assert.match(app, /"Wife"; tamil = "மனைவி"/);
 assert.match(app, /graph-relationship-label/);
 assert.match(html, /English Name/);
@@ -109,7 +169,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app-v2\.js\?v=uravu-profile-fields-20261018-22/);
+assert.match(html, /app-v2\.js\?v=uravu-kinship-layout-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -128,7 +188,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app-v2\.js\?v=uravu-profile-fields-20261018-22/);
+assert.match(html, /app-v2\.js\?v=uravu-kinship-layout-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
