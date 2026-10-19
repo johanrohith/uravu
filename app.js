@@ -1496,45 +1496,38 @@
 
   function renderMembers() {
     const root = $("#tree-members-list");
-    if (!isManager()) { root.innerHTML = ""; return; }
-    const owner = isOwner();
-    if (!state.members.length) { root.innerHTML = '<div class="empty-state">No members yet.</div>'; return; }
-    root.innerHTML = state.members.map(member => {
-      const roleControl = '<span class="role-pill role-' + escapeHtml(member.role) + '">' + escapeHtml(roleLabel(member.role)) + '</span>';
-      const assignedId = member.person_id || "";
-      const placeholder = owner
-        ? '<option value=""' + (!assignedId ? ' selected' : '') + '>Not linked</option>'
-        : (!assignedId ? '<option value="" selected disabled>Select a record</option>' : '<option value="" disabled>Linked</option>');
-      const controlDisabled = !owner && Boolean(assignedId) ? " disabled" : "";
-      const assignedControl = '<label class="inline-control"><span class="tiny-label">Linked family record</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '"' + controlDisabled + '>' +
-        placeholder + state.people.filter(person => !state.members.some(other => other.person_id === person.id && other.user_id !== member.user_id))
-        .map(person => '<option value="' + escapeHtml(person.id) + '"' + (assignedId === person.id ? ' selected' : '') + '>' + escapeHtml(person.full_name) + '</option>').join("") +
-        '</select></label>';
-      return '<div class="member-row"><div class="member-identity"><span class="person-avatar">' + escapeHtml(initials(member.display_name)) +
-        '</span><div><strong>' + escapeHtml(member.display_name || "Family member") + '</strong><small>' +
-        (member.user_id === state.user.id ? "You · " : "") + escapeHtml(member.user_id === state.user.id ? (state.user.email || "Signed in") : "Approved member") +
-        '</small></div></div>' + roleControl + '<div class="member-controls">' + assignedControl + '</div></div>';
+    if (!root) return;
+    const linkedMembers = state.members.filter(member => member.person_id);
+    if (!linkedMembers.length) {
+      root.innerHTML = '<div class="empty-state">' +
+        (state.language === "ta" ? "இன்னும் குடும்பப் பதிவுடன் இணைக்கப்பட்ட கணக்குகள் இல்லை." : "No accounts are linked to a family record yet.") +
+        '</div>';
+      return;
+    }
+    root.innerHTML = linkedMembers.map(member => {
+      const person = state.people.find(item => item.id === member.person_id);
+      return '<article class="member-row linked-account-row">' +
+        '<div class="member-identity"><span class="person-avatar">' + escapeHtml(initials(member.display_name)) +
+        '</span><div><strong>' + escapeHtml(member.display_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "Family member")) +
+        (member.user_id === state.user?.id ? ' · ' + escapeHtml(state.language === "ta" ? "நீங்கள்" : "You") : '') +
+        '</strong><small>' + escapeHtml(state.language === "ta" ? "இணைக்கப்பட்ட கணக்கு" : "Linked account") + '</small></div></div>' +
+        '<div class="member-record"><strong>' + escapeHtml(person?.full_name || (state.language === "ta" ? "பதிவு கிடைக்கவில்லை" : "Record unavailable")) +
+        '</strong><small>' + escapeHtml(person?.tamil_name || "") + '</small></div></article>';
     }).join("");
-    $$("[data-member-person]").forEach(select => select.addEventListener("change", async () => {
-      const value = select.value || null;
-      const target = state.members.find(member => member.user_id === select.dataset.memberPerson);
-      if (!value && target?.person_id && !isOwner()) {
-        toast("Only the owner can unlink a member account.", true);
-        await loadWorkspace(state.activeTree.id, false);
-        return;
-      }
-      const { error } = await callRpc("uravu_assign_member_person", {
-        p_tree_id:state.activeTree.id, p_user_id:select.dataset.memberPerson, p_person_id:value
-      });
-      if (error) { showDbError(error, "assign family entry"); await loadWorkspace(state.activeTree.id, false); return; }
-      toast(value ? "Member linked to family record." : "Member link removed.");
-      await loadWorkspace(state.activeTree.id, false);
-    }));
   }
 
   function renderRequests() {
-    renderRequestGroup($("#access-requests-list"), state.requests.filter(request => request.request_type === "join"), "access");
-    renderRequestGroup($("#linking-requests-list"), state.requests.filter(request => request.request_type === "link"), "linking");
+    const root = $("#linking-requests-list");
+    if (!root) return;
+    if (!isManager()) {
+      root.innerHTML = '<div class="empty-state">' +
+        (state.language === "ta"
+          ? "இணைப்பு கோரிக்கைகளைப் பரிசீலிக்க, உங்கள் கணக்கு முதலில் குடும்பப் பதிவுடன் இணைக்கப்பட வேண்டும்."
+          : "Your account must be linked to a family record before you can review linking requests.") +
+        '</div>';
+      return;
+    }
+    renderRequestGroup(root, state.requests.filter(request => request.request_type === "link"), "linking");
   }
 
   function renderRequestGroup(root, requests, kind) {
@@ -1763,7 +1756,7 @@
 
   function beginEditPerson(personId) {
     const person = state.people.find(item => item.id === personId);
-    if (!person || !isManager() || !state.activeTree) return;
+    if (!person || !canEditPerson(person) || !state.activeTree) return;
     state.editingPersonId = personId;
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
@@ -1837,7 +1830,7 @@
 
   async function savePerson(event) {
     event.preventDefault();
-    if (!isManager() || !state.activeTree) return;
+    if (!state.activeTree || (state.editingPersonId ? !canEditPerson(state.people.find(person => person.id === state.editingPersonId)) : !canCreatePerson())) return;
     const data = collectPersonFormData();
     if (!data) return;
     const button = $("#save-person-button");
@@ -1850,7 +1843,7 @@
       error = result.error;
     } else {
       const result = await db.from("uravu_people").insert({
-        tree_id:state.activeTree.id, created_by:state.user.id, ...data
+        tree_id:state.activeTree.id, created_by:state.user.id, is_self_record:!isManager(), ...data
       }).select("id").single();
       error = result.error;
       personId = result.data?.id;
@@ -1858,12 +1851,13 @@
     setBusy(button, false);
     if (error) { showDbError(error, "save family member"); return; }
     clearPersonForm();
-    toast(wasEditing ? "Family member updated." : "Family member added.");
+    if (!wasEditing && !isManager()) await requestLinkToPerson(personId, "This is my newly created family record.");
+    else toast(wasEditing ? "Family member updated." : "Family member added.");
     await loadWorkspace(state.activeTree.id, false);
   }
 
   async function addConnectionFromForm() {
-    if (!isManager() || !state.activeTree) return;
+    if (!state.activeTree || (state.editingPersonId ? !canEditPerson(state.people.find(person => person.id === state.editingPersonId)) : !canCreatePerson())) return;
     const connectedId = $("#connect-person").value || null;
     const relationshipType = $("#connect-type").value || null;
     if (!connectedId || !relationshipType) {
@@ -1890,7 +1884,7 @@
       error = result.error;
     } else {
       const result = await db.from("uravu_people").insert({
-        tree_id:treeId, created_by:state.user.id, ...data
+        tree_id:treeId, created_by:state.user.id, is_self_record:!isManager(), ...data
       }).select("id").single();
       error = result.error;
       personId = result.data?.id;
@@ -1917,14 +1911,15 @@
       return;
     }
     clearPersonForm();
+    if (!isManager() && personId) await requestLinkToPerson(personId, "This is my newly created family record.");
+    else toast("Family connection added.");
     await loadWorkspace(treeId, false);
-    toast("Family connection added.");
   }
 
   async function deletePerson(personId) {
     const person = state.people.find(item => item.id === personId);
-    if (!person || !isManager()) return;
-    if (!window.confirm(translateUiValue("Delete " + person.full_name + " and their family connections? Accounts linked to this entry will be unlinked."))) return;
+    if (!person || !canDeletePerson(person)) return;
+    if (!window.confirm(translateUiValue("Delete " + person.full_name + " and their family connections? This cannot be undone."))) return;
     const { error } = await db.from("uravu_people").delete().eq("id", personId).eq("tree_id", state.activeTree.id);
     if (error) { showDbError(error, "delete person"); return; }
     toast("Family member and connections deleted.");
