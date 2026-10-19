@@ -837,8 +837,18 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       .filter(edge => edge.relationship_type === "spouse")
       .forEach(edge => unite(edge.person_id, edge.related_person_id));
 
-    // Only explicit spouse links share a generation unit. Parent links alone do not
-    // imply that two people are partners or should be clustered together.
+    // Parents of one child share a generation row, but this does not imply a
+    // spouse relationship and does not group their cards in the visual layout.
+    const parentsByChild = new Map();
+    parentEdges.forEach(edge => {
+      if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, []);
+      parentsByChild.get(edge.related_person_id).push(edge.person_id);
+    });
+    parentsByChild.forEach(parentIds => {
+      for (let index = 1; index < parentIds.length; index++) {
+        unite(parentIds[0], parentIds[index]);
+      }
+    });
 
     const groups = new Map();
     state.people.forEach(person => {
