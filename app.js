@@ -605,6 +605,7 @@
       state.relationships = [];
       state.members = [];
       state.requests = [];
+      state.openPanels.clear();
       $("#tree-workspace").hidden = true;
       $("#dashboard").classList.remove("tree-open");
       return;
@@ -1966,9 +1967,23 @@
   }
 
   function bindEvents() {
-    $("#create-tree-form").addEventListener("submit", createTree);
-    $("#refresh-button").addEventListener("click", refreshDashboard);
-    $("#tree-search").addEventListener("input", renderTreeLists);
+    $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
+    $("#toggle-member-list-panel").addEventListener("click", () => togglePanel("member-management-panel"));
+    $("#toggle-linking-requests-panel").addEventListener("click", () => togglePanel("linking-requests-panel"));
+    $("[data-close-panel]").forEach(button => button.addEventListener("click", () => closePanel(button.dataset.closePanel)));
+    $("#link-existing-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const personId = $("#request-person").value;
+      if (!personId) {
+        toast(state.language === "ta" ? "குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்." : "Select a family record to link.", true);
+        return;
+      }
+      const button = $("#request-existing-link-button");
+      setBusy(button, true, "Sending…");
+      const result = await requestLinkToPerson(personId, "Please confirm that this is my family record.");
+      setBusy(button, false);
+      if (!result.error && state.activeTree) await loadWorkspace(state.activeTree.id, false);
+    });
     $("#people-search").addEventListener("input", renderPeople);
     $("#person-form").addEventListener("submit", savePerson);
     $("#add-connection-button").addEventListener("click", addConnectionFromForm);
@@ -1979,16 +1994,6 @@
     $("#person-death-calendar").addEventListener("change", () => syncTextFromCalendar("person-death-calendar", "person-death"));
     $("#cancel-edit-button").addEventListener("click", clearPersonForm);
     syncDeathDateField();
-    $("#request-role-button").addEventListener("click", () => {
-      if (state.activeTree) openRequestDialog(state.activeTree.id, true);
-    });
-    $("#close-tree-button").addEventListener("click", () => {
-      state.activeTree = null;
-      state.activeMembership = null;
-      $("#tree-workspace").hidden = true;
-      $("#dashboard").classList.remove("tree-open");
-    });
-    $("#delete-tree-button").addEventListener("click", deleteTree);
     $("#fit-tree-button").addEventListener("click", fitTreeToView);
     $("#tree-zoom-out").addEventListener("click", () => setTreeZoom(state.treeZoom / 1.2));
     $("#tree-zoom-in").addEventListener("click", () => setTreeZoom(state.treeZoom * 1.2));
