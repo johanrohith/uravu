@@ -17,7 +17,6 @@ jobs:
           node-version: 20
       - name: Check JavaScript syntax
         run: |
-          node --check app.js
           node --check app-v2.js
           node --check auth.js
           node --check tests/relationship-smoke.cjs
