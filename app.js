@@ -159,7 +159,32 @@
     if (!(tamil in tamilToEnglish)) tamilToEnglish[tamil] = english;
   });
 
-  function translateUiValue(value) {
+  Object.assign(interfaceTranslations, {
+  "Uravugal":"உறவுகள்",
+  "SHARED FAMILY TREE":"பகிரப்பட்ட குடும்ப மரம்",
+  "Add Family Member":"குடும்ப உறுப்பினரைச் சேர்",
+  "Member list":"உறுப்பினர் பட்டியல்",
+  "Linking Requests":"இணைப்பு கோரிக்கைகள்",
+  "Explore your family’s generations and help keep the records accurate.":"உங்கள் குடும்பத் தலைமுறைகளைப் பார்த்து பதிவுகளைச் சரியாகப் பராமரிக்கவும்.",
+  "One shared family tree, across generations.":"தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்.",
+  "Choose a record to link":"இணைக்க வேண்டிய பதிவைத் தேர்ந்தெடுக்கவும்",
+  "Request to link this account":"இந்தக் கணக்கை இணைக்கக் கோரு",
+  "An existing linked family member must confirm the link before you can edit other records.":"மற்ற பதிவுகளைத் திருத்துவதற்கு முன் இணைக்கப்பட்ட குடும்ப உறுப்பினர் ஒருவர் இந்த இணைப்பை உறுதிப்படுத்த வேண்டும்.",
+  "OR ADD YOUR OWN RECORD":"அல்லது உங்கள் பதிவைச் சேர்க்கவும்",
+  "Your account must be linked to a family record before you can review linking requests.":"இணைப்பு கோரிக்கைகளைப் பரிசீலிக்க, உங்கள் கணக்கு முதலில் குடும்பப் பதிவுடன் இணைக்கப்பட வேண்டும்.",
+  "No accounts are linked to a family record yet.":"இதுவரை எந்தக் கணக்கும் குடும்பப் பதிவுடன் இணைக்கப்படவில்லை.",
+  "Linked account":"இணைக்கப்பட்ட கணக்கு",
+  "You":"நீங்கள்",
+  "Your family-record link request is awaiting review.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனையில் உள்ளது.",
+  "Living in Memory":"நினைவில் வாழ்பவர்",
+  "Deceased":"நினைவில் வாழ்பவர்",
+  "No family record requested yet.":"இதுவரை குடும்பப் பதிவு கோரப்படவில்லை.",
+  "Create your own family record first, or sign in with an existing family account.":"முதலில் உங்கள் குடும்பப் பதிவை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள குடும்பக் கணக்கில் உள்நுழையவும்.",
+  "Your account is already linked to a family record.":"உங்கள் கணக்கு ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்டுள்ளது.",
+  "This is my newly created family record.":"இது நான் புதிதாக உருவாக்கிய குடும்பப் பதிவு."
+});
+
+function translateUiValue(value) {
     const raw = String(value == null ? "" : value);
     const trimmed = raw.trim();
     const leading = raw.match(/^\s*/)?.[0] || "";
