@@ -187,11 +187,11 @@ assert.ok(app.includes("family-child-drop"), "Each child should have its own ver
 assert.ok(!app.includes("const siblingBusGroups = new Map()"), "Do not use sibling-pair connection routing");
 
 assert.match(app, /const spousesForLayout = new Map/);
-assert.match(app, /addEffectiveParent\\(spouseId, edge.related_person_id, true\\)/,
+assert.match(app, /addEffectiveParent\(spouseId, edge.related_person_id, true\)/,
   "A recorded parent's spouse should be displayed as a co-parent");
-assert.match(app, /unit\\.people\\.forEach\\(\\(person, index\\) => \\{/,
+assert.match(app, /unit\.people\.forEach\(\(person, index\) => \{/,
   "Position each spouse-connected group as an indivisible unit");
-assert.match(app, /const parentRowBottom = Math\\.max/,
+assert.match(app, /const parentRowBottom = Math\.max/,
   "Family buses must stay below every card in the parent generation row");
 
 assert.match(html, /id="toggle-edit-mode"/);
@@ -240,6 +240,8 @@ assert.match(app, /Parents of one child share a generation row/);
 assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = new Map()"), "Child connectors should be grouped by their actual parent set");
+assert.ok(app.includes("outgoingFamilies.size * 26 + 44"), "Reserve vertical space for distinct family connector lanes");
+assert.ok(app.includes("parentRowBottom + 26 + laneIndex * 24"), "Give each family bus its own vertical lane");
 assert.ok(!app.includes("V ' + laneY + ' H ' + endX + ' V ' + endY"), "Parent-child links should not be drawn as separate H-shaped routes");
 assert.ok(styles.includes(".family-node-card .person-meta.record-meta"), "Card metadata must not be clamped to one line");
 assert.ok(!app.includes("coupleGap + 2"));
