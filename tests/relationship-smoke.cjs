@@ -129,7 +129,7 @@ assert.ok(permissionsMigration.includes("alter table public.uravu_people alter c
 assert.match(html, /id="access-requests-list"/);
 assert.match(html, /id="linking-requests-list"/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
-assert.match(app, /Every connected spouse group gets one adjacent block/);
+assert.match(app, /Every connected spouse or co-parent group gets one adjacent block/);
 assert.ok(!app.includes("coupleGap + 2"));
 assert.match(app, /member.role === "member" && member.person_id/);
 assert.match(schema, /public.uravu_can_edit_tree/);
