@@ -557,7 +557,16 @@ revoke all on public.uravu_tree_members from anon, authenticated;
 revoke all on public.uravu_access_requests from anon, authenticated;
 
 grant select on public.uravu_family_trees to authenticated;
-grant select, update, insert, delete on public.uravu_people to authenticated;
+grant select, delete on public.uravu_people to authenticated;
+-- Keep identity and policy fields immutable through the public data API.
+grant insert (
+  tree_id, full_name, tamil_name, gender, birth_date, birth_date_text,
+  death_date, death_date_text, is_deceased, notes, created_by, is_self_record
+) on public.uravu_people to authenticated;
+grant update (
+  full_name, tamil_name, gender, birth_date, birth_date_text,
+  death_date, death_date_text, is_deceased, notes
+) on public.uravu_people to authenticated;
 grant select, delete on public.uravu_relationships to authenticated;
 grant select (tree_id,user_id,role,person_id,display_name,avatar_url,joined_at,updated_at)
   on public.uravu_tree_members to authenticated;
