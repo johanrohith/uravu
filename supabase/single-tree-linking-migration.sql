@@ -66,6 +66,9 @@ where m.tree_id = public.uravu_main_tree_id()
   and m.user_id = (select t.created_by from public.uravu_family_trees t where t.id = m.tree_id)
   and m.person_id is null
   and lower(btrim(p.full_name)) = lower(btrim(m.display_name))
+  and (select count(*) from public.uravu_people same_name
+       where same_name.tree_id = p.tree_id
+         and lower(btrim(same_name.full_name)) = lower(btrim(m.display_name))) = 1
   and not exists (
     select 1 from public.uravu_tree_members other_member
     where other_member.tree_id = p.tree_id
@@ -94,8 +97,9 @@ as $$
     where m.tree_id = p_tree_id
       and m.user_id = auth.uid()
       and m.person_id is not null
+      and p_tree_id = public.uravu_main_tree_id()
   );
-$$;
+$;
 
 create or replace function public.uravu_can_edit_person(p_tree_id uuid, p_person_id uuid)
 returns boolean
@@ -445,25 +449,28 @@ drop policy if exists uravu_people_insert_main on public.uravu_people;
 create policy uravu_people_insert_main on public.uravu_people
 for insert to authenticated
 with check (
-  tree_id = public.uravu_main_tree_id()
-  and created_by = auth.uid()
+  public.uravu_people.tree_id = public.uravu_main_tree_id()
+  and public.uravu_people.created_by = auth.uid()
   and (
     (
-      is_self_record = true
+      public.uravu_people.is_self_record = true
       and not exists (
         select 1 from public.uravu_tree_members m
-        where m.tree_id = tree_id and m.user_id = auth.uid() and m.person_id is not null
+        where m.tree_id = public.uravu_people.tree_id
+          and m.user_id = auth.uid() and m.person_id is not null
       )
       and not exists (
         select 1 from public.uravu_people own
-        where own.tree_id = tree_id and own.created_by = auth.uid() and own.is_self_record = true
+        where own.tree_id = public.uravu_people.tree_id
+          and own.created_by = auth.uid() and own.is_self_record = true
       )
     )
     or (
-      is_self_record = false
+      public.uravu_people.is_self_record = false
       and exists (
         select 1 from public.uravu_tree_members m
-        where m.tree_id = tree_id and m.user_id = auth.uid() and m.person_id is not null
+        where m.tree_id = public.uravu_people.tree_id
+          and m.user_id = auth.uid() and m.person_id is not null
       )
     )
   )
@@ -484,10 +491,11 @@ drop policy if exists uravu_people_delete_main_unlinked on public.uravu_people;
 create policy uravu_people_delete_main_unlinked on public.uravu_people
 for delete to authenticated
 using (
-  public.uravu_can_edit_person(tree_id, id)
+  public.uravu_can_edit_person(public.uravu_people.tree_id, public.uravu_people.id)
   and not exists (
     select 1 from public.uravu_tree_members assigned
-    where assigned.tree_id = tree_id and assigned.person_id = id
+    where assigned.tree_id = public.uravu_people.tree_id
+      and assigned.person_id = public.uravu_people.id
   )
 );
 
@@ -503,10 +511,24 @@ drop policy if exists uravu_relationships_delete_linked on public.uravu_relation
 create policy uravu_relationships_delete_linked on public.uravu_relationships
 for delete to authenticated
 using (
-  tree_id = public.uravu_main_tree_id()
-  and exists (
-    select 1 from public.uravu_tree_members m
-    where m.tree_id = tree_id and m.user_id = auth.uid() and m.person_id is not null
+  public.uravu_relationships.tree_id = public.uravu_main_tree_id()
+  and (
+    exists (
+      select 1 from public.uravu_tree_members m
+      where m.tree_id = public.uravu_relationships.tree_id
+        and m.user_id = auth.uid() and m.person_id is not null
+    )
+    or exists (
+      select 1 from public.uravu_people self_record
+      where self_record.tree_id = public.uravu_relationships.tree_id
+        and self_record.created_by = auth.uid()
+        and self_record.is_self_record = true
+        and self_record.id in (public.uravu_relationships.person_id, public.uravu_relationships.related_person_id)
+        and not exists (
+          select 1 from public.uravu_tree_members assigned
+          where assigned.tree_id = self_record.tree_id and assigned.person_id = self_record.id
+        )
+    )
   )
 );
 
