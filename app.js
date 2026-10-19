@@ -184,7 +184,10 @@
   "This is my newly created family record.":"இது நான் புதிதாக உருவாக்கிய குடும்பப் பதிவு."
 });
 
-function translateUiValue(value) {
+tamilToEnglish["உறவுகள்"] = "Uravugal";
+  tamilToEnglish["நினைவில் வாழ்பவர்"] = "Living in Memory";
+
+  function translateUiValue(value) {
     const raw = String(value == null ? "" : value);
     const trimmed = raw.trim();
     const leading = raw.match(/^\s*/)?.[0] || "";
@@ -2001,7 +2004,7 @@ function translateUiValue(value) {
     $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
     $("#toggle-member-list-panel").addEventListener("click", () => togglePanel("member-management-panel"));
     $("#toggle-linking-requests-panel").addEventListener("click", () => togglePanel("linking-requests-panel"));
-    $("[data-close-panel]").forEach(button => button.addEventListener("click", () => closePanel(button.dataset.closePanel)));
+    Array.from(document.querySelectorAll("[data-close-panel]")).forEach(button => button.addEventListener("click", () => closePanel(button.dataset.closePanel)));
     $("#link-existing-form").addEventListener("submit", async event => {
       event.preventDefault();
       const personId = $("#request-person").value;
