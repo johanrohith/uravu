@@ -1089,6 +1089,81 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return lines;
   }
 
+  function sortUnitPeopleByParentCenter(unit, parentCenter) {
+    unit.people.sort((a, b) => {
+      const ac = parentCenter({ people:[a] });
+      const bc = parentCenter({ people:[b] });
+      if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
+      if (ac != null && bc == null) return -1;
+      if (ac == null && bc != null) return 1;
+      return a.full_name.localeCompare(b.full_name);
+    });
+    unit.sortName = unit.people[0]?.full_name || unit.sortName;
+    return unit;
+  }
+
+  function familyBlockTargetCenter(units, parentPositions) {
+    const alignedUnits = units.filter(unit => unit.parentCenter != null);
+    const alignedWidth = alignedUnits.reduce((sum, unit) => sum + unit.width, 0);
+    if (alignedWidth) {
+      return alignedUnits.reduce((sum, unit) => sum + unit.parentCenter * unit.width, 0) / alignedWidth;
+    }
+    return parentPositions.length
+      ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
+      : null;
+  }
+
+
+  function choosePrimaryFamilyKey(unit, candidateKeys, activePersonId, parentFamilyByPerson, relatednessDistance, buckets, positions) {
+    const candidates = Array.from(new Set(candidateKeys.filter(Boolean)));
+    if (!candidates.length) return null;
+
+    // If the currently linked person is one of the partners, keep the couple
+    // with that person's own parent/sibling family. Otherwise, do not let a
+    // spouse-side family claim the whole couple just because it matches a
+    // broad family anchor.
+    if (activePersonId && unit.people.some(person => person.id === activePersonId)) {
+      const activeKey = parentFamilyByPerson.get(activePersonId);
+      if (activeKey && candidates.includes(activeKey)) return activeKey;
+    }
+
+    const originalCenter = unit.people.reduce((sum, person) => {
+      const position = positions.get(person.id);
+      return sum + (position ? position.x + position.width / 2 : 0);
+    }, 0) / Math.max(1, unit.people.length);
+
+    const memberDistance = key => {
+      const distances = unit.people
+        .filter(person => parentFamilyByPerson.get(person.id) === key)
+        .map(person => relatednessDistance.get(person.id) ?? Infinity);
+      return distances.length ? Math.min(...distances) : Infinity;
+    };
+    const centerFor = key => {
+      const bucket = buckets.get(key);
+      if (!bucket) return originalCenter;
+      const parentPositions = bucket.parentIds.map(id => positions.get(id)).filter(Boolean);
+      return parentPositions.length
+        ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
+        : originalCenter;
+    };
+
+    candidates.sort((a, b) => {
+      const distanceA = memberDistance(a);
+      const distanceB = memberDistance(b);
+      if (distanceA !== distanceB) {
+        if (!Number.isFinite(distanceA)) return 1;
+        if (!Number.isFinite(distanceB)) return -1;
+        return distanceA - distanceB;
+      }
+      const bucketA = buckets.get(a), bucketB = buckets.get(b);
+      const sizeDifference = (bucketB?.children.length || 0) - (bucketA?.children.length || 0);
+      if (sizeDifference) return sizeDifference;
+      return Math.abs(centerFor(a) - originalCenter) - Math.abs(centerFor(b) - originalCenter) ||
+        a.localeCompare(b);
+    });
+    return candidates[0];
+  }
+
   function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
@@ -1274,8 +1349,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         return centers.length ? centers.reduce((sum, center) => sum + center, 0) / centers.length : null;
       };
 
+      // Keep the couple together, but order the partners to match their own
+      // ancestral branches. This prevents a distant mother's branch from
+      // sweeping across the father's connector lines just to reach her card.
+      units.forEach(unit => {
+        sortUnitPeopleByParentCenter(unit, parentCenter);
+        unit.parentCenter = parentCenter(unit);
+      });
+
       units.sort((a, b) => {
-        const ac = parentCenter(a), bc = parentCenter(b);
+        const ac = a.parentCenter, bc = b.parentCenter;
         if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
         if (ac != null && bc == null) return -1;
         if (ac == null && bc != null) return 1;
@@ -1324,16 +1407,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       familyBucketsByLevel.set(level, buckets);
     });
 
-    // The currently linked member's own sibling family is the strongest grouping
-    // anchor. Elsewhere, prefer the sibling set with the most children. This keeps
-    // partners adjacent while leaving space for each partner's separate ancestry.
+    // Measure kinship through recorded parent-child relationships only.
+    // Marriage and inferred co-parent display edges must not make a partner's
+    // parents/siblings pull the other partner's couple unit into their branch.
     const activePersonId = state.activeMembership?.person_id ||
       state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
-    const activeFamilyKey = activePersonId ? parentFamilyByPerson.get(activePersonId) : null;
-
-    // Measure kinship distance from the linked member using the displayed family
-    // graph. When a spouse unit belongs to two sibling families, anchor it to the
-    // side that is closer to the active member, then use sibling count as a tie-break.
     const relatednessAdjacency = new Map(state.people.map(person => [person.id, new Set()]));
     const addRelatednessEdge = (a, b) => {
       if (relatednessAdjacency.has(a) && relatednessAdjacency.has(b) && a !== b) {
@@ -1341,8 +1419,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         relatednessAdjacency.get(b).add(a);
       }
     };
-    parentEdgesForLayout.forEach(edge => addRelatednessEdge(edge.person_id, edge.related_person_id));
-    state.relationships.filter(edge => edge.relationship_type === "spouse")
+    state.relationships.filter(edge => edge.relationship_type === "parent")
       .forEach(edge => addRelatednessEdge(edge.person_id, edge.related_person_id));
     const relatednessDistance = new Map();
     if (activePersonId && relatednessAdjacency.has(activePersonId)) {
@@ -1364,41 +1441,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       (levelUnits.get(level) || []).forEach(unit => {
         const candidates = Array.from(new Set(unit.people.map(person => parentFamilyByPerson.get(person.id)).filter(Boolean)));
         if (!candidates.length) return;
-        let chosenKey = null;
-        if (activeFamilyKey && candidates.includes(activeFamilyKey)) {
-          chosenKey = activeFamilyKey;
-        } else {
-          const originalCenter = unit.people.reduce((sum, person) => {
-            const position = positions.get(person.id);
-            return sum + (position ? position.x + position.width / 2 : 0);
-          }, 0) / Math.max(1, unit.people.length);
-          candidates.sort((a, b) => {
-            const bucketA = buckets.get(a), bucketB = buckets.get(b);
-            const memberDistance = key => {
-              const distances = unit.people
-                .filter(person => parentFamilyByPerson.get(person.id) === key)
-                .map(person => relatednessDistance.get(person.id) ?? Infinity);
-              return distances.length ? Math.min(...distances) : Infinity;
-            };
-            const affinityDifference = memberDistance(a) - memberDistance(b);
-            if (Number.isFinite(affinityDifference) && affinityDifference !== 0) return affinityDifference;
-            if (memberDistance(a) !== memberDistance(b)) {
-              return memberDistance(a) === Infinity ? 1 : -1;
-            }
-            const sizeDifference = (bucketB?.children.length || 0) - (bucketA?.children.length || 0);
-            if (sizeDifference) return sizeDifference;
-            const centerFor = bucket => {
-              if (!bucket) return originalCenter;
-              const parentPositions = bucket.parentIds.map(id => positions.get(id)).filter(Boolean);
-              return parentPositions.length
-                ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
-                : originalCenter;
-            };
-            return Math.abs(centerFor(bucketA) - originalCenter) - Math.abs(centerFor(bucketB) - originalCenter) ||
-              a.localeCompare(b);
-          });
-          chosenKey = candidates[0];
-        }
+        const chosenKey = choosePrimaryFamilyKey(
+          unit, candidates, activePersonId, parentFamilyByPerson,
+          relatednessDistance, buckets, positions
+        );
         primaryFamilyByUnit.set(unit, chosenKey);
       });
     });
@@ -1420,9 +1466,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         const width = units.reduce((sum, unit) => sum + unit.width, 0) +
           Math.max(0, units.length - 1) * familySiblingGap;
         const parentPositions = bucket.parentIds.map(id => positions.get(id)).filter(Boolean);
-        const targetCenter = parentPositions.length
-          ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
-          : null;
+        const targetCenter = familyBlockTargetCenter(units, parentPositions);
         const originalLeft = Math.min(...units.flatMap(unit =>
           unit.people.map(person => positions.get(person.id)?.x ?? 0)));
         blocks.push({
