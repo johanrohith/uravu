@@ -1204,18 +1204,29 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
     const treeLineageIds = new Set();
     if (activePersonIdForTree && allPeopleById.has(activePersonIdForTree)) {
-      const queue = [activePersonIdForTree];
-      treeLineageIds.add(activePersonIdForTree);
-      for (let index = 0; index < queue.length; index++) {
-        const currentId = queue[index];
-        const adjacent = [
-          ...(rawParentsByChild.get(currentId) || new Set()),
-          ...(rawChildrenByParent.get(currentId) || new Set())
-        ];
-        adjacent.forEach(relatedId => {
-          if (treeLineageIds.has(relatedId)) return;
-          treeLineageIds.add(relatedId);
-          queue.push(relatedId);
+      // Define the central family tree as the active person's bloodline:
+      // walk upward through parents first, then downward through those ancestors'
+      // descendants. Never walk sideways through a spouse link. That keeps an
+      // aunt/uncle's in-law out of the birth-family branch unless their own
+      // recorded parent-child path independently places them in the lineage.
+      const ancestorQueue = [activePersonIdForTree];
+      const directAncestorIds = new Set([activePersonIdForTree]);
+      for (let index = 0; index < ancestorQueue.length; index++) {
+        const currentId = ancestorQueue[index];
+        (rawParentsByChild.get(currentId) || new Set()).forEach(parentId => {
+          if (directAncestorIds.has(parentId)) return;
+          directAncestorIds.add(parentId);
+          ancestorQueue.push(parentId);
+        });
+      }
+      const descendantQueue = Array.from(directAncestorIds);
+      directAncestorIds.forEach(id => treeLineageIds.add(id));
+      for (let index = 0; index < descendantQueue.length; index++) {
+        const currentId = descendantQueue[index];
+        (rawChildrenByParent.get(currentId) || new Set()).forEach(childId => {
+          if (treeLineageIds.has(childId)) return;
+          treeLineageIds.add(childId);
+          descendantQueue.push(childId);
         });
       }
     }
@@ -1391,7 +1402,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       rootFamiliesCache.set(personId, roots);
       return roots;
     };
-    selected.forEach(person => rootFamiliesForPerson(person.id));
+    const legendPersonIds = new Set(treeLineageIds);
+    partnerFamilyToggleByPerson.forEach(toggle => {
+      if (toggle.expanded) legendPersonIds.add(toggle.spouseId);
+    });
+    legendPersonIds.forEach(personId => rootFamiliesForPerson(personId));
     const rootFamilyLabel = key => (rootFamilyMembers.get(key) || [])
       .map(id => allPeopleById.get(id)?.full_name)
       .filter(Boolean).join(" + ");
@@ -1838,8 +1853,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     }
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
-    $("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
-    $("[data-toggle-partner-family]").forEach(button => button.addEventListener("click", event => {
+    $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
+    $$("[data-toggle-partner-family]").forEach(button => button.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
       const personId = button.dataset.togglePartnerFamily;
@@ -1849,7 +1864,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       else state.treeExpandedPartnerFamilies.add(personId);
       renderPeople();
     }));
-    $("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
+    $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
     $$("[data-view-person]").forEach(card => {
       card.addEventListener("click", () => openPersonDetails(card.dataset.viewPerson));
       card.addEventListener("keydown", event => {
