@@ -33,6 +33,37 @@ function extractFunction(source, startMarker, endMarker) {
 }
 
 
+const spouseUnitSortSource = extractFunction(
+  app,
+  "function sortUnitPeopleByParentCenter(unit, parentCenter) {",
+  "\\n  function renderPeople"
+);
+const sortUnitPeopleByParentCenter = new Function(
+  spouseUnitSortSource + "\\nreturn sortUnitPeopleByParentCenter;"
+)();
+{
+  // The alphabetic order is intentionally the opposite of the ancestry order.
+  // The spouse whose own parents are to the left should occupy the left card,
+  // keeping each great-grandparent connector local to its own branch.
+  const unit = {
+    people:[
+      { id:"maternal-grandmother", full_name:"A Grandma" },
+      { id:"paternal-grandfather", full_name:"Z Grandpa" }
+    ],
+    sortName:"A Grandma"
+  };
+  const centers = new Map([
+    ["maternal-grandmother", 760],
+    ["paternal-grandfather", 220]
+  ]);
+  sortUnitPeopleByParentCenter(unit, individual => centers.get(individual.people[0].id) ?? null);
+  assert.deepEqual(
+    unit.people.map(person => person.id),
+    ["paternal-grandfather", "maternal-grandmother"],
+    "Spouses should remain adjacent but follow their own ancestral branches left-to-right"
+  );
+}
+
 const recordDetailSource = extractFunction(
   app,
   "function familyRecordDetailLines(person) {",
@@ -288,7 +319,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app\.js\?v=uravu-family-layout-keep-spouses-20261019-5/);
+assert.match(html, /app\.js\?v=uravu-family-layout-ancestor-alignment-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -307,7 +338,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app\.js\?v=uravu-family-layout-keep-spouses-20261019-5/);
+assert.match(html, /app\.js\?v=uravu-family-layout-ancestor-alignment-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
