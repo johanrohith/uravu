@@ -142,9 +142,9 @@ const relatednessBlock = extractFunction(
   "const relatednessAdjacency = new Map(",
   "const primaryFamilyByUnit = new Map();"
 );
-assert.match(relatednessBlock, /state\\.relationships\\.filter\\(edge => edge\\.relationship_type === "parent"\\)/);
+assert.match(relatednessBlock, /state\.relationships\.filter\(edge => edge\.relationship_type === "parent"\)/);
 assert.doesNotMatch(relatednessBlock, /relationship_type === "spouse"/);
-assert.doesNotMatch(relatednessBlock, /parentEdgesForLayout\\.forEach/);
+assert.doesNotMatch(relatednessBlock, /parentEdgesForLayout\.forEach/);
 
 const recordDetailSource = extractFunction(
   app,
