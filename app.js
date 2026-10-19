@@ -1403,8 +1403,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return roots;
     };
     const legendPersonIds = new Set(treeLineageIds);
-    partnerFamilyToggleByPerson.forEach(toggle => {
-      if (toggle.expanded) legendPersonIds.add(toggle.spouseId);
+    partnerFamilyToggleByPerson.forEach((toggle, personId) => {
+      if (toggle.expanded) legendPersonIds.add(personId);
     });
     legendPersonIds.forEach(personId => rootFamiliesForPerson(personId));
     const rootFamilyLabel = key => (rootFamilyMembers.get(key) || [])
