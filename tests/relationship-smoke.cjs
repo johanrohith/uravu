@@ -47,6 +47,8 @@ const familyState = {
     { id:"great-grandmother", full_name:"Great Grandma", gender:"female" },
     { id:"grandfather", full_name:"Grandpa", gender:"male" },
     { id:"grandmother", full_name:"Grandma", gender:"female" },
+    { id:"grandfather-spouse", full_name:"Grandpa spouse", gender:"female" },
+    { id:"grandmother-spouse", full_name:"Grandma spouse", gender:"male" },
     { id:"parent", full_name:"Parent", gender:"other" },
     { id:"me", full_name:"Me", gender:"other" },
     { id:"child", full_name:"Child", gender:"other" },
@@ -56,6 +58,8 @@ const familyState = {
   relationships: [
     { person_id:"great-grandfather", related_person_id:"grandfather", relationship_type:"parent" },
     { person_id:"great-grandmother", related_person_id:"grandmother", relationship_type:"parent" },
+    { person_id:"grandfather", related_person_id:"grandfather-spouse", relationship_type:"spouse" },
+    { person_id:"grandmother", related_person_id:"grandmother-spouse", relationship_type:"spouse" },
     { person_id:"grandfather", related_person_id:"parent", relationship_type:"parent" },
     { person_id:"grandmother", related_person_id:"parent", relationship_type:"parent" },
     { person_id:"parent", related_person_id:"me", relationship_type:"parent" },
@@ -73,6 +77,8 @@ const createRelationshipLabeler = new Function("state", relationshipLabelsSource
 const labels = createRelationshipLabeler(familyState)();
 assert.equal(labels.get("grandfather"), "Grandfather");
 assert.equal(labels.get("grandmother"), "Grandmother");
+assert.equal(labels.get("grandfather-spouse"), "Grandmother", "A grandfather spouse must be labelled as a grandmother by gender");
+assert.equal(labels.get("grandmother-spouse"), "Grandfather", "A grandmother spouse must be labelled as a grandfather by gender");
 assert.equal(labels.get("great-grandfather"), "Great-grandfather");
 assert.equal(labels.get("great-grandmother"), "Great-grandmother");
 assert.equal(labels.get("great-grandchild"), "Great-grandchild");
@@ -81,6 +87,8 @@ familyState.language = "ta";
 const tamilLabels = createRelationshipLabeler(familyState)();
 assert.equal(tamilLabels.get("great-grandfather"), "கொள்ளுத்தாத்தா");
 assert.equal(tamilLabels.get("great-grandmother"), "கொள்ளுப்பாட்டி");
+assert.equal(tamilLabels.get("grandfather-spouse"), "பாட்டி");
+assert.equal(tamilLabels.get("grandmother-spouse"), "தாத்தா");
 
 assert.match(html, /id="signed-out"/);
 assert.match(html, /id="dashboard"/);
@@ -108,12 +116,18 @@ assert.match(app, /uravu_delete_tree/);
 assert.match(app, /family-tree-lines/);
 assert.match(app, /family-node-card/);
 assert.match(app, /relationshipLabelsForCurrentUser/);
-assert.match(app, /function syncSpouseChildLinks/);
-assert.match(app, /function backfillExistingSpouseChildren/);
+assert.doesNotMatch(app, /function syncSpouseChildLinks/);
+assert.doesNotMatch(app, /function backfillExistingSpouseChildren/);
 assert.match(app, /clearPersonForm\(\);\s*if \(!wasEditing && !isManager\(\)\) await requestLinkToPerson/);
 assert.match(app, /clearPersonForm\(\);\s*if \(!isManager\(\) && personId\) await requestLinkToPerson/);
 assert.match(app, /const layoutPartners = new Map/);
-assert.match(app, /addLayoutPartner\(parentId, otherId\)/);
+assert.doesNotMatch(app, /addLayoutPartner\(parentId, otherId\)/);
+assert.match(app, /const showActions = state\.editMode && canEdit/);
+assert.match(app, /state\.openPanels\.add\("add-person-panel"\)/);
+assert.match(app, /laneY = startY \+ 14 \+ index \* 10/);
+assert.match(html, /id="toggle-edit-mode"/);
+assert.match(styles, /\.edit-mode-button\.is-on/);
+assert.match(styles, /\.edit-mode-button\.is-off/);
 assert.match(app, /english="Wife";tamil="மனைவி"/);
 assert.match(app, /graph-relationship-label/);
 assert.match(html, /English Name/);
@@ -141,7 +155,7 @@ assert.match(html, /id="link-existing-form"/);
 assert.match(app, /function displayTreeName/);
 assert.match(app, /const selected = state\.people\.slice\(\)/);
 assert.match(app, /function highlightSearchMatch/);
-assert.match(app, /const siblingSetGap = 118/);
+assert.match(app, /const columnGap = 84/);
 assert.match(app, /is_self_record:!isManager\(\)/);
 assert.match(app, /நினைவில் வாழ்பவர்/);
 assert.match(app, /Living in Memory/);
@@ -153,7 +167,7 @@ assert.match(singleTreeMigration, /Only a member already linked to a family reco
 assert.match(singleTreeMigration, /grant update \(/);
 assert.match(singleTreeMigration, /uravu_main_tree_id/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
-assert.match(app, /Every connected spouse or co-parent group gets one adjacent block/);
+assert.match(app, /Parents of one child share a generation row/);
 assert.ok(!app.includes("coupleGap + 2"));
 assert.match(app, /function isManager\(\) \{\s*return Boolean\(state.activeMembership && state.activeMembership.person_id\);/);
 assert.match(schema, /public.uravu_can_edit_tree/);
@@ -198,7 +212,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app\.js\?v=uravu-single-tree-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-edit-layout-20261019-2/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -217,7 +231,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app\.js\?v=uravu-single-tree-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-edit-layout-20261019-2/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
