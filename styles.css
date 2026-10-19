@@ -241,3 +241,27 @@
   .member-row.linked-account-row{grid-template-columns:1fr}
   .tree-control-button#tree-zoom-out,.tree-control-button#tree-zoom-in{width:38px;height:38px}
 }
+
+
+/* Explicit edit mode: visible controls, with a clear ON/OFF state. */
+.edit-mode-button.is-on {
+  background: #218447 !important;
+  border-color: #218447 !important;
+  color: #fff !important;
+}
+.edit-mode-button.is-off {
+  background: #c83e3e !important;
+  border-color: #c83e3e !important;
+  color: #fff !important;
+}
+.edit-mode-button.is-on:hover,
+.edit-mode-button.is-off:hover {
+  filter: brightness(.94);
+}
+.family-node-card .graph-relationship-label {
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.family-node-card .person-card-actions {
+  margin-top: 0;
+}
