@@ -1474,7 +1474,7 @@
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes && manager ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
       (manager ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
-      '</button><button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button></div>' : '') +
+      '</button>' + (isOwner() ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
       '</article>';
   }
 
@@ -1747,7 +1747,7 @@
 
   function beginEditPerson(personId) {
     const person = state.people.find(item => item.id === personId);
-    if (!person || !isManager()) return;
+    if (!person || !isOwner() || !state.activeTree) return;
     state.editingPersonId = personId;
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
