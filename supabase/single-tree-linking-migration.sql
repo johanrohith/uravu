@@ -543,6 +543,15 @@ using (
   and tree_id = public.uravu_main_tree_id()
   and request_type = 'link'
   and status = 'pending'
+  and (
+    user_id = auth.uid()
+    or exists (
+      select 1 from public.uravu_tree_members linked
+      where linked.tree_id = public.uravu_access_requests.tree_id
+        and linked.user_id = auth.uid()
+        and linked.person_id is not null
+    )
+  )
 );
 
 revoke all on public.uravu_family_trees from anon, authenticated;
