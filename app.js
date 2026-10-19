@@ -1089,6 +1089,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return lines;
   }
 
+  function sortUnitPeopleByParentCenter(unit, parentCenter) {
+    unit.people.sort((a, b) => {
+      const ac = parentCenter({ people:[a] });
+      const bc = parentCenter({ people:[b] });
+      if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
+      if (ac != null && bc == null) return -1;
+      if (ac == null && bc != null) return 1;
+      return a.full_name.localeCompare(b.full_name);
+    });
+    unit.sortName = unit.people[0]?.full_name || unit.sortName;
+    return unit;
+  }
+
   function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
@@ -1273,6 +1286,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         });
         return centers.length ? centers.reduce((sum, center) => sum + center, 0) / centers.length : null;
       };
+
+      // Keep the couple together, but order the partners to match their own
+      // ancestral branches. This prevents a distant mother's branch from
+      // sweeping across the father's connector lines just to reach her card.
+      units.forEach(unit => sortUnitPeopleByParentCenter(unit, parentCenter));
 
       units.sort((a, b) => {
         const ac = parentCenter(a), bc = parentCenter(b);
