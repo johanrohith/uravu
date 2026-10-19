@@ -734,7 +734,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     state.loadingTree = false;
     if (results[0].error && /(birth_date_text|death_date_text|is_deceased|schema cache)/i.test(String(results[0].error.message || results[0].error))) {
       const legacyPeople = await db.from("uravu_people")
-        .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,notes,created_by,created_at,updated_at")
+        .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,is_self_record,notes,created_by,created_at,updated_at")
         .eq("tree_id", treeId).order("full_name");
       results[0] = legacyPeople;
       state.partialDatesSupported = false;
