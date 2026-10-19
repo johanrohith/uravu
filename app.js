@@ -1355,17 +1355,45 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     linesRoot.setAttribute("height", String(baseHeight));
 
     const paths = [];
-    const siblingBusGroups = new Map();
+    const partnerLineByPair = new Map();
+    const partnerEdges = state.relationships.filter(edge => edge.relationship_type === "spouse");
+
+    // Draw only explicit partner links. Keep the midpoint and line height so
+    // the parent-to-children stem can descend from the partner line itself.
+    partnerEdges.forEach(edge => {
+      const first = positions.get(edge.person_id);
+      const second = positions.get(edge.related_person_id);
+      if (!first || !second || first.y !== second.y) return;
+      const left = first.x <= second.x ? first : second;
+      const right = first.x <= second.x ? second : first;
+      const lineY = left.y + 36;
+      const lineLeft = left.x + left.width;
+      const lineRight = right.x;
+      if (lineRight <= lineLeft) return;
+      const pairKey = [edge.person_id, edge.related_person_id].sort().join("|");
+      const line = {
+        centerX: (lineLeft + lineRight) / 2,
+        y: lineY
+      };
+      partnerLineByPair.set(pairKey, line);
+      paths.push('<path class="family-line spouse-line" d="M ' +
+        lineLeft + ' ' + lineY + ' H ' + lineRight + '"/>');
+    });
+
+    // Group each child under the exact set of recorded parents. The horizontal
+    // bus is a family connector only: never draw separate lines between siblings.
+    const familyChildGroups = new Map();
     parentsByChild.forEach((parentSet, childId) => {
       const child = positions.get(childId);
       const parentIds = Array.from(parentSet).sort();
       const parents = parentIds.map(id => positions.get(id)).filter(Boolean);
       if (!child || !parents.length || !parents.every(parent => parent.y < child.y)) return;
       const key = parentIds.join("|");
-      if (!siblingBusGroups.has(key)) siblingBusGroups.set(key, { parentIds, childIds:[] });
-      siblingBusGroups.get(key).childIds.push(childId);
+      if (!familyChildGroups.has(key)) familyChildGroups.set(key, { parentIds, childIds:[] });
+      familyChildGroups.get(key).childIds.push(childId);
     });
-    siblingBusGroups.forEach(group => {
+
+    familyChildGroups.forEach(group => {
       const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
       const children = group.childIds.map(id => positions.get(id)).filter(Boolean)
         .sort((a, b) => (a.x + a.width / 2) - (b.x + b.width / 2));
@@ -1376,33 +1404,46 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const parentBottom = Math.max(...parents.map(parent => parent.y + parent.height));
       const childTop = Math.min(...children.map(child => child.y));
       if (childTop <= parentBottom + 8) return;
-      const parentCenterX = parents.reduce((sum, parent) => sum + parent.x + parent.width / 2, 0) / parents.length;
-      const childCenters = children.map(child => child.x + child.width / 2);
-      const busLeft = Math.min(parentCenterX, ...childCenters);
-      const busRight = Math.max(parentCenterX, ...childCenters);
-      const busY = Math.min(childTop - 18, parentBottom + Math.max(24, (childTop - parentBottom) * 0.45));
 
-      // One centred parent stem reaches one shared horizontal sibling bus.
-      // Each child receives a separate vertical drop; no per-edge H-shaped detours.
-      paths.push('<path class="family-line" d="M ' + parentCenterX + ' ' + parentBottom +
-        ' V ' + busY + '"/>');
+      // Prefer the centre of a recorded partner link. If no partner relationship
+      // exists, use the centre of the recorded parent group without inventing a link.
+      let partnerLine = null;
+      for (let i = 0; i < group.parentIds.length && !partnerLine; i++) {
+        for (let j = i + 1; j < group.parentIds.length; j++) {
+          const pairKey = [group.parentIds[i], group.parentIds[j]].sort().join("|");
+          if (partnerLineByPair.has(pairKey)) {
+            partnerLine = partnerLineByPair.get(pairKey);
+            break;
+          }
+        }
+      }
+
+      const fallbackParentCenterX = parents.reduce(
+        (sum, parent) => sum + parent.x + parent.width / 2, 0
+      ) / parents.length;
+      const trunkStartX = partnerLine ? partnerLine.centerX : fallbackParentCenterX;
+      const trunkStartY = partnerLine ? partnerLine.y : parentBottom;
+      const childCenters = children.map(child => child.x + child.width / 2);
+      const busLeft = Math.min(trunkStartX, ...childCenters);
+      const busRight = Math.max(trunkStartX, ...childCenters);
+      const busY = Math.min(
+        childTop - 18,
+        parentBottom + Math.max(24, (childTop - parentBottom) * 0.45)
+      );
+
+      // One vertical trunk flows down from the partner link (or parent group),
+      // meets a single horizontal child bus, then drops vertically to each child.
+      paths.push('<path class="family-line family-parent-stem" d="M ' +
+        trunkStartX + ' ' + trunkStartY + ' V ' + busY + '"/>');
       if (busRight - busLeft > 1) {
-        paths.push('<path class="family-line" d="M ' + busLeft + ' ' + busY + ' H ' + busRight + '"/>');
+        paths.push('<path class="family-line family-child-bus" d="M ' +
+          busLeft + ' ' + busY + ' H ' + busRight + '"/>');
       }
       children.forEach(child => {
         const childCenterX = child.x + child.width / 2;
-        paths.push('<path class="family-line" d="M ' + childCenterX + ' ' + busY + ' V ' + child.y + '"/>');
+        paths.push('<path class="family-line family-child-drop" d="M ' +
+          childCenterX + ' ' + busY + ' V ' + child.y + '"/>');
       });
-    });
-
-    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
-      const first = positions.get(edge.person_id);
-      const second = positions.get(edge.related_person_id);
-      if (!first || !second || first.y !== second.y) return;
-      const left = first.x < second.x ? first : second;
-      const right = first.x < second.x ? second : first;
-      paths.push('<path class="family-line spouse-line" d="M ' +
-        (left.x + left.width) + ' ' + (left.y + 36) + ' H ' + right.x + '"/>');
     });
 
     linesRoot.innerHTML = paths.join("");
