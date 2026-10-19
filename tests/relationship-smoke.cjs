@@ -90,10 +90,10 @@ const familyBlockTargetCenter = new Function(
 const primaryFamilyChooserSource = extractFunction(
   app,
   "function choosePrimaryFamilyKey(unit, candidateKeys, activePersonId,",
-  "\\n  function renderPeople"
+  "\n  function renderPeople"
 );
 const choosePrimaryFamilyKey = new Function(
-  primaryFamilyChooserSource + "\\nreturn choosePrimaryFamilyKey;"
+  primaryFamilyChooserSource + "\nreturn choosePrimaryFamilyKey;"
 )();
 {
   const unit = {
