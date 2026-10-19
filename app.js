@@ -1701,7 +1701,7 @@
     const heading = $("#person-connections-heading");
     if (!section || !root || !heading) return;
     const personId = state.editingPersonId;
-    if (!personId || !isManager()) {
+    if (!personId || !canEditPerson(state.people.find(person => person.id === personId))) {
       section.hidden = true;
       root.innerHTML = "";
       return;
@@ -1928,10 +1928,16 @@
   }
 
   async function deleteRelationship(relationshipId) {
-    if (!isManager() || !window.confirm("Remove this family connection?")) return;
+    const edge = state.relationships.find(item => item.id === relationshipId);
+    const ownRecord = state.people.find(person => person.created_by === state.user?.id &&
+      person.is_self_record && !linkedPersonIds().has(person.id));
+    const canRemoveOwnEdge = Boolean(ownRecord && edge &&
+      (edge.person_id === ownRecord.id || edge.related_person_id === ownRecord.id));
+    if ((!isManager() && !canRemoveOwnEdge) || !edge) return;
+    if (!window.confirm(state.language === "ta" ? "இந்தக் குடும்ப இணைப்பை நீக்கவா?" : "Remove this family connection?")) return;
     const { error } = await db.from("uravu_relationships").delete().eq("id", relationshipId).eq("tree_id", state.activeTree.id);
     if (error) { showDbError(error, "remove connection"); return; }
-    toast("Family connection removed.");
+    toast(state.language === "ta" ? "குடும்ப உறவு இணைப்பு நீக்கப்பட்டது." : "Family connection removed.");
     await loadWorkspace(state.activeTree.id, false);
   }
 
