@@ -1102,6 +1102,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return unit;
   }
 
+  function familyBlockTargetCenter(units, parentPositions) {
+    const alignedUnits = units.filter(unit => unit.parentCenter != null);
+    const alignedWidth = alignedUnits.reduce((sum, unit) => sum + unit.width, 0);
+    if (alignedWidth) {
+      return alignedUnits.reduce((sum, unit) => sum + unit.parentCenter * unit.width, 0) / alignedWidth;
+    }
+    return parentPositions.length
+      ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
+      : null;
+  }
+
   function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
@@ -1290,10 +1301,13 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       // Keep the couple together, but order the partners to match their own
       // ancestral branches. This prevents a distant mother's branch from
       // sweeping across the father's connector lines just to reach her card.
-      units.forEach(unit => sortUnitPeopleByParentCenter(unit, parentCenter));
+      units.forEach(unit => {
+        sortUnitPeopleByParentCenter(unit, parentCenter);
+        unit.parentCenter = parentCenter(unit);
+      });
 
       units.sort((a, b) => {
-        const ac = parentCenter(a), bc = parentCenter(b);
+        const ac = a.parentCenter, bc = b.parentCenter;
         if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
         if (ac != null && bc == null) return -1;
         if (ac == null && bc != null) return 1;
@@ -1438,9 +1452,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         const width = units.reduce((sum, unit) => sum + unit.width, 0) +
           Math.max(0, units.length - 1) * familySiblingGap;
         const parentPositions = bucket.parentIds.map(id => positions.get(id)).filter(Boolean);
-        const targetCenter = parentPositions.length
-          ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
-          : null;
+        const targetCenter = familyBlockTargetCenter(units, parentPositions);
         const originalLeft = Math.min(...units.flatMap(unit =>
           unit.people.map(person => positions.get(person.id)?.x ?? 0)));
         blocks.push({
