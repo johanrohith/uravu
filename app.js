@@ -1105,30 +1105,39 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     const minLevel = levelKeys[0];
     const maxLevel = levelKeys[levelKeys.length - 1];
-    const nodeWidth = 236;
+    const nodeWidth = 270;
     const columnGap = 84;
-    const coupleGap = 24;
+    const coupleGap = 28;
     const levelUnits = new Map();
     const positions = new Map();
     const byId = new Map(state.people.map(person => [person.id, person]));
     const relationLabels = relationshipLabelsForCurrentUser();
     const countLines = (value, charsPerLine) => String(value || "").split(/\r?\n/)
       .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / charsPerLine)), 0);
+    const detailLinesFor = person => {
+      const lines = [];
+      const birthValue = person.birth_date_text || person.birth_date;
+      const deathValue = person.death_date_text || person.death_date;
+      if (birthValue) lines.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
+      if (deathValue) lines.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
+      else if (isPersonDeceased(person)) lines.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
+      return lines;
+    };
     const cardHeightFor = person => {
       const label = relationLabels.get(person.id) || "";
-      const nameHeight = Math.max(30,
-        countLines(person.full_name, 22) * 16 +
-        (person.tamil_name ? 2 + countLines(person.tamil_name, 21) * 13 : 0));
-      const hasDetails = Boolean(person.birth_date_text || person.birth_date ||
-        person.death_date_text || person.death_date || isPersonDeceased(person));
-      const hasNotes = Boolean(person.notes && canEditPerson(person));
-      const hasActions = Boolean(state.editMode && canEditPerson(person));
-      const labelHeight = label ? countLines(label, 34) * 13 : 0;
-      return Math.max(70, 22 + nameHeight +
-        (label ? 5 + labelHeight : 0) +
-        (hasDetails ? 5 + 12 : 0) +
-        (hasNotes ? 5 + 12 : 0) +
-        (hasActions ? 6 + 29 : 0) + 4);
+      const nameHeight = Math.max(34,
+        countLines(person.full_name, 27) * 16 +
+        (person.tamil_name ? 3 + countLines(person.tamil_name, 24) * 14 : 0));
+      const labelHeight = label ? 12 + countLines(label, 31) * 15 : 0;
+      const detailHeight = detailLinesFor(person).reduce((total, line) =>
+        total + countLines(line, 40) * 13 + 2, 0);
+      const notesHeight = person.notes && canEditPerson(person)
+        ? countLines(person.notes, 40) * 14 + 2 : 0;
+      const actionsHeight = state.editMode && canEditPerson(person) ? 32 : 0;
+      const blocks = 1 + (label ? 1 : 0) + detailLinesFor(person).length +
+        (notesHeight ? 1 : 0) + (actionsHeight ? 1 : 0);
+      return Math.max(82, 24 + nameHeight + labelHeight + detailHeight +
+        notesHeight + actionsHeight + Math.max(0, blocks - 1) * 5 + 8);
     };
     const cardHeights = new Map(selected.map(person => [person.id, cardHeightFor(person)]));
     const levelByPerson = new Map();
@@ -1242,21 +1251,83 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
-      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
-    ));
-    const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 52);
-    const rowPositions = new Map();
-    positions.forEach((position, id) => {
-      if (!rowPositions.has(position.y)) rowPositions.set(position.y, []);
-      rowPositions.get(position.y).push([id, position]);
+    // Repack each sibling set as its own family block. The block is placed under
+    // the centre of its actual parent group, rather than centring every generation
+    // row across the entire tree. Separate families retain clear horizontal space.
+    const familyChildGap = 34;
+    const parentsByChild = new Map();
+    parentEdgesForLayout.forEach(edge => {
+      if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, new Set());
+      parentsByChild.get(edge.related_person_id).add(edge.person_id);
     });
-    rowPositions.forEach(row => {
-      const left = Math.min(...row.map(([, position]) => position.x));
-      const right = Math.max(...row.map(([, position]) => position.x + position.width));
-      const shift = (baseWidth - (right - left)) / 2 - left;
-      row.forEach(([id, position]) => positions.set(id, { ...position, x:position.x + shift }));
+    levelKeys.forEach(level => {
+      const rowY = rowYByLevel.get(level);
+      const people = grouped.get(level) || [];
+      const siblingSets = new Map();
+      const claimed = new Set();
+
+      people.forEach(person => {
+        const parentIds = Array.from(parentsByChild.get(person.id) || new Set())
+          .filter(parentId => {
+            const parentPosition = positions.get(parentId);
+            const childPosition = positions.get(person.id);
+            return parentPosition && childPosition && parentPosition.y < childPosition.y;
+          }).sort();
+        if (!parentIds.length) return;
+        const parentsKey = parentIds.join("|");
+        if (!siblingSets.has(parentsKey)) siblingSets.set(parentsKey, { parentIds, people:[] });
+        siblingSets.get(parentsKey).people.push(person);
+        claimed.add(person.id);
+      });
+
+      const blocks = [];
+      siblingSets.forEach(family => {
+        const members = family.people.slice().sort((a, b) =>
+          (positions.get(a.id)?.x || 0) - (positions.get(b.id)?.x || 0)
+        );
+        const parentPositions = family.parentIds.map(id => positions.get(id)).filter(Boolean);
+        const targetCenter = parentPositions.length
+          ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
+          : null;
+        const width = members.length * nodeWidth + Math.max(0, members.length - 1) * familyChildGap;
+        const originalLeft = Math.min(...members.map(person => positions.get(person.id).x));
+        blocks.push({ members, width, targetCenter, originalLeft,
+          desiredLeft:targetCenter == null ? originalLeft : targetCenter - width / 2 });
+      });
+
+      // Root members or people without a visible parent retain their explicit
+      // spouse blocks. They are not merged into another family's sibling row.
+      (levelUnits.get(level) || []).forEach(unit => {
+        const members = unit.people.filter(person => !claimed.has(person.id));
+        if (!members.length) return;
+        const width = members.length * nodeWidth + Math.max(0, members.length - 1) * coupleGap;
+        const originalLeft = Math.min(...members.map(person => positions.get(person.id).x));
+        blocks.push({ members, width, targetCenter:null, originalLeft, desiredLeft:originalLeft,
+          memberGap:coupleGap });
+      });
+
+      blocks.sort((a, b) => a.desiredLeft - b.desiredLeft);
+      let previousRight = -Infinity;
+      blocks.forEach(block => {
+        const left = Math.max(block.desiredLeft, previousRight + columnGap);
+        const gap = block.memberGap == null ? familyChildGap : block.memberGap;
+        block.members.forEach((person, index) => {
+          const current = positions.get(person.id);
+          positions.set(person.id, { ...current, x:left + index * (nodeWidth + gap), y:rowY });
+        });
+        previousRight = left + block.width;
+      });
     });
+
+    // Shift the whole graph only enough to give its leftmost record a margin.
+    // This preserves every parent-to-children alignment without centring a row.
+    const leftmostCard = Math.min(0, ...Array.from(positions.values()).map(position => position.x));
+    const treeShiftX = 26 - leftmostCard;
+    if (treeShiftX) positions.forEach((position, id) =>
+      positions.set(id, { ...position, x:position.x + treeShiftX })
+    );
+    const widestLevel = Math.max(1, ...Array.from(positions.values()).map(position => position.x + position.width));
+    const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 26);
     const lowestCardEdge = Math.max(0, ...Array.from(positions.values()).map(position => position.y + position.height));
     const baseHeight = Math.max(290, lowestCardEdge + 48);
     state.treeBaseWidth = baseWidth;
@@ -1283,28 +1354,43 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     linesRoot.setAttribute("height", String(baseHeight));
 
     const paths = [];
-    const parentRoutes = new Map();
-    state.relationships.filter(edge => edge.relationship_type === "parent").forEach(edge => {
-      const parent = positions.get(edge.person_id);
-      const child = positions.get(edge.related_person_id);
-      if (!parent || !child || child.y <= parent.y) return;
-      const key = parent.y + "|" + child.y;
-      if (!parentRoutes.has(key)) parentRoutes.set(key, []);
-      parentRoutes.get(key).push({ parent, child });
+    const siblingBusGroups = new Map();
+    parentsByChild.forEach((parentSet, childId) => {
+      const child = positions.get(childId);
+      const parentIds = Array.from(parentSet).sort();
+      const parents = parentIds.map(id => positions.get(id)).filter(Boolean);
+      if (!child || !parents.length || !parents.every(parent => parent.y < child.y)) return;
+      const key = parentIds.join("|");
+      if (!siblingBusGroups.has(key)) siblingBusGroups.set(key, { parentIds, childIds:[] });
+      siblingBusGroups.get(key).childIds.push(childId);
     });
-    parentRoutes.forEach(routes => {
-      routes.sort((a, b) =>
-        (a.parent.x + a.parent.width / 2) - (b.parent.x + b.parent.width / 2) ||
-        (a.child.x + a.child.width / 2) - (b.child.x + b.child.width / 2)
-      );
-      routes.forEach(({ parent, child }, index) => {
-        const startX = parent.x + parent.width / 2;
-        const startY = parent.y + parent.height;
-        const endX = child.x + child.width / 2;
-        const endY = child.y;
-        const laneY = startY + 14 + index * 10;
-        paths.push('<path class="family-line" d="M ' + startX + ' ' + startY +
-          ' V ' + laneY + ' H ' + endX + ' V ' + endY + '"/>');
+    siblingBusGroups.forEach(group => {
+      const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
+      const children = group.childIds.map(id => positions.get(id)).filter(Boolean)
+        .sort((a, b) => (a.x + a.width / 2) - (b.x + b.width / 2));
+      if (!parents.length || !children.length) return;
+      if (!parents.every(parent => parent.y === parents[0].y) ||
+          !children.every(child => child.y === children[0].y)) return;
+
+      const parentBottom = Math.max(...parents.map(parent => parent.y + parent.height));
+      const childTop = Math.min(...children.map(child => child.y));
+      if (childTop <= parentBottom + 8) return;
+      const parentCenterX = parents.reduce((sum, parent) => sum + parent.x + parent.width / 2, 0) / parents.length;
+      const childCenters = children.map(child => child.x + child.width / 2);
+      const busLeft = Math.min(parentCenterX, ...childCenters);
+      const busRight = Math.max(parentCenterX, ...childCenters);
+      const busY = Math.min(childTop - 18, parentBottom + Math.max(24, (childTop - parentBottom) * 0.45));
+
+      // One centred parent stem reaches one shared horizontal sibling bus.
+      // Each child receives a separate vertical drop; no per-edge H-shaped detours.
+      paths.push('<path class="family-line" d="M ' + parentCenterX + ' ' + parentBottom +
+        ' V ' + busY + '"/>');
+      if (busRight - busLeft > 1) {
+        paths.push('<path class="family-line" d="M ' + busLeft + ' ' + busY + ' H ' + busRight + '"/>');
+      }
+      children.forEach(child => {
+        const childCenterX = child.x + child.width / 2;
+        paths.push('<path class="family-line" d="M ' + childCenterX + ' ' + busY + ' V ' + child.y + '"/>');
       });
     });
 
@@ -1519,21 +1605,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const searchMatch = Boolean(search && [person.full_name, person.tamil_name]
       .some(value => String(value || "").toLocaleLowerCase().includes(search.toLocaleLowerCase())));
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
-    const details = [];
-    const birthValue = person.birth_date_text || person.birth_date;
-    const deathValue = person.death_date_text || person.death_date;
-    if (birthValue) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
-    if (deathValue) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
-    else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
+    const details = detailLinesFor(person);
     const viewAttributes = showActions ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
-    return '<article class="family-node-card' + (searchMatch ? ' search-match' : '') + '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
+    return '<article class="family-node-card' + (searchMatch ? ' search-match' : '') + '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;min-height:' + position.height + 'px"' + viewAttributes + '>' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
       '</span><div class="graph-person-names"><h4>' + highlightSearchMatch(person.full_name, search) + '</h4>' +
       (person.tamil_name ? '<div class="tamil-name">' + highlightSearchMatch(person.tamil_name, search) + '</div>' : '') + '</div></div>' +
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
-      (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
+      (details.length ? details.map(detail => '<div class="person-meta record-meta">' + escapeHtml(detail) + '</div>').join("") : '') +
       (person.notes && canEdit ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
       (showActions ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button>' + (canDelete ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
