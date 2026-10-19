@@ -175,7 +175,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app-v2\.js\?v=uravu-member-record-permissions-20261019-1/);
+assert.match(html, /app-v2\.js\?v=uravu-member-edit-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -194,7 +194,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app-v2\.js\?v=uravu-member-record-permissions-20261019-1/);
+assert.match(html, /app-v2\.js\?v=uravu-member-edit-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
