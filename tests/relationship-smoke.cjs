@@ -113,7 +113,7 @@ assert.match(app, /clearPersonForm\(\);\s*toast\(wasEditing \? "Family member up
 assert.match(app, /clearPersonForm\(\);\s*await loadWorkspace\(treeId, false\);\s*toast\("Family connection added\."/);
 assert.match(app, /const layoutPartners = new Map/);
 assert.match(app, /addLayoutPartner\(parentId, otherId\)/);
-assert.match(app, /"Wife"; tamil = "மனைவி"/);
+assert.match(app, /english="Wife";tamil="மனைவி"/);
 assert.match(app, /graph-relationship-label/);
 assert.match(html, /English Name/);
 assert.match(html, /id="person-tamil"[^>]*required/);
