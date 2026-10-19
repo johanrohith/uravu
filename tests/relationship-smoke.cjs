@@ -134,7 +134,7 @@ assert.match(app, /Every connected spouse or co-parent group gets one adjacent b
 assert.ok(!app.includes("coupleGap + 2"));
 assert.match(app, /member.role === "member" && member.person_id/);
 assert.match(schema, /public.uravu_can_edit_tree/);
-assert.match(app, /if \(!person \|\| !isOwner\(\) \|\| !state\.activeTree\) return;/);
+assert.match(app, /if \(!person \|\| !isManager\(\) \|\| !state\.activeTree\) return;/);
 assert.match(app, /isOwner\(\) \? '<button class="danger-button" type="button" data-delete-person=/);
 assert.match(schema, /create policy uravu_people_delete_owner on public\.uravu_people\s+for delete to authenticated using \(public\.uravu_has_tree_role\(tree_id,array\['owner'\]\)\)/);
 assert.match(recordDeletionMigration, /create policy uravu_people_delete_owner on public\.uravu_people/);
