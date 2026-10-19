@@ -11,6 +11,7 @@ const styles = fs.readFileSync(path.join(root, "styles-v2.css"), "utf8");
 const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8");
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
+const recordDeletionMigration = fs.readFileSync(path.join(root, "supabase", "record-deletion-permissions-migration.sql"), "utf8");
 
 const dateHelperStart = app.indexOf("function datePartsValid");
 const dateHelperEnd = app.indexOf("function formatDateEntry", dateHelperStart);
@@ -133,6 +134,11 @@ assert.match(app, /Every connected spouse or co-parent group gets one adjacent b
 assert.ok(!app.includes("coupleGap + 2"));
 assert.match(app, /member.role === "member" && member.person_id/);
 assert.match(schema, /public.uravu_can_edit_tree/);
+assert.match(app, /if \(!person \|\| !isOwner\(\) \|\| !state\.activeTree\) return;/);
+assert.match(app, /isOwner\(\) \? '<button class="danger-button" type="button" data-delete-person=/);
+assert.match(schema, /create policy uravu_people_delete_owner on public\.uravu_people\s+for delete to authenticated using \(public\.uravu_has_tree_role\(tree_id,array\['owner'\]\)\)/);
+assert.match(recordDeletionMigration, /create policy uravu_people_delete_owner on public\.uravu_people/);
+assert.doesNotMatch(recordDeletionMigration, /create policy uravu_people_delete_editor/i);
 assert.ok(!schema.includes("role in ('owner', 'admin'"));
 assert.match(permissionsMigration, /set role = 'member'/);
 assert.match(permissionsMigration, /public.uravu_can_edit_tree/);
