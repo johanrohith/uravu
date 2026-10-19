@@ -32,6 +32,39 @@ function extractFunction(source, startMarker, endMarker) {
   return source.slice(start, end);
 }
 
+
+const recordDetailSource = extractFunction(
+  app,
+  "function familyRecordDetailLines(person) {",
+  "\\n  function renderPeople"
+);
+const createRecordDetailLines = new Function(
+  "state",
+  "formatFamilyDate",
+  "isPersonDeceased",
+  recordDetailSource + "\\nreturn familyRecordDetailLines;"
+);
+const recordDetails = createRecordDetailLines(
+  { language:"en" },
+  value => String(value),
+  person => Boolean(person.is_deceased)
+);
+assert.deepEqual(recordDetails({ birth_date_text:"24-06-1985", is_deceased:true }),
+  ["Born 24-06-1985", "Living in Memory"]);
+assert.deepEqual(recordDetails({ birth_date:"1985-06-24", death_date_text:"01-01-2000" }),
+  ["Born 1985-06-24", "Died 01-01-2000"]);
+assert.ok(
+  app.indexOf("function familyRecordDetailLines(person)") < app.indexOf("function renderPeople()"),
+  "The record detail helper must be in scope for both tree layout and card rendering"
+);
+const renderCardSource = extractFunction(
+  app,
+  "function renderPersonCard(person, position, relationLabel) {",
+  "\\n  function renderMembers"
+);
+assert.match(renderCardSource, /familyRecordDetailLines\\(person\\)/);
+assert.doesNotMatch(renderCardSource, /detailLinesFor/);
+
 const generationMapSource = extractFunction(app, "function generationMap() {", "\n  function relationNames");
 const relationshipLabelsSource = extractFunction(
   app,
@@ -217,7 +250,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app\.js\?v=uravu-edit-layout-20261019-2/);
+assert.match(html, /app\.js\?v=uravu-family-render-fix-20261019-3/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -236,7 +269,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app\.js\?v=uravu-edit-layout-20261019-2/);
+assert.match(html, /app\.js\?v=uravu-family-render-fix-20261019-3/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
