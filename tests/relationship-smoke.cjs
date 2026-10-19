@@ -576,4 +576,15 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal((ta.match(/வயது உறுதி இல்லை/g)||[]).length,1);
 }
 
+
+assert.match(html, /id="family-branch-legend"/);
+assert.match(app, /treeExpandedPartnerFamilies/);
+assert.match(app, /partnerFamilyToggleByPerson/);
+assert.match(app, /data-toggle-partner-family/);
+assert.match(app, /familyColorForParentIds/);
+assert.match(app, /rootFamilyColorByKey/);
+assert.match(app, /expandedFamilyKey/);
+assert.match(styles, /\.family-branch-legend/);
+assert.match(styles, /\.partner-family-toggle/);
+
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
