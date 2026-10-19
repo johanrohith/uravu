@@ -36,10 +36,10 @@ function extractFunction(source, startMarker, endMarker) {
 const spouseUnitSortSource = extractFunction(
   app,
   "function sortUnitPeopleByParentCenter(unit, parentCenter) {",
-  "\\n  function renderPeople"
+  "\n  function renderPeople"
 );
 const sortUnitPeopleByParentCenter = new Function(
-  spouseUnitSortSource + "\\nreturn sortUnitPeopleByParentCenter;"
+  spouseUnitSortSource + "\nreturn sortUnitPeopleByParentCenter;"
 )();
 {
   // The alphabetic order is intentionally the opposite of the ancestry order.
