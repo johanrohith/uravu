@@ -1155,8 +1155,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const used = new Set();
       const units = [];
 
-      // Every connected spouse or co-parent group gets one adjacent block in its generation.
-      // This keeps grandparents and other shared-parent groups together.
+      // Only people connected by an explicit spouse edge share an adjacent block.
+      // Parent-child links are drawn independently, without grouping unrelated records.
       people.forEach(person => {
         if (used.has(person.id)) return;
         const groupIds = [];
