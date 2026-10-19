@@ -1126,8 +1126,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const cardHeightFor = person => {
       const label = relationLabels.get(person.id) || "";
       const nameHeight = Math.max(34,
-        countLines(person.full_name, 27) * 16 +
-        (person.tamil_name ? 3 + countLines(person.tamil_name, 24) * 14 : 0));
+        countLines(person.full_name, 27) * 19 +
+        (person.tamil_name ? 3 + countLines(person.tamil_name, 24) * 15 : 0));
       const labelHeight = label ? 12 + countLines(label, 31) * 15 : 0;
       const detailHeight = detailLinesFor(person).reduce((total, line) =>
         total + countLines(line, 40) * 13 + 2, 0);
