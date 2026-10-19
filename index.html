@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-relationships-20261019-1';
+        stylesheet.href = './styles.css?v=uravu-single-tree-20261019-1';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -57,7 +57,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app.js?v=uravu-relationships-20261019-1');
+        await loadScript('./app.js?v=uravu-single-tree-20261019-1');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
@@ -115,9 +115,9 @@
         <div class="hero-copy">
           <p class="eyebrow">YOUR FAMILY, CONNECTED</p>
           <h1>Every generation has a story.</h1>
-          <p class="lead">Build your family tree, preserve names and relationships, and invite family members to contribute with the right permissions.</p>
+          <p class="lead">Explore Uravugal, preserve your family’s names and relationships, and help keep every generation connected.</p>
           <button class="google-button google-button-large" id="hero-signin" type="button"><span class="google-mark">G</span><span>Continue with Google</span></button>
-          <p class="muted-small">Your family tree is private to its members. Nothing is shown here until you sign in and open or create a tree.</p>
+          <p class="muted-small">Uravugal is private. Sign in to view the shared family tree.</p>
         </div>
         <div class="hero-illustration" aria-hidden="true">
           <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
@@ -134,55 +134,38 @@
           <div>
             <p class="eyebrow">YOUR FAMILY WORKSPACE</p>
             <h1 id="welcome-heading">Welcome to Uravu</h1>
-            <p class="subheading">Manage family records, relationships and membership.</p>
+            <p class="subheading" data-i18n="sharedTreeSubtitle">Explore your family’s generations and help keep the records accurate.</p>
           </div>
-        </section>
-
-        <div class="action-grid">
-          <section class="panel create-panel">
-            <div class="panel-heading"><span class="panel-icon">＋</span><div><h2>Create a family tree</h2><p>Start a new family space. You become its owner.</p></div></div>
-            <form id="create-tree-form">
-              <label class="field-label" for="tree-name">Family tree name</label>
-              <input class="form-input" id="tree-name" name="name" maxlength="100" placeholder="e.g. The Kumar family" required>
-              <label class="field-label" for="tree-description">Description <span class="optional">Optional</span></label>
-              <textarea class="form-input form-textarea" id="tree-description" name="description" maxlength="500" placeholder="A short note about this family tree"></textarea>
-              <label class="field-label" for="tree-language">Primary language</label>
-              <select class="form-input" id="tree-language" name="language"><option value="en">English</option><option value="ta">தமிழ்</option></select>
-              <button class="primary-button" type="submit">Create tree</button>
-            </form>
-          </section>
-
-          <section class="panel browse-panel">
-            <div class="panel-heading"><span class="panel-icon panel-icon-gold">↗</span><div><h2>Find a family tree</h2><p>Search for a family tree and request membership.</p></div></div>
-            <label class="search-label" for="tree-search">Search trees</label>
-            <input class="form-input" id="tree-search" placeholder="Search by tree name...">
-            <div class="tree-list browse-list" id="available-tree-list"><div class="empty-state compact">Loading available trees…</div></div>
-          </section>
-        </div>
-
-        <section class="panel my-trees-panel">
-          <div class="section-heading"><div><p class="eyebrow">YOUR MEMBERSHIPS</p><h2>My family trees</h2></div><button class="quiet-button" id="refresh-button" type="button">Refresh</button></div>
-          <div class="tree-list my-tree-list" id="my-tree-list"><div class="empty-state compact">Loading your trees…</div></div>
         </section>
 
         <section class="tree-workspace" id="tree-workspace" hidden>
           <div class="workspace-header">
-            <div><p class="eyebrow" id="workspace-role">TREE MEMBER</p><h2 id="workspace-title">Family tree</h2><p class="subheading" id="workspace-description"></p></div>
-            <div class="workspace-actions"><button class="secondary-button" id="request-role-button" type="button">Request a record link</button><button class="quiet-button" id="close-tree-button" type="button">Close tree</button></div>
+            <div><p class="eyebrow" id="workspace-role">SHARED FAMILY TREE</p><h2 id="workspace-title">Uravugal</h2><p class="subheading" id="workspace-description">One family, across generations.</p></div>
           </div>
 
           <p class="status-message" id="member-request-status" hidden></p>
           <div class="workspace-stats"><div><strong id="people-count">0</strong><span>Family members</span></div><div><strong id="member-count">0</strong><span>Tree accounts</span></div><div><strong id="pending-count">0</strong><span>Pending requests</span></div></div>
+          <div class="workspace-panel-actions" aria-label="Family management">
+            <button class="secondary-button" id="toggle-add-person-panel" type="button">Add Family Member</button>
+            <button class="secondary-button" id="toggle-member-list-panel" type="button">Member list</button>
+            <button class="secondary-button" id="toggle-linking-requests-panel" type="button">Linking Requests</button>
+          </div>
 
           <section class="panel add-person-panel" id="add-person-panel" hidden>
-            <div class="section-heading"><div><p class="eyebrow">TREE EDITING</p><h3 id="person-form-title">Add a family member</h3></div><button class="quiet-button" id="cancel-edit-button" type="button" hidden>Cancel edit</button></div>
+            <div class="section-heading"><div><p class="eyebrow">TREE EDITING</p><h3 id="person-form-title">Add a family member</h3></div><div class="panel-heading-actions"><button class="quiet-button" id="cancel-edit-button" type="button" hidden>Cancel edit</button><button class="panel-close-button" type="button" data-close-panel="add-person-panel" aria-label="Close section">×</button></div></div>
+            <form id="link-existing-form" class="link-existing-form">
+              <div><label class="field-label" for="request-person">Already in the tree? Select your family record</label><select class="form-input" id="request-person" required><option value="">Choose a record to link</option></select></div>
+              <button class="secondary-button" id="request-existing-link-button" type="submit">Request to link this account</button>
+              <p class="field-help">An existing linked family member must confirm the link before you can edit other records.</p>
+            </form>
+            <div class="form-divider" id="self-record-divider"><span>OR ADD YOUR OWN RECORD</span></div>
             <form id="person-form" class="person-form">
               <div class="form-grid">
                 <div><label class="field-label" for="person-name">English Name</label><input class="form-input" id="person-name" maxlength="120" required placeholder="Full English name"></div>
                 <div><label class="field-label" for="person-tamil">Tamil name</label><input class="form-input tamil-input" id="person-tamil" maxlength="120" required aria-required="true" placeholder="தமிழ்ப் பெயர்"></div>
                 <div><label class="field-label" for="person-gender">Gender</label><select class="form-input" id="person-gender" required aria-required="true"><option value="">Select gender</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
                 <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><div class="date-entry-row"><input class="form-input partial-date-input" id="person-birth" type="text" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="off" aria-describedby="birth-date-help"><label class="calendar-picker" for="person-birth-calendar" aria-label="Choose date of birth"><span aria-hidden="true">▦</span><span>Calendar</span><input class="native-calendar-input" id="person-birth-calendar" type="date" aria-label="Choose date of birth"></label></div><p class="field-help" id="birth-date-help">Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.</p></div>
-                <div class="deceased-field"><label class="checkbox-label" for="person-deceased"><input id="person-deceased" type="checkbox"><span>Deceased</span></label></div>
+                <div class="deceased-field"><label class="checkbox-label" for="person-deceased"><input id="person-deceased" type="checkbox"><span>Living in Memory</span></label></div>
                 <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><div class="date-entry-row"><input class="form-input partial-date-input" id="person-death" type="text" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="off" aria-describedby="death-date-help"><label class="calendar-picker" for="person-death-calendar" aria-label="Choose date of death"><span aria-hidden="true">▦</span><span>Calendar</span><input class="native-calendar-input" id="person-death-calendar" type="date" aria-label="Choose date of death"></label></div><p class="field-help" id="death-date-help">Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.</p></div>
                 <section class="form-wide connection-input-group" aria-labelledby="add-connection-heading">
                   <h4 class="connection-group-title" id="add-connection-heading">Add a connection</h4>
@@ -200,27 +183,24 @@
             </form>
           </section>
 
+>
+
+          <section class="panel management-panel" id="member-management-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">MEMBERSHIP</p><h3>Member list</h3><p class="panel-description">Signed-in accounts linked to their matching family record.</p></div><button class="panel-close-button" type="button" data-close-panel="member-management-panel" aria-label="Close section">×</button></div>
+            <div id="tree-members-list" class="member-list"></div>
+          </section>
+
+          <section class="panel requests-panel" id="linking-requests-panel" hidden>
+            <div class="section-heading"><div><p class="eyebrow">FAMILY RECORDS</p><h3>Linking Requests</h3><p class="panel-description">Confirm requests from people asking to link their account to a family record.</p></div><button class="panel-close-button" type="button" data-close-panel="linking-requests-panel" aria-label="Close section">×</button></div>
+            <div id="linking-requests-list" class="request-list"></div>
+          </section>
+
+
           <section class="panel people-panel">
             <div class="section-heading tree-section-heading"><div><p class="eyebrow">FAMILY TREE</p><h3>Family tree</h3></div><div class="tree-view-controls"><input class="form-input people-search" id="people-search" placeholder="Search names…"><button class="secondary-button tree-control-button" id="tree-zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button><span class="tree-zoom-level" id="tree-zoom-level" aria-live="polite">100%</span><button class="secondary-button tree-control-button" id="tree-zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button><button class="secondary-button tree-control-button" id="fit-tree-button" type="button">Fit tree</button><button class="secondary-button tree-control-button" id="tree-fullscreen-button" type="button" aria-label="Full screen">Full screen</button></div></div>
             <p class="tree-gesture-hint">Pinch to zoom · drag to move · Ctrl + scroll to zoom</p>
             <div class="empty-state" id="people-empty" hidden></div><div class="family-tree-viewport" id="family-tree-viewport" hidden><div class="family-tree-canvas" id="family-tree-canvas"><svg class="family-tree-lines" id="family-tree-lines" aria-hidden="true"></svg><div class="family-tree-nodes" id="family-tree-nodes"></div></div></div>
-          </section>
-
-          <section class="panel management-panel" id="member-management-panel" hidden>
-            <div class="section-heading"><div><p class="eyebrow">MEMBERSHIP</p><h3>Member accounts</h3><p class="panel-description">Link an account to an existing family record, or add a new record above and link it here. Linked members can maintain family records and relationships.</p></div></div>
-            <div id="tree-members-list" class="member-list"></div>
-          </section>
-
-          <section class="panel requests-panel" id="access-requests-panel" hidden>
-            <div class="section-heading"><div><p class="eyebrow">MEMBERSHIP</p><h3>Access Requests</h3><p class="panel-description">Review requests to join this family tree.</p></div></div>
-            <div id="access-requests-list" class="request-list"></div>
-          </section>
-          <section class="panel requests-panel" id="linking-requests-panel" hidden>
-            <div class="section-heading"><div><p class="eyebrow">FAMILY RECORDS</p><h3>Linking Requests</h3><p class="panel-description">Review requests to link an account to an existing family record.</p></div></div>
-            <div id="linking-requests-list" class="request-list"></div>
-          </section>
-
-          <div class="danger-zone" id="delete-tree-zone" hidden><div><strong>Delete this family tree</strong><p>This permanently deletes its people, relationships, memberships and requests.</p></div><button class="danger-button" id="delete-tree-button" type="button">Delete tree</button></div>
+          </section
         </section>
       </section>
     </main>

@@ -12,6 +12,7 @@ const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8"
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
 const recordDeletionMigration = fs.readFileSync(path.join(root, "supabase", "record-deletion-permissions-migration.sql"), "utf8");
+const singleTreeMigration = fs.readFileSync(path.join(root, "supabase", "single-tree-linking-migration.sql"), "utf8");
 
 const dateHelperStart = app.indexOf("function datePartsValid");
 const dateHelperEnd = app.indexOf("function formatDateEntry", dateHelperStart);
@@ -100,7 +101,7 @@ assert.match(app, /from\("uravu_tree_members"\)/);
 assert.match(app, /uravu_create_tree/);
 assert.match(app, /uravu_request_tree_access/);
 assert.match(app, /uravu_review_tree_request/);
-assert.match(app, /uravu_assign_member_person/);
+assert.doesNotMatch(app, /uravu_assign_member_person/);
 assert.match(app, /function isOwner/);
 assert.match(app, /function isManager/);
 assert.match(app, /uravu_delete_tree/);
@@ -109,8 +110,8 @@ assert.match(app, /family-node-card/);
 assert.match(app, /relationshipLabelsForCurrentUser/);
 assert.match(app, /function syncSpouseChildLinks/);
 assert.match(app, /function backfillExistingSpouseChildren/);
-assert.match(app, /clearPersonForm\(\);\s*toast\(wasEditing \? "Family member updated\." : "Family member added\."/);
-assert.match(app, /clearPersonForm\(\);\s*await loadWorkspace\(treeId, false\);\s*toast\("Family connection added\."/);
+assert.match(app, /clearPersonForm\(\);\s*if \(!wasEditing && !isManager\(\)\) await requestLinkToPerson/);
+assert.match(app, /clearPersonForm\(\);\s*if \(!isManager\(\) && personId\) await requestLinkToPerson/);
 assert.match(app, /const layoutPartners = new Map/);
 assert.match(app, /addLayoutPartner\(parentId, otherId\)/);
 assert.match(app, /english="Wife";tamil="மனைவி"/);
@@ -127,15 +128,37 @@ assert.match(schema, /tamil_name text not null/);
 assert.match(schema, /gender text not null/);
 assert.ok(permissionsMigration.includes("alter table public.uravu_people alter column tamil_name set not null"));
 assert.ok(permissionsMigration.includes("alter table public.uravu_people alter column gender set not null"));
-assert.match(html, /id="access-requests-list"/);
+assert.doesNotMatch(html, /id="access-requests-list"/);
 assert.match(html, /id="linking-requests-list"/);
+assert.match(html, /id="toggle-add-person-panel"/);
+assert.match(html, /id="toggle-member-list-panel"/);
+assert.match(html, /id="toggle-linking-requests-panel"/);
+assert.match(html, /data-close-panel="add-person-panel"/);
+assert.match(html, /data-close-panel="member-management-panel"/);
+assert.match(html, /data-close-panel="linking-requests-panel"/);
+assert.doesNotMatch(html, /id="create-tree-form"|id="close-tree-button"|id="delete-tree-button"/);
+assert.match(html, /id="link-existing-form"/);
+assert.match(app, /function displayTreeName/);
+assert.match(app, /const selected = state\.people\.slice\(\)/);
+assert.match(app, /function highlightSearchMatch/);
+assert.match(app, /const siblingSetGap = 118/);
+assert.match(app, /is_self_record:!isManager\(\)/);
+assert.match(app, /நினைவில் வாழ்பவர்/);
+assert.match(app, /Living in Memory/);
+assert.match(app, /function canEditPerson/);
+assert.match(app, /function canDeletePerson/);
+assert.match(singleTreeMigration, /name = 'Uravugal'/);
+assert.match(singleTreeMigration, /create policy uravu_people_update_main/);
+assert.match(singleTreeMigration, /Only a member already linked to a family record can review linking requests/);
+assert.match(singleTreeMigration, /grant update \(/);
+assert.match(singleTreeMigration, /uravu_main_tree_id/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
 assert.match(app, /Every connected spouse or co-parent group gets one adjacent block/);
 assert.ok(!app.includes("coupleGap + 2"));
-assert.match(app, /member.role === "member" && member.person_id/);
+assert.match(app, /function isManager\(\) \{\s*return Boolean\(state.activeMembership && state.activeMembership.person_id\);/);
 assert.match(schema, /public.uravu_can_edit_tree/);
-assert.match(app, /if \(!person \|\| !isManager\(\) \|\| !state\.activeTree\) return;/);
-assert.match(app, /isOwner\(\) \? '<button class="danger-button" type="button" data-delete-person=/);
+assert.match(app, /if \(!person \|\| !canEditPerson\(person\) \|\| !state\.activeTree\) return;/);
+assert.match(app, /canDelete \? '<button class="danger-button" type="button" data-delete-person=/);
 assert.match(schema, /create policy uravu_people_delete_owner on public\.uravu_people\s+for delete to authenticated using \(public\.uravu_has_tree_role\(tree_id,array\['owner'\]\)\)/);
 assert.match(recordDeletionMigration, /create policy uravu_people_delete_owner on public\.uravu_people/);
 assert.doesNotMatch(recordDeletionMigration, /create policy uravu_people_delete_editor/i);
@@ -145,7 +168,7 @@ assert.match(permissionsMigration, /public.uravu_can_edit_tree/);
 assert.match(permissionsMigration, /Only the tree owner or a member linked to a family record can review requests/);
 assert.match(linkingMigration, /Only the owner or a member linked to a family record can link accounts/);
 assert.match(linkingMigration, /Only the tree owner can unlink an account/);
-assert.match(app, /state\.requests\.filter\(request => request\.request_type === "join"\)/);
+assert.match(app, /state\.requests\.filter\(request => request\.request_type === "link"\)/);
 assert.ok(!schema.includes("Only the tree owner can review family-record assignment requests"));
 assert.match(html, /id="person-deceased"/);
 
@@ -155,12 +178,12 @@ assert.match(html, /id="person-birth-calendar" type="date"/);
 assert.match(html, /id="person-death-calendar" type="date"/);
 assert.match(html, /placeholder="DD-MM-YYYY"/);
 assert.ok(!html.includes("Family data is loaded from Supabase, not browser cache"));
-assert.match(html, /id="access-requests-panel"/);
+assert.doesNotMatch(html, /id="access-requests-panel"/);
 assert.match(html, /id="linking-requests-panel"/);
 assert.ok(!html.includes("Access, role and linking requests"));
 assert.match(app, /function syncCalendarFromText/);
 assert.match(app, /function syncTextFromCalendar/);
-assert.match(app, /The Owner or a Member linked to a family record will review your linking request/);
+assert.match(app, /Your account must be linked to a family record before you can review linking requests/);
 assert.match(html, /id="death-date-field" hidden/);
 assert.match(html, /id="person-connections-section" hidden/);
 assert.match(html, /connection-input-group/);
@@ -175,7 +198,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app\.js\?v=uravu-relationships-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-single-tree-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -194,7 +217,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app\.js\?v=uravu-relationships-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-single-tree-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
@@ -321,6 +344,24 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(relationLabel("me",people,relationships,"older-brother-wife"),"அண்ணி");
  assert.equal(relationLabel("me",people,relationships,"younger-brother-wife"),"கொழுந்தியாள்");
  assert.equal(relationLabel("me2",people,relationships,"wife-sister-husband"),"சகலை");
+}
+
+{
+ const people=[person("great-grandpa","male","1920-01-01"),person("grandpa","male","1950-01-01"),
+   person("grandma-by-marriage","female","1952-01-01"),person("dad","male","1980-01-01"),person("me","female","2005-01-01")];
+ const relationships=[parentLink("great-grandpa","grandpa"),spouseLink("grandpa","grandma-by-marriage"),
+   parentLink("grandpa","dad"),parentLink("dad","me")];
+ assert.equal(relationLabel("me",people,relationships,"grandma-by-marriage","en"),"Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"grandma-by-marriage","ta"),"பாட்டி");
+}
+{
+ const people=[person("gp","male","1950-01-01"),person("dad","male","1980-01-01"),
+   person("uncle","male"),person("me","male","2004-01-01"),person("cousin","female")];
+ const relationships=[parentLink("gp","dad"),parentLink("gp","uncle"),parentLink("dad","me"),parentLink("uncle","cousin")];
+ const en=relationLabel("me",people,relationships,"cousin","en");
+ const ta=relationLabel("me",people,relationships,"cousin","ta");
+ assert.equal((en.match(/Age not sure/g)||[]).length,1);
+ assert.equal((ta.match(/வயது உறுதி இல்லை/g)||[]).length,1);
 }
 
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");

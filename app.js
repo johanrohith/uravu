@@ -22,7 +22,8 @@
     partialDatesSupported: null,
     treeZoom: 1,
     treeBaseWidth: 0,
-    treeBaseHeight: 0
+    treeBaseHeight: 0,
+    openPanels: new Set()
   };
 
   const words = {
@@ -64,14 +65,14 @@
   interfaceTranslations["Family members"] = "குடும்ப உறுப்பினர்கள்";
   interfaceTranslations["Delete tree"] = "மரத்தை நீக்கு";
   Object.assign(interfaceTranslations, {
-    "Deceased":"இறந்தவர்",
+    "Deceased":"நினைவில் வாழ்பவர்",
     "Connections":"இணைப்புகள்",
     "Select a family member":"குடும்ப உறுப்பினரைத் தேர்ந்தெடுக்கவும்",
     "Select relationship":"உறவைத் தேர்ந்தெடுக்கவும்",
     "Connect to someone":"ஒருவருடன் இணைக்கவும்",
     "Relationship to them":"அவருடனான உறவு",
     "Choose both a family member and relationship to add a connection.":"இணைப்பைச் சேர்க்க குடும்ப உறுப்பினரையும் உறவையும் தேர்ந்தெடுக்கவும்.",
-    "Enter the date of death when Deceased is checked.":"இறந்தவர் என்பதைத் தேர்ந்தெடுத்தால் இறந்த தேதியை உள்ளிடவும்.",
+    "Enter the date of death when Living in Memory is checked.":"இறந்தவர் என்பதைத் தேர்ந்தெடுத்தால் இறந்த தேதியை உள்ளிடவும்.",
     "No connections yet.":"இன்னும் இணைப்புகள் இல்லை.",
     "Remove connection: ":"இணைப்பை நீக்கு: ",
     "Parent":"பெற்றோர்",
@@ -87,7 +88,7 @@
     "Adding connection…":"இணைப்பு சேர்க்கப்படுகிறது…",
     "Use YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD for dates.":"தேதிகளுக்கு YYYY, YYYY-MM, YYYY-MM-DD அல்லது MM-DD பயன்படுத்தவும்.",
     "Run supabase/partial-dates-migration.sql in Supabase before saving partial dates or a death with an unknown date.":"பகுதி தேதிகள் அல்லது தேதி தெரியாத இறப்பு நிலையைச் சேமிக்கும் முன் Supabase-ல் supabase/partial-dates-migration.sql-ஐ இயக்கவும்.",
-    "Deceased":"இறந்தவர்",
+    "Deceased":"நினைவில் வாழ்பவர்",
     "Died / status":"இறந்த தேதி / நிலை"
   });
 
@@ -157,6 +158,34 @@
   Object.entries(interfaceTranslations).forEach(([english, tamil]) => {
     if (!(tamil in tamilToEnglish)) tamilToEnglish[tamil] = english;
   });
+
+  Object.assign(interfaceTranslations, {
+  "Uravugal":"உறவுகள்",
+  "SHARED FAMILY TREE":"பகிரப்பட்ட குடும்ப மரம்",
+  "Add Family Member":"குடும்ப உறுப்பினரைச் சேர்",
+  "Member list":"உறுப்பினர் பட்டியல்",
+  "Linking Requests":"இணைப்பு கோரிக்கைகள்",
+  "Explore your family’s generations and help keep the records accurate.":"உங்கள் குடும்பத் தலைமுறைகளைப் பார்த்து பதிவுகளைச் சரியாகப் பராமரிக்கவும்.",
+  "One shared family tree, across generations.":"தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்.",
+  "Choose a record to link":"இணைக்க வேண்டிய பதிவைத் தேர்ந்தெடுக்கவும்",
+  "Request to link this account":"இந்தக் கணக்கை இணைக்கக் கோரு",
+  "An existing linked family member must confirm the link before you can edit other records.":"மற்ற பதிவுகளைத் திருத்துவதற்கு முன் இணைக்கப்பட்ட குடும்ப உறுப்பினர் ஒருவர் இந்த இணைப்பை உறுதிப்படுத்த வேண்டும்.",
+  "OR ADD YOUR OWN RECORD":"அல்லது உங்கள் பதிவைச் சேர்க்கவும்",
+  "Your account must be linked to a family record before you can review linking requests.":"இணைப்பு கோரிக்கைகளைப் பரிசீலிக்க, உங்கள் கணக்கு முதலில் குடும்பப் பதிவுடன் இணைக்கப்பட வேண்டும்.",
+  "No accounts are linked to a family record yet.":"இதுவரை எந்தக் கணக்கும் குடும்பப் பதிவுடன் இணைக்கப்படவில்லை.",
+  "Linked account":"இணைக்கப்பட்ட கணக்கு",
+  "You":"நீங்கள்",
+  "Your family-record link request is awaiting review.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனையில் உள்ளது.",
+  "Living in Memory":"நினைவில் வாழ்பவர்",
+  "Deceased":"நினைவில் வாழ்பவர்",
+  "No family record requested yet.":"இதுவரை குடும்பப் பதிவு கோரப்படவில்லை.",
+  "Create your own family record first, or sign in with an existing family account.":"முதலில் உங்கள் குடும்பப் பதிவை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள குடும்பக் கணக்கில் உள்நுழையவும்.",
+  "Your account is already linked to a family record.":"உங்கள் கணக்கு ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்டுள்ளது.",
+  "This is my newly created family record.":"இது நான் புதிதாக உருவாக்கிய குடும்பப் பதிவு."
+});
+
+tamilToEnglish["உறவுகள்"] = "Uravugal";
+  tamilToEnglish["நினைவில் வாழ்பவர்"] = "Living in Memory";
 
   function translateUiValue(value) {
     const raw = String(value == null ? "" : value);
@@ -457,9 +486,98 @@
   function roleLabel(role) { return t(role || "member"); }
   function isOwner() { return Boolean(state.activeMembership && state.activeMembership.role === "owner"); }
   function isManager() {
-    const member = state.activeMembership;
-    return Boolean(member && (member.role === "owner" || (member.role === "member" && member.person_id)));
+    return Boolean(state.activeMembership && state.activeMembership.person_id);
   }
+  function linkedPersonIds() {
+    return new Set(state.members.filter(member => member.person_id).map(member => member.person_id));
+  }
+  function canEditPerson(person) {
+    if (!person || !state.user) return false;
+    if (state.activeMembership?.person_id === person.id) return true;
+    const linked = linkedPersonIds();
+    if (!isManager() && person.is_self_record && person.created_by === state.user.id && !linked.has(person.id)) return true;
+    return isManager() && !linked.has(person.id);
+  }
+  function canDeletePerson(person) {
+    if (!person || !state.user) return false;
+    const linked = linkedPersonIds();
+    if (linked.has(person.id)) return false;
+    if (!isManager() && person.is_self_record && person.created_by === state.user.id) return true;
+    return isManager();
+  }
+  function canCreatePerson() {
+    return Boolean(state.user && state.activeTree &&
+      (isManager() || (!requestPendingForUser() && !state.people.some(person => person.created_by === state.user.id && person.is_self_record))));
+  }
+  function displayTreeName(tree = state.activeTree) {
+    return state.language === "ta" ? "உறவுகள்" : (tree?.name || "Uravugal");
+  }
+  function requestPendingForUser() {
+    return state.ownRequests.find(request => request.tree_id === state.activeTree?.id && request.status === "pending");
+  }
+  async function requestLinkToPerson(personId, message = "") {
+    if (!state.user || !state.activeTree || !personId) return { error: new Error("Select a family record.") };
+    if (isManager()) {
+      toast("Your account is already linked to a family record.", true);
+      return { error: new Error("Already linked.") };
+    }
+    const result = await callRpc("uravu_request_tree_access", {
+      p_tree_id: state.activeTree.id, p_message: message,
+      p_requested_role: "member", p_requested_person_id: personId
+    });
+    if (result.error) { showDbError(result.error, "request family record link"); return result; }
+    toast(t("requestSent"));
+    await refreshDashboard();
+    return result;
+  }
+  function renderExistingLinkOptions() {
+    const select = $("#request-person");
+    if (!select) return;
+    const previous = select.value;
+    const linked = linkedPersonIds();
+    const ownRecord = state.people.find(person => person.created_by === state.user?.id && person.is_self_record);
+    select.innerHTML = '<option value="">' +
+      escapeHtml(state.language === "ta" ? "இணைக்க வேண்டிய பதிவைத் தேர்ந்தெடுக்கவும்" : "Choose a record to link") +
+      '</option>' + state.people.filter(person => !linked.has(person.id) && (!ownRecord || person.id === ownRecord.id)).map(person =>
+        '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.full_name) +
+        (person.tamil_name ? " · " + escapeHtml(person.tamil_name) : "") + '</option>'
+      ).join("");
+    if (previous && state.people.some(person => person.id === previous) && !linked.has(previous)) select.value = previous;
+    const form = $("#link-existing-form");
+    if (form) form.hidden = isManager();
+    const pending = requestPendingForUser();
+    const button = $("#request-existing-link-button");
+    if (button) button.disabled = isManager() || Boolean(pending);
+    const shouldPauseCreation = !isManager() && !ownRecord && Boolean(pending);
+    const personForm = $("#person-form");
+    const divider = $("#self-record-divider");
+    if (personForm) personForm.hidden = shouldPauseCreation;
+    if (divider) divider.hidden = shouldPauseCreation;
+  }
+  function togglePanel(panelId) {
+    if (state.openPanels.has(panelId)) {
+      state.openPanels.delete(panelId);
+    } else {
+      state.openPanels.clear();
+      state.openPanels.add(panelId);
+      if (panelId === "add-person-panel") {
+        if (isManager()) clearPersonForm();
+        else {
+          const ownRecord = state.people.find(person => person.created_by === state.user?.id && person.is_self_record);
+          if (ownRecord) beginEditPerson(ownRecord.id);
+          else clearPersonForm();
+        }
+      }
+    }
+    renderWorkspace();
+    if (state.openPanels.has(panelId)) $("#" + panelId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function closePanel(panelId) {
+    state.openPanels.delete(panelId);
+    if (panelId === "add-person-panel") clearPersonForm();
+    renderWorkspace();
+  }
+
   function toast(message, isError) {
     const node = $("#toast");
     if (!node) return;
@@ -523,6 +641,7 @@
       state.relationships = [];
       state.members = [];
       state.requests = [];
+      state.openPanels.clear();
       $("#tree-workspace").hidden = true;
       $("#dashboard").classList.remove("tree-open");
       return;
@@ -531,80 +650,47 @@
   }
 
   async function refreshDashboard() {
-    if (!state.user) return;
-    $("#my-tree-list").innerHTML = '<div class="loading-line">Loading your family trees…</div>';
-    $("#available-tree-list").innerHTML = '<div class="loading-line">Loading trees…</div>';
-    const userId = state.user.id;
-    const results = await Promise.all([
-      db.from("uravu_family_trees").select("id,name,description,language,created_by,created_at").order("created_at", { ascending:false }),
-      db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at").eq("user_id", userId),
-      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("user_id", userId).order("created_at", { ascending:false })
-    ]);
-    const error = results.find(result => result.error)?.error;
-    if (error) {
-      $("#my-tree-list").innerHTML = '<div class="empty-state"><strong>Could not load family trees</strong>' + escapeHtml(error.message || "Database error") + '</div>';
-      $("#available-tree-list").innerHTML = '<div class="empty-state compact">Database setup or permissions need attention.</div>';
-      showDbError(error, "dashboard");
+    if (!state.user || !db) return;
+    const mainResult = await db.from("uravu_family_trees")
+      .select("id,name,description,language,created_by,created_at,is_main")
+      .eq("is_main", true).limit(1).maybeSingle();
+    if (mainResult.error) { showDbError(mainResult.error, "load main family tree"); return; }
+    const tree = mainResult.data;
+    if (!tree) {
+      toast(state.language === "ta"
+        ? "முக்கிய குடும்ப மரம் இன்னும் அமைக்கப்படவில்லை. Supabase இடமாற்றத்தை இயக்கவும்."
+        : "The main family tree is not configured yet. Apply the single-tree Supabase migration.", true);
       return;
     }
-    state.trees = results[0].data || [];
-    state.memberships = results[1].data || [];
-    state.ownRequests = results[2].data || [];
-    renderTreeLists();
-
-    if (state.activeTree) {
-      const membership = state.memberships.find(item => item.tree_id === state.activeTree.id);
-      if (membership) {
-        state.activeMembership = membership;
-        await loadWorkspace(state.activeTree.id, false);
-      } else {
-        state.activeTree = null;
-        state.activeMembership = null;
-        $("#tree-workspace").hidden = true;
-        $("#dashboard").classList.remove("tree-open");
-      }
-    }
+    const [membershipResult, ownRequestResult] = await Promise.all([
+      db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at")
+        .eq("tree_id", tree.id).eq("user_id", state.user.id),
+      db.from("uravu_access_requests")
+        .select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at")
+        .eq("tree_id", tree.id).eq("user_id", state.user.id).eq("status", "pending").order("created_at", { ascending:false })
+    ]);
+    const error = membershipResult.error || ownRequestResult.error;
+    if (error) { showDbError(error, "load main family tree"); return; }
+    state.trees = [tree];
+    state.memberships = membershipResult.data || [];
+    state.ownRequests = ownRequestResult.data || [];
+    state.activeTree = tree;
+    state.activeMembership = state.memberships[0] || null;
+    $("#tree-workspace").hidden = false;
+    $("#dashboard").classList.add("tree-open");
+    $("#workspace-title").textContent = displayTreeName(tree);
+    $("#workspace-description").textContent = state.language === "ta"
+      ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
+      : "One shared family tree, across generations.";
+    await loadWorkspace(tree.id, !state.people.length);
   }
 
   function renderTreeLists() {
-    const myTrees = state.memberships.map(membership => ({
-      membership,
-      tree: state.trees.find(tree => tree.id === membership.tree_id)
-    })).filter(item => item.tree);
-    if (!myTrees.length) {
-      $("#my-tree-list").innerHTML = '<div class="empty-state"><strong>' + escapeHtml(t("noTrees")) + '</strong>' + escapeHtml(t("noTreesSub")) + '</div>';
-    } else {
-      $("#my-tree-list").innerHTML = myTrees.map(item => {
-        const tree = item.tree, membership = item.membership;
-        return '<article class="tree-card"><div class="tree-card-main"><span class="tree-card-icon" aria-hidden="true">⌘</span><div><h3>' +
-          escapeHtml(tree.name) + '</h3><p>' + escapeHtml(tree.description || "No description provided.") +
-          '</p><div class="tree-card-meta"><span class="role-pill role-' + escapeHtml(membership.role) + '">' +
-          escapeHtml(roleLabel(membership.role)) + '</span><span class="role-pill">' + escapeHtml(tree.language === "ta" ? "தமிழ்" : "English") +
-          '</span></div></div></div><div class="tree-card-actions"><button type="button" class="primary-button" data-open-tree="' +
-          escapeHtml(tree.id) + '">' + escapeHtml(t("viewTree")) + '</button></div></article>';
-      }).join("");
-    }
-
-    const memberTreeIds = new Set(state.memberships.map(m => m.tree_id));
-    const pendingByTree = new Map(state.ownRequests.filter(r => r.status === "pending").map(r => [r.tree_id, r]));
-    const search = ($("#tree-search").value || "").trim().toLocaleLowerCase();
-    const available = state.trees.filter(tree => !memberTreeIds.has(tree.id) && tree.name.toLocaleLowerCase().includes(search));
-    if (!available.length) {
-      $("#available-tree-list").innerHTML = '<div class="empty-state compact"><strong>' + escapeHtml(t("noBrowse")) + '</strong></div>';
-    } else {
-      $("#available-tree-list").innerHTML = available.map(tree => {
-        const request = pendingByTree.get(tree.id);
-        const action = request
-          ? '<span class="status-pill status-pending">' + escapeHtml(t("pending")) + '</span>'
-          : '<button class="secondary-button" type="button" data-request-tree="' + escapeHtml(tree.id) + '">' + escapeHtml(t("join")) + '</button>';
-        return '<article class="tree-card"><div class="tree-card-main"><span class="tree-card-icon" aria-hidden="true">⌘</span><div><h3>' +
-          escapeHtml(tree.name) + '</h3><p>' + escapeHtml(tree.description || "No description provided.") +
-          '</p><div class="tree-card-meta"><span class="role-pill">' + escapeHtml(tree.language === "ta" ? "தமிழ்" : "English") +
-          '</span></div></div></div><div class="tree-card-actions">' + action + '</div></article>';
-      }).join("");
-    }
-    $$("[data-open-tree]").forEach(button => button.addEventListener("click", () => openTree(button.dataset.openTree)));
-    $$("[data-request-tree]").forEach(button => button.addEventListener("click", () => openRequestDialog(button.dataset.requestTree, false)));
+    if (!state.activeTree) return;
+    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-description").textContent = state.language === "ta"
+      ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
+      : "One shared family tree, across generations.";
   }
 
   async function createTree(event) {
@@ -628,18 +714,12 @@
   }
 
   async function openTree(treeId) {
-    const tree = state.trees.find(item => item.id === treeId);
-    const membership = state.memberships.find(item => item.tree_id === treeId);
-    if (!tree || !membership) { toast("You must be an approved member to open this tree.", true); return; }
-    state.activeTree = tree;
-    state.activeMembership = membership;
-    $("#dashboard").classList.add("tree-open");
+    if (!state.activeTree || state.activeTree.id !== treeId) await refreshDashboard();
+    if (!state.activeTree) return;
     $("#tree-workspace").hidden = false;
-    $("#workspace-title").textContent = tree.name;
-    $("#workspace-description").textContent = tree.description || "Family connections across generations.";
-    $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(membership.role).toUpperCase();
-    $("#tree-workspace").scrollIntoView({ behavior:"smooth", block:"start" });
-    await loadWorkspace(treeId, true);
+    $("#dashboard").classList.add("tree-open");
+    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    await loadWorkspace(state.activeTree.id, true);
   }
 
   async function loadWorkspace(treeId, showLoading) {
@@ -652,15 +732,15 @@
     }
     state.loadingTree = true;
     const results = await Promise.all([
-      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,death_date,death_date_text,is_deceased,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
+      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,death_date,death_date_text,is_deceased,is_self_record,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
       db.from("uravu_relationships").select("id,tree_id,person_id,related_person_id,relationship_type,created_at").eq("tree_id", treeId),
       db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at").eq("tree_id", treeId),
-      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("tree_id", treeId).eq("status","pending").order("created_at")
+      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("tree_id", treeId).eq("request_type","link").eq("status","pending").order("created_at")
     ]);
     state.loadingTree = false;
     if (results[0].error && /(birth_date_text|death_date_text|is_deceased|schema cache)/i.test(String(results[0].error.message || results[0].error))) {
       const legacyPeople = await db.from("uravu_people")
-        .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,notes,created_by,created_at,updated_at")
+        .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,is_self_record,notes,created_by,created_at,updated_at")
         .eq("tree_id", treeId).order("full_name");
       results[0] = legacyPeople;
       state.partialDatesSupported = false;
@@ -680,7 +760,7 @@
     state.relationships = results[1].data || [];
     state.members = results[2].data || [];
     state.requests = results[3].data || [];
-    state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || state.activeMembership;
+    state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || null;
 
     // Repair existing one-parent records when a person already has a spouse.
     // Owners and assigned members can repair linked spouse/child records; unassigned members are read-only.
@@ -729,31 +809,27 @@
   }
 
   function renderWorkspace() {
-    if (!state.activeTree || !state.activeMembership) return;
-    const manager = isManager();
-    const owner = isOwner();
-    $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(state.activeMembership.role).toUpperCase();
-    $("#workspace-title").textContent = state.activeTree.name;
-    $("#workspace-description").textContent = state.activeTree.description || "Family connections across generations.";
+    if (!state.activeTree) return;
+    $("#workspace-role").textContent = state.language === "ta" ? "பகிரப்பட்ட குடும்ப மரம்" : "SHARED FAMILY TREE";
+    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-description").textContent = state.language === "ta"
+      ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
+      : "One shared family tree, across generations.";
     $("#people-count").textContent = String(state.people.length);
-    $("#member-count").textContent = String(state.members.length);
-    $("#pending-count").textContent = String(manager ? state.requests.length : state.ownRequests.filter(request => request.tree_id === state.activeTree.id && request.status === "pending").length);
-    const ownPending = state.ownRequests.find(request => request.tree_id === state.activeTree.id && request.status === "pending");
-    const ownStatus = $("#member-request-status");
-    ownStatus.hidden = !ownPending;
-    ownStatus.textContent = ownPending
-      ? (ownPending.request_type === "join" ? "Your access request is awaiting review." : "Your family-record linking request is awaiting review.")
+    $("#member-count").textContent = String(state.members.filter(member => member.person_id).length);
+    $("#pending-count").textContent = String(state.requests.length);
+    const ownPending = requestPendingForUser();
+    const status = $("#member-request-status");
+    status.hidden = !ownPending;
+    status.textContent = ownPending
+      ? (state.language === "ta" ? "உங்கள் குடும்பப் பதிவை இணைக்கும் கோரிக்கை பரிசீலனையில் உள்ளது." : "Your family-record link request is awaiting review.")
       : "";
-    $("#add-person-panel").hidden = !manager;
-    $("#member-management-panel").hidden = !manager;
-    $("#access-requests-panel").hidden = !manager;
-    $("#linking-requests-panel").hidden = !manager;
-    $("#delete-tree-zone").hidden = !owner;
-    $("#request-role-button").hidden = owner;
-    $("#request-role-button").textContent = translateUiValue("Request a record link");
-    $("#request-role-button").hidden = owner || Boolean(state.activeMembership.person_id);
+    $("#add-person-panel").hidden = !state.openPanels.has("add-person-panel");
+    $("#member-management-panel").hidden = !state.openPanels.has("member-management-panel");
+    $("#linking-requests-panel").hidden = !state.openPanels.has("linking-requests-panel");
     renderPersonConnectOptions();
     renderEditorConnections();
+    renderExistingLinkOptions();
     renderPeople();
     renderMembers();
     renderRequests();
@@ -928,10 +1004,10 @@
     function cousinBranchFor(id){for(const cp of array(parentsOf(id)))for(const ep of egoParents)if(siblingsOf(ep).has(cp)){const details=parentSiblingDetails(cp,ep);if(details)return {details};}return null;}
     function cousinLabels(person,branch){
       const d=branch.details,pathEn=d.pathEnglish+"'s "+gendered(person,"son","daughter","child"),pathTa=d.pathTamil+" "+gendered(person,"மகன்","மகள்","பிள்ளை"),order=age(person,ego);
-      let english="First cousin ("+pathEn+")",tamil=pathTa;if(d.age==="unknown")english+=" "+englishAgeNotSure;if(order==="unknown")english+=" "+englishAgeNotSure;
+      let english="First cousin ("+pathEn+")",tamil=pathTa;const ageUnknown=d.age==="unknown"||order==="unknown";if(ageUnknown)english+=" "+englishAgeNotSure;
       if(d.parallel){if(order==="older")tamil=(gender(person)==="male"?"அண்ணன்":gender(person)==="female"?"அக்கா":"சகோதரர் / சகோதரி")+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"தம்பி":gender(person)==="female"?"தங்கை":"சகோதரர் / சகோதரி")+" ("+pathTa+")";else tamil=(gender(person)==="male"?"சகோதரர்":gender(person)==="female"?"சகோதரி":"சகோதரர் / சகோதரி")+" ("+pathTa.replace(" "+ageNotSure,"")+"; வயது உறுதி இல்லை)";}
       else if(d.cross){if(order==="older")tamil=(gender(person)==="male"?"அத்தான்":gender(person)==="female"?"அண்ணி":pathTa)+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"மச்சான்":gender(person)==="female"?"மச்சினி":pathTa)+" ("+pathTa+")";else tamil=pathTa.replace(" "+ageNotSure,"")+" "+ageNotSure;}
-      else tamil=pathTa+(order==="unknown"?" "+ageNotSure:"");return {english,tamil};
+      else tamil=pathTa.replace(/ \\(வயது உறுதி இல்லை\\)/g,"")+(ageUnknown?" "+ageNotSure:"");return {english,tamil};
     }
     const connected=new Set([egoId]),queue=[egoId];
     for(let i=0;i<queue.length;i++){const cur=queue[i];[...array(parentsOf(cur)),...array(childrenOf(cur)),...array(spousesOf(cur))].forEach(id=>{if(!connected.has(id)){connected.add(id);queue.push(id);}});}
@@ -1026,15 +1102,12 @@
     if (!nodesRoot || !linesRoot || !viewport || !canvas || !empty) return;
 
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
-    const selected = state.people.filter(person => !search ||
-      [person.full_name, person.tamil_name, person.notes].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+    const selected = state.people.slice();
 
-    if (!state.people.length || !selected.length) {
+    if (!state.people.length) {
       viewport.hidden = true;
       empty.hidden = false;
-      empty.innerHTML = !state.people.length
-        ? '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"))
-        : escapeHtml(t("noSearchResults"));
+      empty.innerHTML = '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"));
       nodesRoot.innerHTML = "";
       linesRoot.innerHTML = "";
       return;
@@ -1060,6 +1133,7 @@
     const nodeWidth = 236;
     const nodeHeight = 178;
     const columnGap = 44;
+    const siblingSetGap = 118;
     const coupleGap = 18;
     const rowHeight = 302;
     const levelUnits = new Map();
@@ -1114,7 +1188,8 @@
         const group = groupIds.map(id => visibleById.get(id)).filter(Boolean)
           .sort((a, b) => a.full_name.localeCompare(b.full_name));
         const width = group.length * nodeWidth + Math.max(0, group.length - 1) * coupleGap;
-        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name });
+        const familyKey = Array.from(new Set(group.flatMap(member => parentsByChild.get(member.id) || []))).sort().join("|") || "unparented:" + group.map(member => member.id).sort().join("|");
+        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name, familyKey });
       });
 
       // Use the centre of the parents' couple where possible. This keeps each
@@ -1158,7 +1233,8 @@
       levelUnits.set(level, units);
 
       let cursorX = 26;
-      units.forEach(unit => {
+      units.forEach((unit, unitIndex) => {
+        if (unitIndex && units[unitIndex - 1].familyKey !== unit.familyKey) cursorX += siblingSetGap;
         unit.people.forEach((person, index) => {
           positions.set(person.id, {
             x: cursorX + index * (nodeWidth + coupleGap),
@@ -1172,9 +1248,21 @@
     });
 
     const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
-      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
+      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap +
+      units.reduce((sum, unit, index) => sum + (index && units[index - 1].familyKey !== unit.familyKey ? siblingSetGap : 0), 0)
     ));
     const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 52);
+    const rowPositions = new Map();
+    positions.forEach((position, id) => {
+      if (!rowPositions.has(position.y)) rowPositions.set(position.y, []);
+      rowPositions.get(position.y).push([id, position]);
+    });
+    rowPositions.forEach(row => {
+      const left = Math.min(...row.map(([, position]) => position.x));
+      const right = Math.max(...row.map(([, position]) => position.x + position.width));
+      const shift = (baseWidth - (right - left)) / 2 - left;
+      row.forEach(([id, position]) => positions.set(id, { ...position, x:position.x + shift }));
+    });
     const baseHeight = Math.max(290, (maxLevel - minLevel) * rowHeight + nodeHeight + 54);
     state.treeBaseWidth = baseWidth;
     state.treeBaseHeight = baseHeight;
@@ -1225,6 +1313,15 @@
     const relationLabels = relationshipLabelsForCurrentUser();
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
+    if (search) {
+      const firstMatch = selected.find(person => [person.full_name, person.tamil_name]
+        .some(value => String(value || "").toLocaleLowerCase().includes(search)));
+      const matchPosition = firstMatch && positions.get(firstMatch.id);
+      if (matchPosition) requestAnimationFrame(() => {
+        viewport.scrollLeft = Math.max(0, (matchPosition.x + matchPosition.width / 2) * state.treeZoom - viewport.clientWidth / 2);
+        viewport.scrollTop = Math.max(0, (matchPosition.y + matchPosition.height / 2) * state.treeZoom - viewport.clientHeight / 2);
+      });
+    }
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
@@ -1396,72 +1493,78 @@
   }
 
 
+  function highlightSearchMatch(value, query) {
+    const text = String(value || "");
+    if (!query) return escapeHtml(text);
+    const index = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+    if (index < 0) return escapeHtml(text);
+    return escapeHtml(text.slice(0, index)) + '<mark class="search-highlight">' +
+      escapeHtml(text.slice(index, index + query.length)) + '</mark>' + escapeHtml(text.slice(index + query.length));
+  }
+
   function renderPersonCard(person, position, relationLabel) {
     if (!position) return "";
-    const manager = isManager();
+    const canEdit = canEditPerson(person);
+    const canDelete = canDeletePerson(person);
+    const search = ($("#people-search").value || "").trim();
+    const searchMatch = Boolean(search && [person.full_name, person.tamil_name]
+      .some(value => String(value || "").toLocaleLowerCase().includes(search.toLocaleLowerCase())));
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
     const birthValue = person.birth_date_text || person.birth_date;
     const deathValue = person.death_date_text || person.death_date;
     if (birthValue) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
     if (deathValue) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
-    else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "இறந்தவர்" : "Deceased");
-    const viewAttributes = manager ? "" :
+    else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
+    const viewAttributes = canEdit ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
-    return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
+    return '<article class="family-node-card' + (searchMatch ? ' search-match' : '') + '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
-      '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
-      (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
+      '</span><div class="graph-person-names"><h4>' + highlightSearchMatch(person.full_name, search) + '</h4>' +
+      (person.tamil_name ? '<div class="tamil-name">' + highlightSearchMatch(person.tamil_name, search) + '</div>' : '') + '</div></div>' +
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
-      (person.notes && manager ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
-      (manager ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
-      '</button>' + (isOwner() ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
+      (person.notes && canEdit ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
+      (canEdit ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
+      '</button>' + (canDelete ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
       '</article>';
   }
 
   function renderMembers() {
     const root = $("#tree-members-list");
-    if (!isManager()) { root.innerHTML = ""; return; }
-    const owner = isOwner();
-    if (!state.members.length) { root.innerHTML = '<div class="empty-state">No members yet.</div>'; return; }
-    root.innerHTML = state.members.map(member => {
-      const roleControl = '<span class="role-pill role-' + escapeHtml(member.role) + '">' + escapeHtml(roleLabel(member.role)) + '</span>';
-      const assignedId = member.person_id || "";
-      const placeholder = owner
-        ? '<option value=""' + (!assignedId ? ' selected' : '') + '>Not linked</option>'
-        : (!assignedId ? '<option value="" selected disabled>Select a record</option>' : '<option value="" disabled>Linked</option>');
-      const controlDisabled = !owner && Boolean(assignedId) ? " disabled" : "";
-      const assignedControl = '<label class="inline-control"><span class="tiny-label">Linked family record</span><select class="form-input" data-member-person="' + escapeHtml(member.user_id) + '"' + controlDisabled + '>' +
-        placeholder + state.people.filter(person => !state.members.some(other => other.person_id === person.id && other.user_id !== member.user_id))
-        .map(person => '<option value="' + escapeHtml(person.id) + '"' + (assignedId === person.id ? ' selected' : '') + '>' + escapeHtml(person.full_name) + '</option>').join("") +
-        '</select></label>';
-      return '<div class="member-row"><div class="member-identity"><span class="person-avatar">' + escapeHtml(initials(member.display_name)) +
-        '</span><div><strong>' + escapeHtml(member.display_name || "Family member") + '</strong><small>' +
-        (member.user_id === state.user.id ? "You · " : "") + escapeHtml(member.user_id === state.user.id ? (state.user.email || "Signed in") : "Approved member") +
-        '</small></div></div>' + roleControl + '<div class="member-controls">' + assignedControl + '</div></div>';
+    if (!root) return;
+    const linkedMembers = state.members.filter(member => member.person_id);
+    if (!linkedMembers.length) {
+      root.innerHTML = '<div class="empty-state">' +
+        (state.language === "ta" ? "இன்னும் குடும்பப் பதிவுடன் இணைக்கப்பட்ட கணக்குகள் இல்லை." : "No accounts are linked to a family record yet.") +
+        '</div>';
+      return;
+    }
+    root.innerHTML = linkedMembers.map(member => {
+      const person = state.people.find(item => item.id === member.person_id);
+      return '<article class="member-row linked-account-row">' +
+        '<div class="member-identity"><span class="person-avatar">' + escapeHtml(initials(member.display_name)) +
+        '</span><div><strong>' + escapeHtml(member.display_name || (state.language === "ta" ? "குடும்ப உறுப்பினர்" : "Family member")) +
+        (member.user_id === state.user?.id ? ' · ' + escapeHtml(state.language === "ta" ? "நீங்கள்" : "You") : '') +
+        '</strong><small>' + escapeHtml(state.language === "ta" ? "இணைக்கப்பட்ட கணக்கு" : "Linked account") + '</small></div></div>' +
+        '<div class="member-record"><strong>' + escapeHtml(person?.full_name || (state.language === "ta" ? "பதிவு கிடைக்கவில்லை" : "Record unavailable")) +
+        '</strong><small>' + escapeHtml(person?.tamil_name || "") + '</small></div></article>';
     }).join("");
-    $$("[data-member-person]").forEach(select => select.addEventListener("change", async () => {
-      const value = select.value || null;
-      const target = state.members.find(member => member.user_id === select.dataset.memberPerson);
-      if (!value && target?.person_id && !isOwner()) {
-        toast("Only the owner can unlink a member account.", true);
-        await loadWorkspace(state.activeTree.id, false);
-        return;
-      }
-      const { error } = await callRpc("uravu_assign_member_person", {
-        p_tree_id:state.activeTree.id, p_user_id:select.dataset.memberPerson, p_person_id:value
-      });
-      if (error) { showDbError(error, "assign family entry"); await loadWorkspace(state.activeTree.id, false); return; }
-      toast(value ? "Member linked to family record." : "Member link removed.");
-      await loadWorkspace(state.activeTree.id, false);
-    }));
   }
 
   function renderRequests() {
-    renderRequestGroup($("#access-requests-list"), state.requests.filter(request => request.request_type === "join"), "access");
-    renderRequestGroup($("#linking-requests-list"), state.requests.filter(request => request.request_type === "link"), "linking");
+    const root = $("#linking-requests-list");
+    if (!root) return;
+    if (!isManager()) {
+      root.innerHTML = '<div class="empty-state">' +
+        (state.language === "ta"
+          ? "இணைப்பு கோரிக்கைகளைப் பரிசீலிக்க, உங்கள் கணக்கு முதலில் குடும்பப் பதிவுடன் இணைக்கப்பட வேண்டும்."
+          : "Your account must be linked to a family record before you can review linking requests.") +
+        '</div>';
+      return;
+    }
+    renderRequestGroup(root, state.requests.filter(request => request.request_type === "link"), "linking");
   }
 
   function renderRequestGroup(root, requests, kind) {
@@ -1634,7 +1737,7 @@
     const heading = $("#person-connections-heading");
     if (!section || !root || !heading) return;
     const personId = state.editingPersonId;
-    if (!personId || !isManager()) {
+    if (!personId || !canEditPerson(state.people.find(person => person.id === personId))) {
       section.hidden = true;
       root.innerHTML = "";
       return;
@@ -1690,7 +1793,7 @@
 
   function beginEditPerson(personId) {
     const person = state.people.find(item => item.id === personId);
-    if (!person || !isManager() || !state.activeTree) return;
+    if (!person || !canEditPerson(person) || !state.activeTree) return;
     state.editingPersonId = personId;
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
@@ -1764,7 +1867,7 @@
 
   async function savePerson(event) {
     event.preventDefault();
-    if (!isManager() || !state.activeTree) return;
+    if (!state.activeTree || (state.editingPersonId ? !canEditPerson(state.people.find(person => person.id === state.editingPersonId)) : !canCreatePerson())) return;
     const data = collectPersonFormData();
     if (!data) return;
     const button = $("#save-person-button");
@@ -1777,7 +1880,7 @@
       error = result.error;
     } else {
       const result = await db.from("uravu_people").insert({
-        tree_id:state.activeTree.id, created_by:state.user.id, ...data
+        tree_id:state.activeTree.id, created_by:state.user.id, is_self_record:!isManager(), ...data
       }).select("id").single();
       error = result.error;
       personId = result.data?.id;
@@ -1785,12 +1888,13 @@
     setBusy(button, false);
     if (error) { showDbError(error, "save family member"); return; }
     clearPersonForm();
-    toast(wasEditing ? "Family member updated." : "Family member added.");
+    if (!wasEditing && !isManager()) await requestLinkToPerson(personId, "This is my newly created family record.");
+    else toast(wasEditing ? "Family member updated." : "Family member added.");
     await loadWorkspace(state.activeTree.id, false);
   }
 
   async function addConnectionFromForm() {
-    if (!isManager() || !state.activeTree) return;
+    if (!state.activeTree || (state.editingPersonId ? !canEditPerson(state.people.find(person => person.id === state.editingPersonId)) : !canCreatePerson())) return;
     const connectedId = $("#connect-person").value || null;
     const relationshipType = $("#connect-type").value || null;
     if (!connectedId || !relationshipType) {
@@ -1817,7 +1921,7 @@
       error = result.error;
     } else {
       const result = await db.from("uravu_people").insert({
-        tree_id:treeId, created_by:state.user.id, ...data
+        tree_id:treeId, created_by:state.user.id, is_self_record:!isManager(), ...data
       }).select("id").single();
       error = result.error;
       personId = result.data?.id;
@@ -1844,14 +1948,15 @@
       return;
     }
     clearPersonForm();
+    if (!isManager() && personId) await requestLinkToPerson(personId, "This is my newly created family record.");
+    else toast("Family connection added.");
     await loadWorkspace(treeId, false);
-    toast("Family connection added.");
   }
 
   async function deletePerson(personId) {
     const person = state.people.find(item => item.id === personId);
-    if (!person || !isManager()) return;
-    if (!window.confirm(translateUiValue("Delete " + person.full_name + " and their family connections? Accounts linked to this entry will be unlinked."))) return;
+    if (!person || !canDeletePerson(person)) return;
+    if (!window.confirm(translateUiValue("Delete " + person.full_name + " and their family connections? This cannot be undone."))) return;
     const { error } = await db.from("uravu_people").delete().eq("id", personId).eq("tree_id", state.activeTree.id);
     if (error) { showDbError(error, "delete person"); return; }
     toast("Family member and connections deleted.");
@@ -1859,10 +1964,16 @@
   }
 
   async function deleteRelationship(relationshipId) {
-    if (!isManager() || !window.confirm("Remove this family connection?")) return;
+    const edge = state.relationships.find(item => item.id === relationshipId);
+    const ownRecord = state.people.find(person => person.created_by === state.user?.id &&
+      person.is_self_record && !linkedPersonIds().has(person.id));
+    const canRemoveOwnEdge = Boolean(ownRecord && edge &&
+      (edge.person_id === ownRecord.id || edge.related_person_id === ownRecord.id));
+    if ((!isManager() && !canRemoveOwnEdge) || !edge) return;
+    if (!window.confirm(state.language === "ta" ? "இந்தக் குடும்ப இணைப்பை நீக்கவா?" : "Remove this family connection?")) return;
     const { error } = await db.from("uravu_relationships").delete().eq("id", relationshipId).eq("tree_id", state.activeTree.id);
     if (error) { showDbError(error, "remove connection"); return; }
-    toast("Family connection removed.");
+    toast(state.language === "ta" ? "குடும்ப உறவு இணைப்பு நீக்கப்பட்டது." : "Family connection removed.");
     await loadWorkspace(state.activeTree.id, false);
   }
 
@@ -1898,9 +2009,23 @@
   }
 
   function bindEvents() {
-    $("#create-tree-form").addEventListener("submit", createTree);
-    $("#refresh-button").addEventListener("click", refreshDashboard);
-    $("#tree-search").addEventListener("input", renderTreeLists);
+    $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
+    $("#toggle-member-list-panel").addEventListener("click", () => togglePanel("member-management-panel"));
+    $("#toggle-linking-requests-panel").addEventListener("click", () => togglePanel("linking-requests-panel"));
+    Array.from(document.querySelectorAll("[data-close-panel]")).forEach(button => button.addEventListener("click", () => closePanel(button.dataset.closePanel)));
+    $("#link-existing-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const personId = $("#request-person").value;
+      if (!personId) {
+        toast(state.language === "ta" ? "குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்." : "Select a family record to link.", true);
+        return;
+      }
+      const button = $("#request-existing-link-button");
+      setBusy(button, true, "Sending…");
+      const result = await requestLinkToPerson(personId, "Please confirm that this is my family record.");
+      setBusy(button, false);
+      if (!result.error && state.activeTree) await loadWorkspace(state.activeTree.id, false);
+    });
     $("#people-search").addEventListener("input", renderPeople);
     $("#person-form").addEventListener("submit", savePerson);
     $("#add-connection-button").addEventListener("click", addConnectionFromForm);
@@ -1911,16 +2036,6 @@
     $("#person-death-calendar").addEventListener("change", () => syncTextFromCalendar("person-death-calendar", "person-death"));
     $("#cancel-edit-button").addEventListener("click", clearPersonForm);
     syncDeathDateField();
-    $("#request-role-button").addEventListener("click", () => {
-      if (state.activeTree) openRequestDialog(state.activeTree.id, true);
-    });
-    $("#close-tree-button").addEventListener("click", () => {
-      state.activeTree = null;
-      state.activeMembership = null;
-      $("#tree-workspace").hidden = true;
-      $("#dashboard").classList.remove("tree-open");
-    });
-    $("#delete-tree-button").addEventListener("click", deleteTree);
     $("#fit-tree-button").addEventListener("click", fitTreeToView);
     $("#tree-zoom-out").addEventListener("click", () => setTreeZoom(state.treeZoom / 1.2));
     $("#tree-zoom-in").addEventListener("click", () => setTreeZoom(state.treeZoom * 1.2));

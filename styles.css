@@ -214,3 +214,30 @@
 .request-row{align-items:center}
 .request-owner-only{font-size:11px;color:#6b7c6d}
 #access-requests-panel,#linking-requests-panel{scroll-margin-top:16px}
+
+
+/* Single shared Uravugal tree workspace */
+.workspace-panel-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 20px}
+.workspace-panel-actions .secondary-button{min-height:40px;padding:10px 15px;font-size:12px}
+.panel-heading-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.panel-close-button{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;padding:0;border:1px solid var(--line);border-radius:9px;background:#fff;color:#627066;font-size:22px;line-height:1}
+.panel-close-button:hover{background:var(--surface-alt);color:var(--ink)}
+.link-existing-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;padding:15px;border:1px solid #e5ebe3;border-radius:13px;background:var(--surface-alt)}
+.link-existing-form .field-help{grid-column:1/-1;margin:0}
+.form-divider{display:flex;align-items:center;gap:12px;margin:19px 0;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1.1px}
+.form-divider:before,.form-divider:after{content:"";height:1px;flex:1;background:var(--line)}
+.member-row.linked-account-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;align-items:center}
+.member-record{display:flex;flex-direction:column;gap:2px;min-width:0}
+.member-record strong{font-size:12px;overflow-wrap:anywhere}
+.member-record small{font-size:10px;color:var(--muted);overflow-wrap:anywhere}
+.tree-control-button#tree-zoom-out,.tree-control-button#tree-zoom-in{width:38px;height:38px;min-width:38px;min-height:38px;flex:0 0 38px;display:inline-grid;place-items:center;padding:0;font-size:20px;line-height:1;font-weight:700}
+.family-node-card.search-match{outline:3px solid #b8883e;outline-offset:3px;box-shadow:0 0 0 5px rgba(184,136,62,.14),var(--shadow)}
+.search-highlight{display:inline;border-radius:3px;background:#ffe6a6;color:#33270e;padding:0 1px;font-weight:800;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+@media(max-width:700px){
+  .workspace-panel-actions{display:grid;grid-template-columns:1fr;gap:8px}
+  .workspace-panel-actions .secondary-button{width:100%;justify-content:center}
+  .link-existing-form{grid-template-columns:1fr}
+  .link-existing-form .field-help{grid-column:auto}
+  .member-row.linked-account-row{grid-template-columns:1fr}
+  .tree-control-button#tree-zoom-out,.tree-control-button#tree-zoom-in{width:38px;height:38px}
+}

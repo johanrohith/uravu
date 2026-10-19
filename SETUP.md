@@ -6,13 +6,9 @@ Uravu stores family trees, records, relationships and membership assignments in 
 
 For a **new Supabase project**, open the [Supabase SQL Editor](https://supabase.com/dashboard/project/rtecswdjrwgsiwaonekf/sql/new), open [supabase/schema.sql](./supabase/schema.sql), paste the entire file and run it.
 
-For an **existing Uravu database**, run the migrations in this order if they have not already been applied:
+For an **existing Uravu database**, apply any outstanding legacy migrations first, then run the [Single-tree and linking migration](./supabase/single-tree-linking-migration.sql). This designates the existing family tree as the one main tree, renames it to **Uravugal**, and updates the record-linking and edit permissions. The migration preserves existing people and relationships; it does not delete extra historical tree rows. Do not rerun the full schema on an existing database.
 
-1. [Partial dates migration](./supabase/partial-dates-migration.sql) — enables partial birthdays, partial death dates and a deceased status when the date is unknown.
-2. [Owner and Member permissions migration](./supabase/member-permissions-migration.sql) — replaces the earlier roles with Owner and Member and enables editing for Members whose accounts are linked to family records.
-3. [Linking requests migration](./supabase/linking-requests-migration.sql) — use this if the Owner and Member migration was already applied before this linking update. It lets assigned Members link **unlinked** accounts to available records and review linking requests. Only the Owner can change or remove an existing account assignment.
-
-These migrations preserve existing people and family relationships. Do not rerun the full schema on an existing database.
+For a fresh database, run [supabase/schema.sql](./supabase/schema.sql) first, then run [supabase/single-tree-linking-migration.sql](./supabase/single-tree-linking-migration.sql). If needed, apply the partial-dates migration before using partial dates.
 
 ## 2. Google sign-in
 
@@ -26,12 +22,11 @@ Never commit the Google OAuth Client Secret or a Supabase service-role key. `sup
 
 ## 3. Membership and linking
 
-- The person who creates the tree is its **Owner**.
-- Other people request access. The Owner or a Member linked to a family record can review requests to join.
-- An unlinked Member can request to connect their account to an existing, unassigned family record.
-- The Owner or a linked Member can link an unlinked account to an available record from **Member accounts**. If the person does not yet have a record, create it in the family editor first, then link the account.
-- The Owner alone can reassign or unlink an already-linked account and delete the tree.
-- There are no Admin or Viewer roles. Unlinked Members can view records and request a link; linked Members can maintain the family tree.
+- There is one private family tree for the entire app: **Uravugal** (shown as **உறவுகள்** when Tamil is selected).
+- Signing in is required to view the tree. Accounts are linked to family records through a request and confirmation by a member who is already linked to a record.
+- If no existing record represents the signed-in person, they can create one self-record and add connections. Until a link is confirmed, they can edit only that self-record.
+- Linked members can edit unlinked records and relationships, but no member can edit another account-linked record.
+- The Member list displays linked accounts and their corresponding people; Linking Requests contains only record-link requests. There are no tree-creation, tree-closing, or access-request flows.
 
 ## 4. Open the updated app
 
