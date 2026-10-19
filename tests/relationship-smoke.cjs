@@ -177,7 +177,7 @@ assert.ok(
 );
 const renderCardSource = extractFunction(
   app,
-  "function renderPersonCard(person, position, relationLabel) {",
+  "function renderPersonCard(person, position, relationLabel, partnerFamilyToggle) {",
   "\n  function renderMembers"
 );
 assert.match(renderCardSource, /familyRecordDetailLines\(person\)/);
