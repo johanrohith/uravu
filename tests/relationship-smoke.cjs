@@ -112,6 +112,27 @@ assert.equal(labels.get("grandfather"), "Grandfather");
 assert.equal(labels.get("grandmother"), "Grandmother");
 assert.equal(labels.get("grandfather-spouse"), "Grandmother", "A grandfather spouse must be labelled as a grandmother by gender");
 assert.equal(labels.get("grandmother-spouse"), "Grandfather", "A grandmother spouse must be labelled as a grandfather by gender");
+
+{
+  const inferredParentState = {
+    user:{ id:"co-parent-user" },
+    language:"en",
+    members:[{ user_id:"co-parent-user", person_id:"child" }],
+    people:[
+      { id:"father", full_name:"Father", gender:"male" },
+      { id:"father-spouse", full_name:"Father spouse", gender:"female" },
+      { id:"child", full_name:"Child", gender:"other" }
+    ],
+    relationships:[
+      { person_id:"father", related_person_id:"child", relationship_type:"parent" },
+      { person_id:"father", related_person_id:"father-spouse", relationship_type:"spouse" }
+    ]
+  };
+  const inferredLabels = createRelationshipLabeler(inferredParentState)();
+  assert.equal(inferredLabels.get("father-spouse"), "Mother",
+    "A recorded parent's spouse should be labelled as the child's co-parent");
+}
+
 assert.equal(labels.get("great-grandfather"), "Great-grandfather");
 assert.equal(labels.get("great-grandmother"), "Great-grandmother");
 assert.equal(labels.get("great-grandchild"), "Great-grandchild");
@@ -164,6 +185,15 @@ assert.ok(app.includes("family-parent-stem"), "Parent-to-children routing should
 assert.ok(app.includes("family-child-bus"), "The shared horizontal line should be a parent-to-children connector");
 assert.ok(app.includes("family-child-drop"), "Each child should have its own vertical drop");
 assert.ok(!app.includes("const siblingBusGroups = new Map()"), "Do not use sibling-pair connection routing");
+
+assert.match(app, /const spousesForLayout = new Map/);
+assert.match(app, /addEffectiveParent\\(spouseId, edge.related_person_id, true\\)/,
+  "A recorded parent's spouse should be displayed as a co-parent");
+assert.match(app, /unit\\.people\\.forEach\\(\\(person, index\\) => \\{/,
+  "Position each spouse-connected group as an indivisible unit");
+assert.match(app, /const parentRowBottom = Math\\.max/,
+  "Family buses must stay below every card in the parent generation row");
+
 assert.match(html, /id="toggle-edit-mode"/);
 assert.match(styles, /\.edit-mode-button\.is-on/);
 assert.match(styles, /\.edit-mode-button\.is-off/);
@@ -256,7 +286,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app\.js\?v=uravu-partner-child-connectors-20261019-4/);
+assert.match(html, /app\.js\?v=uravu-family-layout-keep-spouses-20261019-5/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -275,7 +305,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app\.js\?v=uravu-partner-child-connectors-20261019-4/);
+assert.match(html, /app\.js\?v=uravu-family-layout-keep-spouses-20261019-5/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
