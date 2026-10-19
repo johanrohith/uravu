@@ -22,7 +22,8 @@
     partialDatesSupported: null,
     treeZoom: 1,
     treeBaseWidth: 0,
-    treeBaseHeight: 0
+    treeBaseHeight: 0,
+    openPanels: new Set()
   };
 
   const words = {
@@ -457,9 +458,90 @@
   function roleLabel(role) { return t(role || "member"); }
   function isOwner() { return Boolean(state.activeMembership && state.activeMembership.role === "owner"); }
   function isManager() {
-    const member = state.activeMembership;
-    return Boolean(member && (member.role === "owner" || (member.role === "member" && member.person_id)));
+    return Boolean(state.activeMembership && state.activeMembership.person_id);
   }
+  function linkedPersonIds() {
+    return new Set(state.members.filter(member => member.person_id).map(member => member.person_id));
+  }
+  function canEditPerson(person) {
+    if (!person || !state.user) return false;
+    if (state.activeMembership?.person_id === person.id) return true;
+    const linked = linkedPersonIds();
+    if (person.is_self_record && person.created_by === state.user.id && !linked.has(person.id)) return true;
+    return isManager() && !linked.has(person.id);
+  }
+  function canDeletePerson(person) {
+    if (!person || !state.user) return false;
+    const linked = linkedPersonIds();
+    if (linked.has(person.id)) return false;
+    if (person.is_self_record && person.created_by === state.user.id) return true;
+    return isManager();
+  }
+  function canCreatePerson() {
+    return Boolean(state.user && state.activeTree &&
+      (isManager() || !state.people.some(person => person.created_by === state.user.id && person.is_self_record)));
+  }
+  function displayTreeName(tree = state.activeTree) {
+    return state.language === "ta" ? "உறவுகள்" : (tree?.name || "Uravugal");
+  }
+  function requestPendingForUser() {
+    return state.ownRequests.find(request => request.tree_id === state.activeTree?.id && request.status === "pending");
+  }
+  async function requestLinkToPerson(personId, message = "") {
+    if (!state.user || !state.activeTree || !personId) return { error: new Error("Select a family record.") };
+    if (isManager()) {
+      toast("Your account is already linked to a family record.", true);
+      return { error: new Error("Already linked.") };
+    }
+    const result = await callRpc("uravu_request_tree_access", {
+      p_tree_id: state.activeTree.id, p_message: message,
+      p_requested_role: "member", p_requested_person_id: personId
+    });
+    if (result.error) { showDbError(result.error, "request family record link"); return result; }
+    toast(t("requestSent"));
+    await refreshDashboard();
+    return result;
+  }
+  function renderExistingLinkOptions() {
+    const select = $("#request-person");
+    if (!select) return;
+    const previous = select.value;
+    const linked = linkedPersonIds();
+    select.innerHTML = '<option value="">' +
+      escapeHtml(state.language === "ta" ? "இணைக்க வேண்டிய பதிவைத் தேர்ந்தெடுக்கவும்" : "Choose a record to link") +
+      '</option>' + state.people.filter(person => !linked.has(person.id)).map(person =>
+        '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.full_name) +
+        (person.tamil_name ? " · " + escapeHtml(person.tamil_name) : "") + '</option>'
+      ).join("");
+    if (previous && state.people.some(person => person.id === previous) && !linked.has(previous)) select.value = previous;
+    const form = $("#link-existing-form");
+    if (form) form.hidden = isManager();
+    const pending = requestPendingForUser();
+    const button = $("#request-existing-link-button");
+    if (button) button.disabled = isManager() || Boolean(pending);
+  }
+  function togglePanel(panelId) {
+    if (state.openPanels.has(panelId)) state.openPanels.delete(panelId);
+    else {
+      state.openPanels.add(panelId);
+      if (panelId === "add-person-panel") {
+        if (isManager()) clearPersonForm();
+        else {
+          const ownRecord = state.people.find(person => person.created_by === state.user?.id && person.is_self_record);
+          if (ownRecord) beginEditPerson(ownRecord.id);
+          else clearPersonForm();
+        }
+      }
+    }
+    renderWorkspace();
+    if (state.openPanels.has(panelId)) $("#" + panelId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function closePanel(panelId) {
+    state.openPanels.delete(panelId);
+    if (panelId === "add-person-panel") clearPersonForm();
+    renderWorkspace();
+  }
+
   function toast(message, isError) {
     const node = $("#toast");
     if (!node) return;
@@ -531,80 +613,47 @@
   }
 
   async function refreshDashboard() {
-    if (!state.user) return;
-    $("#my-tree-list").innerHTML = '<div class="loading-line">Loading your family trees…</div>';
-    $("#available-tree-list").innerHTML = '<div class="loading-line">Loading trees…</div>';
-    const userId = state.user.id;
-    const results = await Promise.all([
-      db.from("uravu_family_trees").select("id,name,description,language,created_by,created_at").order("created_at", { ascending:false }),
-      db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at").eq("user_id", userId),
-      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("user_id", userId).order("created_at", { ascending:false })
-    ]);
-    const error = results.find(result => result.error)?.error;
-    if (error) {
-      $("#my-tree-list").innerHTML = '<div class="empty-state"><strong>Could not load family trees</strong>' + escapeHtml(error.message || "Database error") + '</div>';
-      $("#available-tree-list").innerHTML = '<div class="empty-state compact">Database setup or permissions need attention.</div>';
-      showDbError(error, "dashboard");
+    if (!state.user || !db) return;
+    const mainResult = await db.from("uravu_family_trees")
+      .select("id,name,description,language,created_by,created_at,is_main")
+      .eq("is_main", true).limit(1).maybeSingle();
+    if (mainResult.error) { showDbError(mainResult.error, "load main family tree"); return; }
+    const tree = mainResult.data;
+    if (!tree) {
+      toast(state.language === "ta"
+        ? "முக்கிய குடும்ப மரம் இன்னும் அமைக்கப்படவில்லை. Supabase இடமாற்றத்தை இயக்கவும்."
+        : "The main family tree is not configured yet. Apply the single-tree Supabase migration.", true);
       return;
     }
-    state.trees = results[0].data || [];
-    state.memberships = results[1].data || [];
-    state.ownRequests = results[2].data || [];
-    renderTreeLists();
-
-    if (state.activeTree) {
-      const membership = state.memberships.find(item => item.tree_id === state.activeTree.id);
-      if (membership) {
-        state.activeMembership = membership;
-        await loadWorkspace(state.activeTree.id, false);
-      } else {
-        state.activeTree = null;
-        state.activeMembership = null;
-        $("#tree-workspace").hidden = true;
-        $("#dashboard").classList.remove("tree-open");
-      }
-    }
+    const [membershipResult, ownRequestResult] = await Promise.all([
+      db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at")
+        .eq("tree_id", tree.id).eq("user_id", state.user.id),
+      db.from("uravu_access_requests")
+        .select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at")
+        .eq("tree_id", tree.id).eq("user_id", state.user.id).eq("status", "pending").order("created_at", { ascending:false })
+    ]);
+    const error = membershipResult.error || ownRequestResult.error;
+    if (error) { showDbError(error, "load main family tree"); return; }
+    state.trees = [tree];
+    state.memberships = membershipResult.data || [];
+    state.ownRequests = ownRequestResult.data || [];
+    state.activeTree = tree;
+    state.activeMembership = state.memberships[0] || null;
+    $("#tree-workspace").hidden = false;
+    $("#dashboard").classList.add("tree-open");
+    $("#workspace-title").textContent = displayTreeName(tree);
+    $("#workspace-description").textContent = state.language === "ta"
+      ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
+      : "One shared family tree, across generations.";
+    await loadWorkspace(tree.id, !state.people.length);
   }
 
   function renderTreeLists() {
-    const myTrees = state.memberships.map(membership => ({
-      membership,
-      tree: state.trees.find(tree => tree.id === membership.tree_id)
-    })).filter(item => item.tree);
-    if (!myTrees.length) {
-      $("#my-tree-list").innerHTML = '<div class="empty-state"><strong>' + escapeHtml(t("noTrees")) + '</strong>' + escapeHtml(t("noTreesSub")) + '</div>';
-    } else {
-      $("#my-tree-list").innerHTML = myTrees.map(item => {
-        const tree = item.tree, membership = item.membership;
-        return '<article class="tree-card"><div class="tree-card-main"><span class="tree-card-icon" aria-hidden="true">⌘</span><div><h3>' +
-          escapeHtml(tree.name) + '</h3><p>' + escapeHtml(tree.description || "No description provided.") +
-          '</p><div class="tree-card-meta"><span class="role-pill role-' + escapeHtml(membership.role) + '">' +
-          escapeHtml(roleLabel(membership.role)) + '</span><span class="role-pill">' + escapeHtml(tree.language === "ta" ? "தமிழ்" : "English") +
-          '</span></div></div></div><div class="tree-card-actions"><button type="button" class="primary-button" data-open-tree="' +
-          escapeHtml(tree.id) + '">' + escapeHtml(t("viewTree")) + '</button></div></article>';
-      }).join("");
-    }
-
-    const memberTreeIds = new Set(state.memberships.map(m => m.tree_id));
-    const pendingByTree = new Map(state.ownRequests.filter(r => r.status === "pending").map(r => [r.tree_id, r]));
-    const search = ($("#tree-search").value || "").trim().toLocaleLowerCase();
-    const available = state.trees.filter(tree => !memberTreeIds.has(tree.id) && tree.name.toLocaleLowerCase().includes(search));
-    if (!available.length) {
-      $("#available-tree-list").innerHTML = '<div class="empty-state compact"><strong>' + escapeHtml(t("noBrowse")) + '</strong></div>';
-    } else {
-      $("#available-tree-list").innerHTML = available.map(tree => {
-        const request = pendingByTree.get(tree.id);
-        const action = request
-          ? '<span class="status-pill status-pending">' + escapeHtml(t("pending")) + '</span>'
-          : '<button class="secondary-button" type="button" data-request-tree="' + escapeHtml(tree.id) + '">' + escapeHtml(t("join")) + '</button>';
-        return '<article class="tree-card"><div class="tree-card-main"><span class="tree-card-icon" aria-hidden="true">⌘</span><div><h3>' +
-          escapeHtml(tree.name) + '</h3><p>' + escapeHtml(tree.description || "No description provided.") +
-          '</p><div class="tree-card-meta"><span class="role-pill">' + escapeHtml(tree.language === "ta" ? "தமிழ்" : "English") +
-          '</span></div></div></div><div class="tree-card-actions">' + action + '</div></article>';
-      }).join("");
-    }
-    $$("[data-open-tree]").forEach(button => button.addEventListener("click", () => openTree(button.dataset.openTree)));
-    $$("[data-request-tree]").forEach(button => button.addEventListener("click", () => openRequestDialog(button.dataset.requestTree, false)));
+    if (!state.activeTree) return;
+    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-description").textContent = state.language === "ta"
+      ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
+      : "One shared family tree, across generations.";
   }
 
   async function createTree(event) {
@@ -628,18 +677,12 @@
   }
 
   async function openTree(treeId) {
-    const tree = state.trees.find(item => item.id === treeId);
-    const membership = state.memberships.find(item => item.tree_id === treeId);
-    if (!tree || !membership) { toast("You must be an approved member to open this tree.", true); return; }
-    state.activeTree = tree;
-    state.activeMembership = membership;
-    $("#dashboard").classList.add("tree-open");
+    if (!state.activeTree || state.activeTree.id !== treeId) await refreshDashboard();
+    if (!state.activeTree) return;
     $("#tree-workspace").hidden = false;
-    $("#workspace-title").textContent = tree.name;
-    $("#workspace-description").textContent = tree.description || "Family connections across generations.";
-    $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(membership.role).toUpperCase();
-    $("#tree-workspace").scrollIntoView({ behavior:"smooth", block:"start" });
-    await loadWorkspace(treeId, true);
+    $("#dashboard").classList.add("tree-open");
+    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    await loadWorkspace(state.activeTree.id, true);
   }
 
   async function loadWorkspace(treeId, showLoading) {
@@ -652,10 +695,10 @@
     }
     state.loadingTree = true;
     const results = await Promise.all([
-      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,death_date,death_date_text,is_deceased,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
+      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,death_date,death_date_text,is_deceased,is_self_record,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
       db.from("uravu_relationships").select("id,tree_id,person_id,related_person_id,relationship_type,created_at").eq("tree_id", treeId),
       db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at").eq("tree_id", treeId),
-      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("tree_id", treeId).eq("status","pending").order("created_at")
+      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("tree_id", treeId).eq("request_type","link").eq("status","pending").order("created_at")
     ]);
     state.loadingTree = false;
     if (results[0].error && /(birth_date_text|death_date_text|is_deceased|schema cache)/i.test(String(results[0].error.message || results[0].error))) {
@@ -680,7 +723,7 @@
     state.relationships = results[1].data || [];
     state.members = results[2].data || [];
     state.requests = results[3].data || [];
-    state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || state.activeMembership;
+    state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || null;
 
     // Repair existing one-parent records when a person already has a spouse.
     // Owners and assigned members can repair linked spouse/child records; unassigned members are read-only.
@@ -729,31 +772,27 @@
   }
 
   function renderWorkspace() {
-    if (!state.activeTree || !state.activeMembership) return;
-    const manager = isManager();
-    const owner = isOwner();
-    $("#workspace-role").textContent = t("YOUR ROLE") + " · " + roleLabel(state.activeMembership.role).toUpperCase();
-    $("#workspace-title").textContent = state.activeTree.name;
-    $("#workspace-description").textContent = state.activeTree.description || "Family connections across generations.";
+    if (!state.activeTree) return;
+    $("#workspace-role").textContent = state.language === "ta" ? "பகிரப்பட்ட குடும்ப மரம்" : "SHARED FAMILY TREE";
+    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-description").textContent = state.language === "ta"
+      ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
+      : "One shared family tree, across generations.";
     $("#people-count").textContent = String(state.people.length);
-    $("#member-count").textContent = String(state.members.length);
-    $("#pending-count").textContent = String(manager ? state.requests.length : state.ownRequests.filter(request => request.tree_id === state.activeTree.id && request.status === "pending").length);
-    const ownPending = state.ownRequests.find(request => request.tree_id === state.activeTree.id && request.status === "pending");
-    const ownStatus = $("#member-request-status");
-    ownStatus.hidden = !ownPending;
-    ownStatus.textContent = ownPending
-      ? (ownPending.request_type === "join" ? "Your access request is awaiting review." : "Your family-record linking request is awaiting review.")
+    $("#member-count").textContent = String(state.members.filter(member => member.person_id).length);
+    $("#pending-count").textContent = String(state.requests.length);
+    const ownPending = requestPendingForUser();
+    const status = $("#member-request-status");
+    status.hidden = !ownPending;
+    status.textContent = ownPending
+      ? (state.language === "ta" ? "உங்கள் குடும்பப் பதிவை இணைக்கும் கோரிக்கை பரிசீலனையில் உள்ளது." : "Your family-record link request is awaiting review.")
       : "";
-    $("#add-person-panel").hidden = !manager;
-    $("#member-management-panel").hidden = !manager;
-    $("#access-requests-panel").hidden = !manager;
-    $("#linking-requests-panel").hidden = !manager;
-    $("#delete-tree-zone").hidden = !owner;
-    $("#request-role-button").hidden = owner;
-    $("#request-role-button").textContent = translateUiValue("Request a record link");
-    $("#request-role-button").hidden = owner || Boolean(state.activeMembership.person_id);
+    $("#add-person-panel").hidden = !state.openPanels.has("add-person-panel");
+    $("#member-management-panel").hidden = !state.openPanels.has("member-management-panel");
+    $("#linking-requests-panel").hidden = !state.openPanels.has("linking-requests-panel");
     renderPersonConnectOptions();
     renderEditorConnections();
+    renderExistingLinkOptions();
     renderPeople();
     renderMembers();
     renderRequests();
