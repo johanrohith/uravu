@@ -495,19 +495,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!person || !state.user) return false;
     if (state.activeMembership?.person_id === person.id) return true;
     const linked = linkedPersonIds();
-    if (person.is_self_record && person.created_by === state.user.id && !linked.has(person.id)) return true;
+    if (!isManager() && person.is_self_record && person.created_by === state.user.id && !linked.has(person.id)) return true;
     return isManager() && !linked.has(person.id);
   }
   function canDeletePerson(person) {
     if (!person || !state.user) return false;
     const linked = linkedPersonIds();
     if (linked.has(person.id)) return false;
-    if (person.is_self_record && person.created_by === state.user.id) return true;
+    if (!isManager() && person.is_self_record && person.created_by === state.user.id) return true;
     return isManager();
   }
   function canCreatePerson() {
     return Boolean(state.user && state.activeTree &&
-      (isManager() || !state.people.some(person => person.created_by === state.user.id && person.is_self_record)));
+      (isManager() || (!requestPendingForUser() && !state.people.some(person => person.created_by === state.user.id && person.is_self_record))));
   }
   function displayTreeName(tree = state.activeTree) {
     return state.language === "ta" ? "உறவுகள்" : (tree?.name || "Uravugal");
@@ -535,9 +535,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!select) return;
     const previous = select.value;
     const linked = linkedPersonIds();
+    const ownRecord = state.people.find(person => person.created_by === state.user?.id && person.is_self_record);
     select.innerHTML = '<option value="">' +
       escapeHtml(state.language === "ta" ? "இணைக்க வேண்டிய பதிவைத் தேர்ந்தெடுக்கவும்" : "Choose a record to link") +
-      '</option>' + state.people.filter(person => !linked.has(person.id)).map(person =>
+      '</option>' + state.people.filter(person => !linked.has(person.id) && (!ownRecord || person.id === ownRecord.id)).map(person =>
         '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.full_name) +
         (person.tamil_name ? " · " + escapeHtml(person.tamil_name) : "") + '</option>'
       ).join("");
@@ -547,6 +548,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const pending = requestPendingForUser();
     const button = $("#request-existing-link-button");
     if (button) button.disabled = isManager() || Boolean(pending);
+    const shouldPauseCreation = !isManager() && !ownRecord && Boolean(pending);
+    const personForm = $("#person-form");
+    const divider = $("#self-record-divider");
+    if (personForm) personForm.hidden = shouldPauseCreation;
+    if (divider) divider.hidden = shouldPauseCreation;
   }
   function togglePanel(panelId) {
     if (state.openPanels.has(panelId)) {
