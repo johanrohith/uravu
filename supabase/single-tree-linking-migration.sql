@@ -202,13 +202,8 @@ begin
     raise exception 'Your account is already linked to a family record.';
   end if;
 
-  -- A person without a membership row can initially request only their own new
-  -- self-record. An existing unlinked membership can request an unassigned record.
-  if v_existing_membership.user_id is null then
-    if not (v_person.created_by = v_user and v_person.is_self_record) then
-      raise exception 'Create your own family record first, or sign in with an existing family account.';
-    end if;
-  end if;
+  -- A new account may request any unassigned record; a linked member's
+  -- confirmation is required before the account can edit records.
 
   select coalesce(
       nullif(u.raw_user_meta_data->>'full_name',''),
