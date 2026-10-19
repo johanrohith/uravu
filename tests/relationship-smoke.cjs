@@ -101,7 +101,7 @@ assert.match(app, /from\("uravu_tree_members"\)/);
 assert.match(app, /uravu_create_tree/);
 assert.match(app, /uravu_request_tree_access/);
 assert.match(app, /uravu_review_tree_request/);
-assert.match(app, /uravu_assign_member_person/);
+assert.doesNotMatch(app, /uravu_assign_member_person/);
 assert.match(app, /function isOwner/);
 assert.match(app, /function isManager/);
 assert.match(app, /uravu_delete_tree/);
