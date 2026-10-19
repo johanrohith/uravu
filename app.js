@@ -959,7 +959,34 @@
           const spId=egoSpouses.find(sid=>siblingsOf(sid).has(id));
           if(spId){const sp=byId.get(spId),order=age(person,sp),rg=gender(person),kind=gender(sp)==="female"&&gender(ego)==="male"?"Wife":gender(sp)==="male"&&gender(ego)==="female"?"Husband":"Spouse",ageText=order==="older"?"elder ":order==="younger"?"younger ":"";english=kind+"'s "+ageText+(rg==="male"?"brother":rg==="female"?"sister":"sibling")+(order==="unknown"&&!(gender(sp)==="male"&&rg==="female")?" "+englishAgeNotSure:"");if(gender(sp)==="female"){if(rg==="male")tamil=order==="older"?"அத்தான்":order==="younger"?"மச்சான்":"மனைவியின் சகோதரர் "+ageNotSure;else if(rg==="female")tamil=order==="older"?"அண்ணி":order==="younger"?"கொழுந்தியாள்":"மனைவியின் சகோதரி "+ageNotSure;}else if(gender(sp)==="male"){if(rg==="male")tamil=order==="older"?"அத்தான்":order==="younger"?"கொழுந்தன்":"கணவரின் சகோதரர் "+ageNotSure;else if(rg==="female")tamil="அண்ணி";}if(!tamil)tamil="துணைவரின் சகோதரர் / சகோதரி";}
         }
-        if(!english){const sibSpouse=array(egoSiblings).find(sid=>spousesOf(sid).has(id));if(sibSpouse){const s=byId.get(sibSpouse);if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil="சகலை";}else if(gender(s)==="male"&&gender(person)==="female"){english="Brother's wife";tamil="சகோதரரின் மனைவி";}else{english="Sibling's spouse";tamil="சகோதரர் / சகோதரியின் துணைவர்";}}}
+        if(!english){
+          const sibSpouse=array(egoSiblings).find(sid=>spousesOf(sid).has(id));
+          if(sibSpouse){
+            const s=byId.get(sibSpouse),order=age(s,ego);
+            if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil="சகலை";}
+            else if(gender(s)==="male"&&gender(person)==="female"){
+              english=order==="older"?"Older brother's wife":order==="younger"?"Younger brother's wife":"Brother's wife"+(order==="unknown"?" "+englishAgeNotSure:"");
+              tamil=order==="older"?"அண்ணி":order==="younger"?"கொழுந்தியாள்":"சகோதரரின் மனைவி "+ageNotSure;
+            }else{english="Sibling's spouse";tamil="சகோதரர் / சகோதரியின் துணைவர்";}
+          }
+        }
+        if(!english){
+          // A wife's elder or younger sister's husband is the user's சகலை.
+          if(gender(ego)==="male"&&gender(person)==="male"){
+            const wifeId=egoSpouses.find(spouseId=>gender(byId.get(spouseId))==="female");
+            if(wifeId){
+              const wife=byId.get(wifeId);
+              const wifeSisterId=array(siblingsOf(wifeId)).find(sisterId=>
+                gender(byId.get(sisterId))==="female"&&spousesOf(sisterId).has(id)
+              );
+              if(wifeSisterId){
+                const order=age(byId.get(wifeSisterId),wife);
+                english="Wife's "+(order==="older"?"elder ":order==="younger"?"younger ":"")+"sister's husband"+(order==="unknown"?" "+englishAgeNotSure:"");
+                tamil="சகலை";
+              }
+            }
+          }
+        }
         if(!english){const stepParent=egoParents.some(parentId=>spousesOf(parentId).has(id));if(stepParent){english=gendered(person,"Stepfather","Stepmother","Step-parent");tamil=gender(person)==="male"?"மாற்றாந்தந்தை":gender(person)==="female"?"மாற்றாந்தாய்":"மாற்றாந்தாய் / மாற்றாந்தந்தை";}}
         if(!english){
           const sc=array(parentsOf(id)).map(pid=>({parentId:pid,spouseId:egoSpouses.find(sid=>siblingsOf(sid).has(pid))})).find(x=>x.spouseId);
