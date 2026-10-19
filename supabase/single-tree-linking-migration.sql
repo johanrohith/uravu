@@ -202,6 +202,16 @@ begin
     raise exception 'Your account is already linked to a family record.';
   end if;
 
+  -- If this account already created a self-record, its link request must target
+  -- that record. This prevents one account from splitting itself across records.
+  if exists (
+    select 1 from public.uravu_people own
+    where own.tree_id = p_tree_id and own.created_by = v_user and own.is_self_record = true
+      and own.id <> p_requested_person_id
+  ) then
+    raise exception 'Your account already has a self-record. Request linking to that record.';
+  end if;
+
   -- A new account may request any unassigned record; a linked member's
   -- confirmation is required before the account can edit records.
 
