@@ -266,4 +266,39 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(relationLabel("me",people,edges,"step-mom","ta"),"மாற்றாந்தாய்");
 }
 
+
+{
+ // Siblings of the paternal grandfather: age is compared with the grandfather.
+ const people=[
+  person("great-grandpa","male","1920-01-01"),
+  person("grandpa","male","1950-01-01"),
+  person("older-brother","male","1948-01-01"),
+  person("younger-brother","male","1952-01-01"),
+  person("unknown-brother","male"),
+  person("older-sister","female","1945-01-01"),
+  person("younger-sister","female","1955-01-01"),
+  person("unknown-sister","female"),
+  person("dad","male","1980-01-01"),
+  person("me","female","2005-01-01")
+ ];
+ const relationships=[
+  parentLink("great-grandpa","grandpa"),parentLink("great-grandpa","older-brother"),
+  parentLink("great-grandpa","younger-brother"),parentLink("great-grandpa","unknown-brother"),
+  parentLink("great-grandpa","older-sister"),parentLink("great-grandpa","younger-sister"),
+  parentLink("great-grandpa","unknown-sister"),parentLink("grandpa","dad"),parentLink("dad","me")
+ ];
+ assert.equal(relationLabel("me",people,relationships,"older-brother","en"),"Older Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"younger-brother","en"),"Younger Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"unknown-brother","en"),"Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"older-sister","en"),"Older Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"younger-sister","en"),"Younger Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"unknown-sister","en"),"Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"older-brother","ta"),"பெரிய தாத்தா");
+ assert.equal(relationLabel("me",people,relationships,"younger-brother","ta"),"சின்ன தாத்தா");
+ assert.equal(relationLabel("me",people,relationships,"unknown-brother","ta"),"தாத்தா");
+ assert.equal(relationLabel("me",people,relationships,"older-sister","ta"),"பெரிய பாட்டி");
+ assert.equal(relationLabel("me",people,relationships,"younger-sister","ta"),"சின்ன பாட்டி");
+ assert.equal(relationLabel("me",people,relationships,"unknown-sister","ta"),"பாட்டி");
+}
+
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
