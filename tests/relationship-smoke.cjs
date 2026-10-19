@@ -577,6 +577,14 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
 }
 
 
+
+assert.match(app, /const directAncestorIds = new Set\(\[activePersonIdForTree\]\)/);
+assert.match(app, /const descendantQueue = Array\.from\(directAncestorIds\)/);
+assert.match(app, /const legendPersonIds = new Set\(treeLineageIds\)/);
+assert.match(app, /\$\$\("\\[data-delete-person\\]"\)\.forEach/);
+assert.match(app, /\$\$\("\\[data-toggle-partner-family\\]"\)\.forEach/);
+assert.match(app, /\$\$\("\\[data-remove-relationship\\]"\)\.forEach/);
+
 assert.match(html, /id="family-branch-legend"/);
 assert.match(app, /treeExpandedPartnerFamilies/);
 assert.match(app, /partnerFamilyToggleByPerson/);
