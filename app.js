@@ -1621,6 +1621,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       (levelUnits.get(level) || []).forEach(unit => {
         const candidates = Array.from(new Set(unit.people.map(person => parentFamilyByPerson.get(person.id)).filter(Boolean)));
         if (!candidates.length) return;
+        const collapsedInLaw = unit.people.find(person => {
+          const toggle = partnerFamilyToggleByPerson.get(person.id);
+          return toggle && !toggle.expanded && unit.people.some(candidate => candidate.id === toggle.spouseId);
+        });
+        const collapsedToggle = collapsedInLaw && partnerFamilyToggleByPerson.get(collapsedInLaw.id);
+        const collapsedFamilyKey = collapsedToggle && parentFamilyByPerson.get(collapsedToggle.spouseId);
+        if (collapsedFamilyKey && candidates.includes(collapsedFamilyKey)) {
+          // In the compact view, keep the couple beside the spouse who belongs
+          // to the central family. The in-law's family is collapsed, not merged.
+          primaryFamilyByUnit.set(unit, collapsedFamilyKey);
+          return;
+        }
+
         const expandedInLaw = unit.people.find(person => {
           const toggle = partnerFamilyToggleByPerson.get(person.id);
           return toggle?.expanded && unit.people.some(candidate => candidate.id === toggle.spouseId);
