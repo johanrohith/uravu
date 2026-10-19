@@ -760,8 +760,8 @@
   }
 
   function generationMap() {
-    // A spouse pair is a single generation unit. Resolve partner groups first,
-    // then calculate generations from parent -> child edges between those groups.
+    // Spouses and co-parents share a generation unit. Resolve these family groups
+    // first, then calculate generations from parent -> child edges between groups.
     const parent = new Map(state.people.map(person => [person.id, person.id]));
     const find = id => {
       let root = id;
@@ -779,9 +779,26 @@
       if (rootA !== rootB) parent.set(rootB, rootA);
     };
 
+    const parentEdges = state.relationships.filter(edge =>
+      edge.relationship_type === "parent" && parent.has(edge.person_id) && parent.has(edge.related_person_id)
+    );
+
     state.relationships
       .filter(edge => edge.relationship_type === "spouse")
       .forEach(edge => unite(edge.person_id, edge.related_person_id));
+
+    // People who share a child belong to the same generation unit even if a
+    // spouse link was never explicitly recorded between them.
+    const parentsByChild = new Map();
+    parentEdges.forEach(edge => {
+      if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, []);
+      parentsByChild.get(edge.related_person_id).push(edge.person_id);
+    });
+    parentsByChild.forEach(parentIds => {
+      for (let index = 1; index < parentIds.length; index++) {
+        unite(parentIds[0], parentIds[index]);
+      }
+    });
 
     const groups = new Map();
     state.people.forEach(person => {
@@ -791,10 +808,7 @@
     });
 
     const depths = new Map(Array.from(groups.keys(), id => [id, 0]));
-    const parentEdges = state.relationships.filter(edge =>
-      edge.relationship_type === "parent" && parent.has(edge.person_id) && parent.has(edge.related_person_id)
-    );
-    // Relax only across distinct spouse groups. The bounded passes avoid hanging
+    // Relax only across distinct family-generation groups. The bounded passes avoid hanging
     // on malformed/cyclic data while still placing descendants below ancestors.
     for (let round = 0; round < groups.size; round++) {
       let changed = false;
@@ -857,6 +871,42 @@
     const spousesOf = id => spousesByPerson.get(id) || new Set();
     const toArray = values => Array.from(values || []);
     const grandparentsOf = id => new Set(toArray(parentsOf(id)).flatMap(parentId => toArray(parentsOf(parentId))));
+    const lineageDistances = (startId, nextIds) => {
+      const distances = new Map([[startId, 0]]);
+      const pending = [startId];
+      for (let index = 0; index < pending.length; index++) {
+        const currentId = pending[index];
+        const nextDistance = distances.get(currentId) + 1;
+        toArray(nextIds(currentId)).forEach(relatedId => {
+          const existingDistance = distances.get(relatedId);
+          if (existingDistance === undefined || nextDistance < existingDistance) {
+            distances.set(relatedId, nextDistance);
+            pending.push(relatedId);
+          }
+        });
+      }
+      return distances;
+    };
+    const ancestorDistances = lineageDistances(egoId, parentsOf);
+
+    // A grandparent or great-grandparent's partner should receive the matching
+    // generation label even when a separate parent link was not recorded.
+    for (let round = 0; round < state.people.length; round++) {
+      let changed = false;
+      Array.from(ancestorDistances.entries()).forEach(([ancestorId, distance]) => {
+        if (distance < 2) return;
+        toArray(spousesOf(ancestorId)).forEach(spouseId => {
+          const existingDistance = ancestorDistances.get(spouseId);
+          if (existingDistance === undefined || distance < existingDistance) {
+            ancestorDistances.set(spouseId, distance);
+            changed = true;
+          }
+        });
+      });
+      if (!changed) break;
+    }
+
+    const descendantDistances = lineageDistances(egoId, childrenOf);
     const siblingsOf = id => new Set(toArray(parentsOf(id)).flatMap(parentId => toArray(childrenOf(parentId))).filter(otherId => otherId !== id));
     const gender = person => person?.gender || "";
     const olderThan = (a, b) => Boolean(a?.birth_date && b?.birth_date && a.birth_date < b.birth_date);
@@ -889,7 +939,9 @@
     const egoParents = toArray(parentsOf(egoId));
     const egoChildren = toArray(childrenOf(egoId));
     const egoSiblings = siblingsOf(egoId);
-    const egoGrandparents = grandparentsOf(egoId);
+    const egoGrandparents = new Set(Array.from(ancestorDistances.entries())
+      .filter(([, distance]) => distance === 2)
+      .map(([id]) => id));
     const egoSpouses = toArray(spousesOf(egoId));
 
     for (const person of state.people) {
@@ -915,12 +967,38 @@
       } else if (egoSiblings.has(id)) {
         english = englishSibling(person);
         tamil = tamilSibling(person, ego);
-      } else if (egoGrandparents.has(id)) {
+      } else if (ancestorDistances.has(id) && ancestorDistances.get(id) === 2) {
         english = gendered(person, "Grandfather", "Grandmother", "Grandparent");
         tamil = gender(person) === "male" ? "தாத்தா" : gender(person) === "female" ? "பாட்டி" : "தாத்தா / பாட்டி";
-      } else if (egoChildren.some(childId => childrenOf(childId).has(id))) {
+      } else if (ancestorDistances.has(id) && ancestorDistances.get(id) >= 3) {
+        const distance = ancestorDistances.get(id);
+        const prefix = "great-".repeat(distance - 2);
+        const capitalizedPrefix = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+        english = gendered(person, capitalizedPrefix + "grandfather", capitalizedPrefix + "grandmother", capitalizedPrefix + "grandparent");
+        tamil = distance === 3
+          ? gendered(person, "கொள்ளுத்தாத்தா", "கொள்ளுப்பாட்டி", "கொள்ளு முன்னோர்")
+          : gendered(
+              person,
+              "தாத்தா (" + distance + " தலைமுறைகள் மேலே)",
+              "பாட்டி (" + distance + " தலைமுறைகள் மேலே)",
+              "முன்னோர் (" + distance + " தலைமுறைகள் மேலே)"
+            );
+      } else if (descendantDistances.has(id) && descendantDistances.get(id) === 2) {
         english = gendered(person, "Grandson", "Granddaughter", "Grandchild");
         tamil = gender(person) === "male" ? "பேரன்" : gender(person) === "female" ? "பேத்தி" : "பேரக்குழந்தை";
+      } else if (descendantDistances.has(id) && descendantDistances.get(id) >= 3) {
+        const distance = descendantDistances.get(id);
+        const prefix = "great-".repeat(distance - 2);
+        const capitalizedPrefix = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+        english = gendered(person, capitalizedPrefix + "grandson", capitalizedPrefix + "granddaughter", capitalizedPrefix + "grandchild");
+        tamil = distance === 3
+          ? gendered(person, "கொள்ளுப்பேரன்", "கொள்ளுப்பேத்தி", "கொள்ளுப் பேரக்குழந்தை")
+          : gendered(
+              person,
+              "பேரன் (" + distance + " தலைமுறைகள் கீழே)",
+              "பேத்தி (" + distance + " தலைமுறைகள் கீழே)",
+              "பேரக்குழந்தை (" + distance + " தலைமுறைகள் கீழே)"
+            );
       } else {
         const parentSibling = egoParents.find(parentId => siblingsOf(parentId).has(id));
         if (parentSibling) {
@@ -1044,9 +1122,28 @@
     const levelUnits = new Map();
     const positions = new Map();
     const byId = new Map(state.people.map(person => [person.id, person]));
-    const spouseOf = id => state.relationships
-      .filter(edge => edge.relationship_type === "spouse" && (edge.person_id === id || edge.related_person_id === id))
-      .map(edge => edge.person_id === id ? edge.related_person_id : edge.person_id);
+    const layoutPartners = new Map(state.people.map(person => [person.id, new Set()]));
+    const addLayoutPartner = (firstId, secondId) => {
+      if (firstId === secondId || !layoutPartners.has(firstId) || !layoutPartners.has(secondId)) return;
+      layoutPartners.get(firstId).add(secondId);
+      layoutPartners.get(secondId).add(firstId);
+    };
+    const parentsByChild = new Map();
+    state.relationships.forEach(edge => {
+      if (edge.relationship_type === "spouse") {
+        addLayoutPartner(edge.person_id, edge.related_person_id);
+      } else if (edge.relationship_type === "parent") {
+        if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, []);
+        parentsByChild.get(edge.related_person_id).push(edge.person_id);
+      }
+    });
+    parentsByChild.forEach(parentIds => {
+      const uniqueParentIds = Array.from(new Set(parentIds));
+      uniqueParentIds.forEach(parentId => {
+        uniqueParentIds.forEach(otherId => addLayoutPartner(parentId, otherId));
+      });
+    });
+    const layoutPartnersOf = id => Array.from(layoutPartners.get(id) || new Set());
 
     levelKeys.forEach(level => {
       const people = grouped.get(level).slice().sort((a, b) => a.full_name.localeCompare(b.full_name));
@@ -1054,8 +1151,8 @@
       const used = new Set();
       const units = [];
 
-      // Every connected spouse group gets one adjacent block in its generation.
-      // This keeps grandparents, parents, aunts/uncles and every other couple aligned.
+      // Every connected spouse or co-parent group gets one adjacent block in its generation.
+      // This keeps grandparents and other shared-parent groups together.
       people.forEach(person => {
         if (used.has(person.id)) return;
         const groupIds = [];
@@ -1064,7 +1161,7 @@
         while (pending.length) {
           const currentId = pending.pop();
           groupIds.push(currentId);
-          spouseOf(currentId).forEach(partnerId => {
+          layoutPartnersOf(currentId).forEach(partnerId => {
             if (visibleById.has(partnerId) && !used.has(partnerId)) {
               used.add(partnerId);
               pending.push(partnerId);
@@ -1091,7 +1188,7 @@
               if (!parentPerson || seenParentIds.has(parentPerson.id)) return;
               const parentPosition = positions.get(parentPerson.id);
               if (!parentPosition) return;
-              const partners = spouseOf(parentPerson.id)
+              const partners = layoutPartnersOf(parentPerson.id)
                 .map(id => ({ id, position: positions.get(id) }))
                 .filter(item => item.position && item.position.y === parentPosition.y);
               if (partners.length) {
@@ -1803,10 +1900,8 @@
       await loadWorkspace(treeId, false);
       return;
     }
-    $("#connect-person").value = "";
-    $("#connect-type").value = "";
+    clearPersonForm();
     await loadWorkspace(treeId, false);
-    renderEditorConnections();
     toast("Family connection added.");
   }
 
