@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-family-branch-ownership-20261019-3';
+        stylesheet.href = './styles.css?v=uravu-family-branch-ownership-20261019-4';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -57,7 +57,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app.js?v=uravu-family-branch-ownership-20261019-3');
+        await loadScript('./app.js?v=uravu-family-branch-ownership-20261019-4');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
@@ -200,6 +200,7 @@
           <section class="panel people-panel">
             <div class="section-heading tree-section-heading"><div><p class="eyebrow">FAMILY TREE</p><h3>Family tree</h3></div><div class="tree-view-controls"><input class="form-input people-search" id="people-search" placeholder="Search names…"><button class="secondary-button tree-control-button" id="tree-zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button><span class="tree-zoom-level" id="tree-zoom-level" aria-live="polite">100%</span><button class="secondary-button tree-control-button" id="tree-zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button><button class="secondary-button tree-control-button" id="fit-tree-button" type="button">Fit tree</button><button class="secondary-button tree-control-button" id="tree-fullscreen-button" type="button" aria-label="Full screen">Full screen</button></div></div>
             <p class="tree-gesture-hint">Pinch to zoom · drag to move · Ctrl + scroll to zoom</p>
+            <div class="family-branch-legend" id="family-branch-legend" hidden aria-label="Family branch line colors"></div>
             <div class="empty-state" id="people-empty" hidden></div><div class="family-tree-viewport" id="family-tree-viewport" hidden><div class="family-tree-canvas" id="family-tree-canvas"><svg class="family-tree-lines" id="family-tree-lines" aria-hidden="true"></svg><div class="family-tree-nodes" id="family-tree-nodes"></div></div></div>
           </section
         </section>
