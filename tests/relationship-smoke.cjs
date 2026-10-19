@@ -3,11 +3,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const root = path.join(__dirname, "..");
-const app = fs.readFileSync(path.join(root, "app-v2.js"), "utf8");
+const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
 const auth = fs.readFileSync(path.join(root, "auth.js"), "utf8");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
-const styles = fs.readFileSync(path.join(root, "styles-v2.css"), "utf8");
+const styles = fs.readFileSync(path.join(root, "styles.css"), "utf8");
 const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8");
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
@@ -87,8 +87,8 @@ assert.match(html, /id="request-modal"/);
 assert.match(html, /id="family-tree-viewport"/);
 assert.match(html, /id="family-tree-lines"/);
 assert.match(html, /id="family-tree-nodes"/);
-assert.match(html, /styles-v2\.css/);
-assert.match(html, /app-v2\.js/);
+assert.match(html, /styles\.css/);
+assert.match(html, /app\.js/);
 assert.match(html, /Sign in with Google/);
 assert.match(auth, /signInWithOAuth/);
 assert.match(auth, /provider:\s*"google"/);
@@ -175,7 +175,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app-v2\.js\?v=uravu-member-edit-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-relationships-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -194,7 +194,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app-v2\.js\?v=uravu-member-edit-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-relationships-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
@@ -211,4 +211,51 @@ assert.match(schema, /Only the owner or a member linked to a family record can l
 assert.match(schema, /uravu_one_pending_request_per_user_tree/);
 assert.match(schema, /would create a family-tree cycle/);
 
-console.log("Uravu clean-app smoke checks passed.");
+
+function relationLabel(egoId,people,relationships,targetId,language="ta"){
+ const state={user:{id:"current-user"},language,members:[{user_id:"current-user",person_id:egoId}],people,relationships};
+ return new Function("state",relationshipLabelsSource+"\nreturn relationshipLabelsForCurrentUser;")(state)().get(targetId);
+}
+function person(id,gender,birth_date){const p={id,full_name:id,gender};if(birth_date)p.birth_date=birth_date;return p;}
+function parentLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"parent"};}
+function spouseLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"spouse"};}
+{
+ const p=[person("gp","male","1950-01-01"),person("dad","male","1980-01-01"),person("uncle","male","1978-01-01"),person("younger","male","1982-01-01"),person("unknown","male"),person("me","male","2004-01-01")];
+ const r=[parentLink("gp","dad"),parentLink("gp","uncle"),parentLink("gp","younger"),parentLink("gp","unknown"),parentLink("dad","me")];
+ assert.equal(relationLabel("me",p,r,"uncle"),"பெரியப்பா");
+ assert.equal(relationLabel("me",p,r,"younger"),"சித்தப்பா");
+ assert.equal(relationLabel("me",p,r,"unknown"),"தந்தையின் சகோதரர் (வயது உறுதி இல்லை)");
+}
+{
+ const p=[person("gp","male","1950-01-01"),person("dad","male","1978-01-01"),person("aunt","female","1980-01-01"),person("me","male","2000-01-01"),person("om","male","1998-01-01"),person("ym","male","2002-01-01"),person("of","female","1997-01-01"),person("yf","female","2003-01-01"),person("uf","female")];
+ const r=[parentLink("gp","dad"),parentLink("gp","aunt"),parentLink("dad","me"),parentLink("aunt","om"),parentLink("aunt","ym"),parentLink("aunt","of"),parentLink("aunt","yf"),parentLink("aunt","uf")];
+ assert.equal(relationLabel("me",p,r,"om"),"அத்தான் (அத்தை மகன்)");
+ assert.equal(relationLabel("me",p,r,"ym"),"மச்சான் (அத்தை மகன்)");
+ assert.equal(relationLabel("me",p,r,"of"),"அண்ணி (அத்தை மகள்)");
+ assert.equal(relationLabel("me",p,r,"yf"),"மச்சினி (அத்தை மகள்)");
+ assert.equal(relationLabel("me",p,r,"uf"),"அத்தை மகள் (வயது உறுதி இல்லை)");
+}
+{
+ const p=[person("gp","male","1950-01-01"),person("dad","male","1980-01-01"),person("uncle","male","1975-01-01"),person("me","male","2000-01-01"),person("cousin","male","1998-01-01")];
+ const r=[parentLink("gp","dad"),parentLink("gp","uncle"),parentLink("dad","me"),parentLink("uncle","cousin")];
+ assert.equal(relationLabel("me",p,r,"cousin"),"அண்ணன் (பெரியப்பா மகன்)");
+}
+{
+ const p=[person("gm","female","1950-01-01"),person("mom","female","1980-01-01"),person("uncle","male","1978-01-01"),person("me","female","2000-01-01"),person("om","male","1998-01-01"),person("yf","female","2002-01-01")];
+ const r=[parentLink("gm","mom"),parentLink("gm","uncle"),parentLink("mom","me"),parentLink("uncle","om"),parentLink("uncle","yf")];
+ assert.equal(relationLabel("me",p,r,"om"),"அத்தான் (மாமா மகன்)");
+ assert.equal(relationLabel("me",p,r,"yf"),"மச்சினி (மாமா மகள்)");
+}
+{
+ const p=[person("me","male","2000-01-01"),person("wife","female","2001-01-01"),person("wp","male","1970-01-01"),person("wb","male","1998-01-01"),person("son","male","1997-01-01"),person("me2","female","2000-01-01"),person("husband","male","2001-01-01"),person("hp","female","1970-01-01"),person("hs","female","1998-01-01"),person("daughter","female","2002-01-01")];
+ const r=[spouseLink("me","wife"),parentLink("wp","wife"),parentLink("wp","wb"),parentLink("wb","son"),spouseLink("me2","husband"),parentLink("hp","husband"),parentLink("hp","hs"),parentLink("hs","daughter")];
+ assert.equal(relationLabel("me",p,r,"son"),"அத்தான் (மனைவியின் சகோதரர் மகன்)");
+ assert.equal(relationLabel("me2",p,r,"daughter"),"மச்சினி (கணவரின் சகோதரி மகள்)");
+}
+{
+ const p=[person("gp","male","1950-01-01"),person("dad","male","1975-01-01"),person("me","female","2000-01-01"),person("sis","female","1998-01-01"),person("husband","male","1997-01-01"),person("nephew","male","2020-01-01")];
+ const r=[parentLink("gp","dad"),parentLink("dad","me"),parentLink("dad","sis"),spouseLink("sis","husband"),parentLink("sis","nephew")];
+ assert.equal(relationLabel("me",p,r,"husband"),"சகலை");
+ assert.equal(relationLabel("me",p,r,"nephew"),"அக்கா மகன்");
+}
+console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
