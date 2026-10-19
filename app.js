@@ -1191,11 +1191,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     levelKeys.forEach(level => {
       rowYByLevel.set(level, nextRowY);
       const tallest = Math.max(70, ...grouped.get(level).map(person => cardHeights.get(person.id) || 80));
-      const outgoingCount = parentEdgesForLayout.filter(edge =>
+      const outgoingFamilies = new Set();
+      parentEdgesForLayout.filter(edge =>
         levelByPerson.get(edge.person_id) === level &&
         levelByPerson.get(edge.related_person_id) > level
-      ).length;
-      nextRowY += tallest + Math.max(132, outgoingCount * 10 + 42);
+      ).forEach(edge => {
+        outgoingFamilies.add(Array.from(parentsByChild.get(edge.related_person_id) || new Set()).sort().join("|"));
+      });
+      // Reserve a separate empty vertical lane for each family bus so unrelated
+      // connector lines do not overlap or run through the same visual row.
+      nextRowY += tallest + Math.max(168, outgoingFamilies.size * 26 + 44);
     });
 
     const layoutPartners = new Map(state.people.map(person => [person.id, new Set()]));
@@ -1492,7 +1497,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       familyChildGroups.get(key).childIds.push(childId);
     });
 
-    familyChildGroups.forEach(group => {
+    const orderedFamilyGroups = Array.from(familyChildGroups.values()).sort((a, b) => {
+      const centerFor = group => {
+        const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
+        return parents.length
+          ? parents.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parents.length
+          : 0;
+      };
+      return centerFor(a) - centerFor(b);
+    });
+    const nextLaneByRowPair = new Map();
+    orderedFamilyGroups.forEach(group => {
       const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
       const children = group.childIds.map(id => positions.get(id)).filter(Boolean)
         .sort((a, b) => (a.x + a.width / 2) - (b.x + b.width / 2));
@@ -1527,10 +1542,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const childCenters = children.map(child => child.x + child.width / 2);
       const busLeft = Math.min(trunkStartX, ...childCenters);
       const busRight = Math.max(trunkStartX, ...childCenters);
-      const busY = Math.min(
-        childTop - 18,
-        parentRowBottom + Math.max(24, (childTop - parentRowBottom) * 0.45)
-      );
+      const rowPairKey = parentRowY + "|" + childTop;
+      const laneIndex = nextLaneByRowPair.get(rowPairKey) || 0;
+      nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
+      const busY = Math.min(childTop - 18, parentRowBottom + 26 + laneIndex * 24);
 
       // One vertical trunk flows down from the partner link (or parent group),
       // meets a single horizontal child bus, then drops vertically to each child.
