@@ -843,227 +843,107 @@
   }
 
   function relationshipLabelsForCurrentUser() {
-    const labels = new Map();
-    const egoMember = state.members.find(member => member.user_id === state.user?.id && member.person_id);
-    if (!egoMember) return labels;
-    const egoId = egoMember.person_id;
-    const byId = new Map(state.people.map(person => [person.id, person]));
-    if (!byId.has(egoId)) return labels;
-
-    const parentsByChild = new Map();
-    const childrenByParent = new Map();
-    const spousesByPerson = new Map();
-    const add = (map, id, relatedId) => {
-      if (!map.has(id)) map.set(id, new Set());
-      map.get(id).add(relatedId);
-    };
-    state.relationships.forEach(edge => {
-      if (edge.relationship_type === "parent") {
-        add(parentsByChild, edge.related_person_id, edge.person_id);
-        add(childrenByParent, edge.person_id, edge.related_person_id);
-      } else if (edge.relationship_type === "spouse") {
-        add(spousesByPerson, edge.person_id, edge.related_person_id);
-        add(spousesByPerson, edge.related_person_id, edge.person_id);
-      }
+    const labels=new Map(),egoMember=state.members.find(member=>member.user_id===state.user?.id&&member.person_id);
+    if(!egoMember)return labels;
+    const egoId=egoMember.person_id,byId=new Map(state.people.map(person=>[person.id,person]));
+    if(!byId.has(egoId))return labels;
+    const parentsByChild=new Map(),childrenByParent=new Map(),spousesByPerson=new Map();
+    const add=(map,id,relatedId)=>{if(!map.has(id))map.set(id,new Set());map.get(id).add(relatedId);};
+    state.relationships.forEach(edge=>{
+      if(edge.relationship_type==="parent"){add(parentsByChild,edge.related_person_id,edge.person_id);add(childrenByParent,edge.person_id,edge.related_person_id);}
+      else if(edge.relationship_type==="spouse"){add(spousesByPerson,edge.person_id,edge.related_person_id);add(spousesByPerson,edge.related_person_id,edge.person_id);}
     });
-    const parentsOf = id => parentsByChild.get(id) || new Set();
-    const childrenOf = id => childrenByParent.get(id) || new Set();
-    const spousesOf = id => spousesByPerson.get(id) || new Set();
-    const toArray = values => Array.from(values || []);
-    const grandparentsOf = id => new Set(toArray(parentsOf(id)).flatMap(parentId => toArray(parentsOf(parentId))));
-    const lineageDistances = (startId, nextIds) => {
-      const distances = new Map([[startId, 0]]);
-      const pending = [startId];
-      for (let index = 0; index < pending.length; index++) {
-        const currentId = pending[index];
-        const nextDistance = distances.get(currentId) + 1;
-        toArray(nextIds(currentId)).forEach(relatedId => {
-          const existingDistance = distances.get(relatedId);
-          if (existingDistance === undefined || nextDistance < existingDistance) {
-            distances.set(relatedId, nextDistance);
-            pending.push(relatedId);
-          }
-        });
-      }
-      return distances;
-    };
-    const ancestorDistances = lineageDistances(egoId, parentsOf);
-
-    // A grandparent or great-grandparent's partner should receive the matching
-    // generation label even when a separate parent link was not recorded.
-    for (let round = 0; round < state.people.length; round++) {
-      let changed = false;
-      Array.from(ancestorDistances.entries()).forEach(([ancestorId, distance]) => {
-        if (distance < 2) return;
-        toArray(spousesOf(ancestorId)).forEach(spouseId => {
-          const existingDistance = ancestorDistances.get(spouseId);
-          if (existingDistance === undefined || distance < existingDistance) {
-            ancestorDistances.set(spouseId, distance);
-            changed = true;
-          }
-        });
-      });
-      if (!changed) break;
+    const parentsOf=id=>parentsByChild.get(id)||new Set(),childrenOf=id=>childrenByParent.get(id)||new Set(),spousesOf=id=>spousesByPerson.get(id)||new Set(),array=v=>Array.from(v||[]);
+    const distances=(startId,nextIds)=>{const map=new Map([[startId,0]]),pending=[startId];for(let i=0;i<pending.length;i++){const current=pending[i],nextDistance=map.get(current)+1;array(nextIds(current)).forEach(id=>{const old=map.get(id);if(old===undefined||nextDistance<old){map.set(id,nextDistance);pending.push(id);}});}return map;};
+    const ancestors=distances(egoId,parentsOf);
+    for(let round=0;round<state.people.length;round++){let changed=false;array(ancestors.entries()).forEach(([id,d])=>{if(d<2)return;array(spousesOf(id)).forEach(spouseId=>{const old=ancestors.get(spouseId);if(old===undefined||d<old){ancestors.set(spouseId,d);changed=true;}});});if(!changed)break;}
+    const bloodAncestors=distances(egoId,parentsOf),descendants=distances(egoId,childrenOf);
+    const siblingsOf=id=>new Set(array(parentsOf(id)).flatMap(pid=>array(childrenOf(pid))).filter(otherId=>otherId!==id));
+    const gender=p=>p?.gender||"",fullBirthDate=p=>typeof p?.birth_date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(p.birth_date);
+    const age=(p,anchor)=>!fullBirthDate(p)||!fullBirthDate(anchor)||p.birth_date===anchor.birth_date?"unknown":p.birth_date<anchor.birth_date?"older":"younger";
+    const siblingTamil=(p,anchor)=>{const order=age(p,anchor);if(gender(p)==="male")return order==="older"?"அண்ணன்":order==="younger"?"தம்பி":"சகோதரர் (வயது உறுதி இல்லை)";if(gender(p)==="female")return order==="older"?"அக்கா":order==="younger"?"தங்கை":"சகோதரி (வயது உறுதி இல்லை)";return "சகோதரர் / சகோதரி";};
+    const siblingEnglish=p=>gender(p)==="male"?"Brother":gender(p)==="female"?"Sister":"Sibling",gendered=(p,male,female,other)=>gender(p)==="male"?male:gender(p)==="female"?female:other;
+    const ordinal=n=>["","first","second","third","fourth","fifth","sixth","seventh","eighth","ninth","tenth"][n]||(n+(n%10===1&&n%100!==11?"st":n%10===2&&n%100!==12?"nd":n%10===3&&n%100!==13?"rd":"th"));
+    const ageNotSure="(வயது உறுதி இல்லை)",englishAgeNotSure="(Age not sure)";
+    const ego=byId.get(egoId),egoParents=array(parentsOf(egoId)),egoChildren=array(childrenOf(egoId)),egoSiblings=siblingsOf(egoId),egoSpouses=array(spousesOf(egoId));
+    function parentSiblingDetails(siblingId,parentId){
+      const sibling=byId.get(siblingId),parent=byId.get(parentId);if(!sibling||!parent)return null;
+      const order=age(sibling,parent),pg=gender(parent),sg=gender(sibling);
+      let english="Parent's sibling",tamil="பெற்றோரின் சகோதரர் / சகோதரி",parallel=false,cross=false,pathEnglish="parent's sibling",pathTamil="பெற்றோரின் சகோதரர் / சகோதரி";
+      if(pg==="male"&&sg==="male"){parallel=true;english=order==="older"?"Paternal uncle (older)":order==="younger"?"Paternal uncle (younger)":"Paternal uncle "+englishAgeNotSure;tamil=order==="older"?"பெரியப்பா":order==="younger"?"சித்தப்பா":"தந்தையின் சகோதரர் "+ageNotSure;pathEnglish=order==="older"?"father's elder brother":order==="younger"?"father's younger brother":"father's brother";pathTamil=tamil;}
+      else if(pg==="male"&&sg==="female"){cross=true;english="Paternal aunt";tamil="அத்தை";pathEnglish="father's sister";pathTamil="அத்தை";}
+      else if(pg==="female"&&sg==="female"){parallel=true;english=order==="older"?"Maternal aunt (older)":order==="younger"?"Maternal aunt (younger)":"Maternal aunt "+englishAgeNotSure;tamil=order==="older"?"பெரியம்மா":order==="younger"?"சித்தி":"தாயின் சகோதரி "+ageNotSure;pathEnglish=order==="older"?"mother's elder sister":order==="younger"?"mother's younger sister":"mother's sister";pathTamil=tamil;}
+      else if(pg==="female"&&sg==="male"){cross=true;english="Maternal uncle";tamil="மாமா";pathEnglish="mother's brother";pathTamil="மாமா";}
+      return {sibling,parent,age:order,parentGender:pg,siblingGender:sg,parallel,cross,english,tamil,pathEnglish,pathTamil};
     }
-
-    const descendantDistances = lineageDistances(egoId, childrenOf);
-    const siblingsOf = id => new Set(toArray(parentsOf(id)).flatMap(parentId => toArray(childrenOf(parentId))).filter(otherId => otherId !== id));
-    const gender = person => person?.gender || "";
-    const olderThan = (a, b) => Boolean(a?.birth_date && b?.birth_date && a.birth_date < b.birth_date);
-    const tamilSibling = (person, anchor) => {
-      if (!person?.birth_date || !anchor?.birth_date) {
-        return gender(person) === "male" ? "சகோதரர்" : gender(person) === "female" ? "சகோதரி" : "சகோதரர் / சகோதரி";
-      }
-      if (gender(person) === "male") return olderThan(person, anchor) ? "அண்ணன்" : "தம்பி";
-      if (gender(person) === "female") return olderThan(person, anchor) ? "அக்கா" : "தங்கை";
-      return "சகோதரர் / சகோதரி";
+    const parentSiblingConnections=[];
+    array(new Set(egoParents.flatMap(pid=>array(siblingsOf(pid))))).forEach(sid=>egoParents.forEach(pid=>{if(siblingsOf(pid).has(sid))parentSiblingConnections.push({siblingId:sid,parentId:pid,details:parentSiblingDetails(sid,pid)});}));
+    const parentSiblingFor=id=>parentSiblingConnections.find(x=>x.siblingId===id);
+    function parentSiblingSpouseDetails(id){
+      for(const c of parentSiblingConnections){
+        if(!spousesOf(c.siblingId).has(id))continue;
+        const sibling=c.details?.sibling,parent=c.details?.parent,sp=byId.get(id);if(!sibling||!parent||!sp)continue;
+        const order=c.details.age,pg=gender(parent),sg=gender(sibling),spg=gender(sp);
+        if(pg==="male"&&sg==="male"&&spg==="female")return {tamil:order==="older"?"பெரியம்மா":order==="younger"?"சித்தி":"தந்தையின் சகோதரரின் மனைவி "+ageNotSure,english:order==="older"?"Paternal uncle's wife (older branch)":order==="younger"?"Paternal uncle's wife (younger branch)":"Paternal uncle's wife "+englishAgeNotSure};
+        if(pg==="male"&&sg==="female"&&spg==="male")return {tamil:"மாமா",english:"Paternal aunt's husband"};
+        if(pg==="female"&&sg==="female"&&spg==="male")return {tamil:order==="older"?"பெரியப்பா":order==="younger"?"சித்தப்பா":"தாயின் சகோதரியின் கணவர் "+ageNotSure,english:order==="older"?"Maternal aunt's husband (older branch)":order==="younger"?"Maternal aunt's husband (younger branch)":"Maternal aunt's husband "+englishAgeNotSure};
+        if(pg==="female"&&sg==="male"&&spg==="female")return {tamil:"அத்தை",english:"Maternal uncle's wife"};
+      }return null;
     }
-    const englishSibling = person => gender(person) === "male" ? "Brother" : gender(person) === "female" ? "Sister" : "Sibling";
-    const gendered = (person, male, female, other) =>
-      gender(person) === "male" ? male : gender(person) === "female" ? female : other;
-
-    // Build reachability once, so disconnected or not-yet-linked entries are not
-    // incorrectly labelled as relatives.
-    const connected = new Set([egoId]);
-    const queue = [egoId];
-    for (let index = 0; index < queue.length; index++) {
-      const current = queue[index];
-      const nextIds = [
-        ...toArray(parentsOf(current)), ...toArray(childrenOf(current)), ...toArray(spousesOf(current))
-      ];
-      nextIds.forEach(id => {
-        if (!connected.has(id)) { connected.add(id); queue.push(id); }
-      });
+    function cousinBranchFor(id){for(const cp of array(parentsOf(id)))for(const ep of egoParents)if(siblingsOf(ep).has(cp)){const details=parentSiblingDetails(cp,ep);if(details)return {details};}return null;}
+    function cousinLabels(person,branch){
+      const d=branch.details,pathEn=d.pathEnglish+"'s "+gendered(person,"son","daughter","child"),pathTa=d.pathTamil+" "+gendered(person,"மகன்","மகள்","பிள்ளை"),order=age(person,ego);
+      let english="First cousin ("+pathEn+")",tamil=pathTa;if(d.age==="unknown")english+=" "+englishAgeNotSure;if(order==="unknown")english+=" "+englishAgeNotSure;
+      if(d.parallel){if(order==="older")tamil=(gender(person)==="male"?"அண்ணன்":gender(person)==="female"?"அக்கா":"சகோதரர் / சகோதரி")+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"தம்பி":gender(person)==="female"?"தங்கை":"சகோதரர் / சகோதரி")+" ("+pathTa+")";else tamil=(gender(person)==="male"?"சகோதரர்":gender(person)==="female"?"சகோதரி":"சகோதரர் / சகோதரி")+" ("+pathTa.replace(" "+ageNotSure,"")+"; வயது உறுதி இல்லை)";}
+      else if(d.cross){if(order==="older")tamil=(gender(person)==="male"?"அத்தான்":gender(person)==="female"?"அண்ணி":pathTa)+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"மச்சான்":gender(person)==="female"?"மச்சினி":pathTa)+" ("+pathTa+")";else tamil=pathTa.replace(" "+ageNotSure,"")+" "+ageNotSure;}
+      else tamil=pathTa+(order==="unknown"?" "+ageNotSure:"");return {english,tamil};
     }
-    const ego = byId.get(egoId);
-    const egoParents = toArray(parentsOf(egoId));
-    const egoChildren = toArray(childrenOf(egoId));
-    const egoSiblings = siblingsOf(egoId);
-    const egoGrandparents = new Set(Array.from(ancestorDistances.entries())
-      .filter(([, distance]) => distance === 2)
-      .map(([id]) => id));
-    const egoSpouses = toArray(spousesOf(egoId));
-
-    for (const person of state.people) {
-      const id = person.id;
-      let english = "";
-      let tamil = "";
-      if (id === egoId) {
-        english = "You"; tamil = "நீங்கள்";
-      } else if (spousesOf(egoId).has(id)) {
-        if (gender(ego) === "male" && gender(person) === "female") {
-          english = "Wife"; tamil = "மனைவி";
-        } else if (gender(ego) === "female" && gender(person) === "male") {
-          english = "Husband"; tamil = "கணவர்";
-        } else {
-          english = "Spouse / partner"; tamil = "துணைவர் / துணைவி";
+    const connected=new Set([egoId]),queue=[egoId];
+    for(let i=0;i<queue.length;i++){const cur=queue[i];[...array(parentsOf(cur)),...array(childrenOf(cur)),...array(spousesOf(cur))].forEach(id=>{if(!connected.has(id)){connected.add(id);queue.push(id);}});}
+    for(const person of state.people){
+      const id=person.id;let english="",tamil="";
+      if(id===egoId){english="You";tamil="நீங்கள்";}
+      else if(egoSpouses.includes(id)){if(gender(ego)==="male"&&gender(person)==="female"){english="Wife";tamil="மனைவி";}else if(gender(ego)==="female"&&gender(person)==="male"){english="Husband";tamil="கணவர்";}else{english="Spouse / partner";tamil="துணைவர் / துணைவி";}}
+      else if(egoParents.includes(id)){english=gendered(person,"Father","Mother","Parent");tamil=gender(person)==="male"?"தந்தை":gender(person)==="female"?"தாய்":"பெற்றோர்";}
+      else if(egoChildren.includes(id)){english=gendered(person,"Son","Daughter","Child");tamil=gender(person)==="male"?"மகன்":gender(person)==="female"?"மகள்":"பிள்ளை";}
+      else if(egoSiblings.has(id)){english=siblingEnglish(person);tamil=siblingTamil(person,ego);}
+      else if(ancestors.has(id)&&ancestors.get(id)===2){english=gendered(person,"Grandfather","Grandmother","Grandparent");tamil=gender(person)==="male"?"தாத்தா":gender(person)==="female"?"பாட்டி":"தாத்தா / பாட்டி";}
+      else if(ancestors.has(id)&&ancestors.get(id)>=3){const d=ancestors.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandfather",cap+"grandmother",cap+"grandparent");tamil=d===3?gendered(person,"கொள்ளுத்தாத்தா","கொள்ளுப்பாட்டி","கொள்ளு முன்னோர்"):gendered(person,"தாத்தா ("+d+" தலைமுறைகள் மேலே)","பாட்டி ("+d+" தலைமுறைகள் மேலே)","முன்னோர் ("+d+" தலைமுறைகள் மேலே)");}
+      else if(descendants.has(id)&&descendants.get(id)===2){english=gendered(person,"Grandson","Granddaughter","Grandchild");tamil=gender(person)==="male"?"பேரன்":gender(person)==="female"?"பேத்தி":"பேரக்குழந்தை";}
+      else if(descendants.has(id)&&descendants.get(id)>=3){const d=descendants.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandson",cap+"granddaughter",cap+"grandchild");tamil=d===3?gendered(person,"கொள்ளுப்பேரன்","கொள்ளுப்பேத்தி","கொள்ளுப் பேரக்குழந்தை"):gendered(person,"பேரன் ("+d+" தலைமுறைகள் கீழே)","பேத்தி ("+d+" தலைமுறைகள் கீழே)","பேரக்குழந்தை ("+d+" தலைமுறைகள் கீழே)");}
+      else{
+        const ps=parentSiblingFor(id);if(ps){english=ps.details.english;tamil=ps.details.tamil;}
+        if(!english){const pss=parentSiblingSpouseDetails(id);if(pss){english=pss.english;tamil=pss.tamil;}}
+        if(!english){
+          const sibParent=array(parentsOf(id)).find(pid=>egoSiblings.has(pid));
+          if(sibParent){const s=byId.get(sibParent),order=age(s,ego),path=gender(s)==="male"?(order==="older"?"older brother":order==="younger"?"younger brother":"brother"):gender(s)==="female"?(order==="older"?"older sister":order==="younger"?"younger sister":"sister"):"sibling";english=gendered(person,"Nephew","Niece","Nibling")+" ("+path+"'s "+gendered(person,"son","daughter","child")+(order==="unknown"?"; Age not sure":"")+")";tamil=(order==="unknown"?(gender(s)==="male"?"சகோதரர்":gender(s)==="female"?"சகோதரி":"சகோதரர் / சகோதரி"):siblingTamil(s,ego))+" "+gendered(person,"மகன்","மகள்","பிள்ளை")+(order==="unknown"?" "+ageNotSure:"");}
         }
-      } else if (egoParents.includes(id)) {
-        english = gendered(person, "Father", "Mother", "Parent");
-        tamil = gender(person) === "male" ? "தந்தை" : gender(person) === "female" ? "தாய்" : "பெற்றோர்";
-      } else if (egoChildren.includes(id)) {
-        english = gendered(person, "Son", "Daughter", "Child");
-        tamil = gender(person) === "male" ? "மகன்" : gender(person) === "female" ? "மகள்" : "பிள்ளை";
-      } else if (egoSiblings.has(id)) {
-        english = englishSibling(person);
-        tamil = tamilSibling(person, ego);
-      } else if (ancestorDistances.has(id) && ancestorDistances.get(id) === 2) {
-        english = gendered(person, "Grandfather", "Grandmother", "Grandparent");
-        tamil = gender(person) === "male" ? "தாத்தா" : gender(person) === "female" ? "பாட்டி" : "தாத்தா / பாட்டி";
-      } else if (ancestorDistances.has(id) && ancestorDistances.get(id) >= 3) {
-        const distance = ancestorDistances.get(id);
-        const prefix = "great-".repeat(distance - 2);
-        const capitalizedPrefix = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-        english = gendered(person, capitalizedPrefix + "grandfather", capitalizedPrefix + "grandmother", capitalizedPrefix + "grandparent");
-        tamil = distance === 3
-          ? gendered(person, "கொள்ளுத்தாத்தா", "கொள்ளுப்பாட்டி", "கொள்ளு முன்னோர்")
-          : gendered(
-              person,
-              "தாத்தா (" + distance + " தலைமுறைகள் மேலே)",
-              "பாட்டி (" + distance + " தலைமுறைகள் மேலே)",
-              "முன்னோர் (" + distance + " தலைமுறைகள் மேலே)"
-            );
-      } else if (descendantDistances.has(id) && descendantDistances.get(id) === 2) {
-        english = gendered(person, "Grandson", "Granddaughter", "Grandchild");
-        tamil = gender(person) === "male" ? "பேரன்" : gender(person) === "female" ? "பேத்தி" : "பேரக்குழந்தை";
-      } else if (descendantDistances.has(id) && descendantDistances.get(id) >= 3) {
-        const distance = descendantDistances.get(id);
-        const prefix = "great-".repeat(distance - 2);
-        const capitalizedPrefix = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-        english = gendered(person, capitalizedPrefix + "grandson", capitalizedPrefix + "granddaughter", capitalizedPrefix + "grandchild");
-        tamil = distance === 3
-          ? gendered(person, "கொள்ளுப்பேரன்", "கொள்ளுப்பேத்தி", "கொள்ளுப் பேரக்குழந்தை")
-          : gendered(
-              person,
-              "பேரன் (" + distance + " தலைமுறைகள் கீழே)",
-              "பேத்தி (" + distance + " தலைமுறைகள் கீழே)",
-              "பேரக்குழந்தை (" + distance + " தலைமுறைகள் கீழே)"
-            );
-      } else {
-        const parentSibling = egoParents.find(parentId => siblingsOf(parentId).has(id));
-        if (parentSibling) {
-          const parentPerson = byId.get(parentSibling);
-          if (gender(person) === "male") {
-            english = "Uncle";
-            if (gender(parentPerson) === "female") tamil = "மாமா";
-            else if (gender(parentPerson) === "male" && person.birth_date && parentPerson.birth_date)
-              tamil = olderThan(person, parentPerson) ? "பெரியப்பா" : "சித்தப்பா";
-            else tamil = "தந்தையின் சகோதரர்";
-          } else if (gender(person) === "female") {
-            english = "Aunt";
-            if (gender(parentPerson) === "male") tamil = "அத்தை";
-            else if (gender(parentPerson) === "female" && person.birth_date && parentPerson.birth_date)
-              tamil = olderThan(person, parentPerson) ? "பெரியம்மா" : "சித்தி";
-            else tamil = "தாயின் சகோதரி";
+        if(!english){const spouseParent=egoSpouses.some(sid=>parentsOf(sid).has(id)),childSpouse=egoChildren.some(cid=>spousesOf(cid).has(id));if(spouseParent){english=gendered(person,"Father-in-law","Mother-in-law","Parent-in-law");tamil=gender(person)==="male"?"மாமனார்":gender(person)==="female"?"மாமியார்":"மாமனார் / மாமியார்";}else if(childSpouse){english=gendered(person,"Son-in-law","Daughter-in-law","Child-in-law");tamil=gender(person)==="male"?"மருமகன்":gender(person)==="female"?"மருமகள்":"மருமகன் / மருமகள்";}}
+        if(!english){
+          const spId=egoSpouses.find(sid=>siblingsOf(sid).has(id));
+          if(spId){const sp=byId.get(spId),order=age(person,sp),rg=gender(person),kind=gender(sp)==="female"&&gender(ego)==="male"?"Wife":gender(sp)==="male"&&gender(ego)==="female"?"Husband":"Spouse",ageText=order==="older"?"elder ":order==="younger"?"younger ":"";english=kind+"'s "+ageText+(rg==="male"?"brother":rg==="female"?"sister":"sibling")+(order==="unknown"&&!(gender(sp)==="male"&&rg==="female")?" "+englishAgeNotSure:"");if(gender(sp)==="female"){if(rg==="male")tamil=order==="older"?"அத்தான்":order==="younger"?"மச்சான்":"மனைவியின் சகோதரர் "+ageNotSure;else if(rg==="female")tamil=order==="older"?"அண்ணி":order==="younger"?"கொழுந்தியாள்":"மனைவியின் சகோதரி "+ageNotSure;}else if(gender(sp)==="male"){if(rg==="male")tamil=order==="older"?"அத்தான்":order==="younger"?"கொழுந்தன்":"கணவரின் சகோதரர் "+ageNotSure;else if(rg==="female")tamil="அண்ணி";}if(!tamil)tamil="துணைவரின் சகோதரர் / சகோதரி";}
+        }
+        if(!english){const sibSpouse=array(egoSiblings).find(sid=>spousesOf(sid).has(id));if(sibSpouse){const s=byId.get(sibSpouse);if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil="சகலை";}else if(gender(s)==="male"&&gender(person)==="female"){english="Brother's wife";tamil="சகோதரரின் மனைவி";}else{english="Sibling's spouse";tamil="சகோதரர் / சகோதரியின் துணைவர்";}}}
+        if(!english){const stepParent=egoParents.some(parentId=>spousesOf(parentId).has(id));if(stepParent){english=gendered(person,"Stepfather","Stepmother","Step-parent");tamil=gender(person)==="male"?"மாற்றாந்தந்தை":gender(person)==="female"?"மாற்றாந்தாய்":"மாற்றாந்தாய் / மாற்றாந்தந்தை";}}
+        if(!english){
+          const sc=array(parentsOf(id)).map(pid=>({parentId:pid,spouseId:egoSpouses.find(sid=>siblingsOf(sid).has(pid))})).find(x=>x.spouseId);
+          if(sc){const sp=byId.get(sc.spouseId),order=age(person,ego),wifeBrotherSon=gender(sp)==="female"&&gender(ego)==="male"&&gender(person)==="male",husbandSisterDaughter=gender(sp)==="male"&&gender(ego)==="female"&&gender(person)==="female";
+            if(wifeBrotherSon){english="Wife's brother's son"+(order==="unknown"?" "+englishAgeNotSure:order==="older"?" (older than you)":" (younger than you)");tamil=order==="older"?"அத்தான் (மனைவியின் சகோதரர் மகன்)":order==="younger"?"மச்சான் (மனைவியின் சகோதரர் மகன்)":"மனைவியின் சகோதரர் மகன் "+ageNotSure;}
+            else if(husbandSisterDaughter){english="Husband's sister's daughter"+(order==="unknown"?" "+englishAgeNotSure:order==="older"?" (older than you)":" (younger than you)");tamil=order==="older"?"அண்ணி (கணவரின் சகோதரி மகள்)":order==="younger"?"மச்சினி (கணவரின் சகோதரி மகள்)":"கணவரின் சகோதரி மகள் "+ageNotSure;}
+            else{const kind=gender(sp)==="female"?"Wife":gender(sp)==="male"?"Husband":"Spouse",sibKind=gender(byId.get(sc.parentId))==="male"?"brother":"sister";english=kind+"'s "+sibKind+"'s "+gendered(person,"son","daughter","child")+(order==="unknown"?" "+englishAgeNotSure:"");tamil=(kind==="Wife"?"மனைவியின் ":"கணவரின் ")+(sibKind==="brother"?"சகோதரர்":"சகோதரி")+" "+gendered(person,"மகன்","மகள்","பிள்ளை")+(order==="unknown"?" "+ageNotSure:"");}
           }
         }
-
-        if (!english) {
-          const siblingParent = toArray(parentsOf(id)).find(parentId => egoSiblings.has(parentId));
-          if (siblingParent) {
-            const sibling = byId.get(siblingParent);
-            english = gendered(person, "Nephew", "Niece", "Nibling");
-            tamil = tamilSibling(sibling, ego) + (gender(person) === "male" ? " மகன்" : gender(person) === "female" ? " மகள்" : " பிள்ளை");
-          }
-        }
-
-        if (!english) {
-          const spouseParent = egoSpouses.some(spouseId => parentsOf(spouseId).has(id));
-          const childSpouse = egoChildren.some(childId => spousesOf(childId).has(id));
-          const spouseSibling = egoSpouses.some(spouseId => siblingsOf(spouseId).has(id));
-          const siblingSpouse = Array.from(egoSiblings).some(siblingId => spousesOf(siblingId).has(id));
-          const stepParent = egoParents.some(parentId => spousesOf(parentId).has(id));
-          if (spouseParent) {
-            english = gendered(person, "Father-in-law", "Mother-in-law", "Parent-in-law");
-            tamil = gender(person) === "male" ? "மாமனார்" : gender(person) === "female" ? "மாமியார்" : "மாமனார் / மாமியார்";
-          } else if (childSpouse) {
-            english = gendered(person, "Son-in-law", "Daughter-in-law", "Child-in-law");
-            tamil = gender(person) === "male" ? "மருமகன்" : gender(person) === "female" ? "மருமகள்" : "மருமகன் / மருமகள்";
-          } else if (spouseSibling || siblingSpouse) {
-            english = gendered(person, "Brother-in-law", "Sister-in-law", "Sibling-in-law");
-            tamil = gender(person) === "male" ? "மைத்துனர்" : gender(person) === "female" ? "மைத்துனி" : "மைத்துனர் / மைத்துனி";
-          } else if (stepParent) {
-            english = gendered(person, "Stepfather", "Stepmother", "Step-parent");
-            tamil = gender(person) === "male" ? "மாற்றாந்தந்தை" : gender(person) === "female" ? "மாற்றாந்தாய்" : "மாற்றாந்தாய் / மாற்றாந்தந்தை";
-          }
-        }
-
-        if (!english && connected.has(id)) {
-          const sharesGrandparent = Array.from(grandparentsOf(id)).some(grandparentId => egoGrandparents.has(grandparentId));
-          if (sharesGrandparent) {
-            english = "Cousin";
-            tamil = gender(person) === "male" ? "ஒன்றுவிட்ட சகோதரர்" : gender(person) === "female" ? "ஒன்றுவிட்ட சகோதரி" : "ஒன்றுவிட்ட உறவினர்";
-          } else {
-            english = "Relative";
-            tamil = "உறவினர்";
-          }
+        if(!english){const branch=cousinBranchFor(id);if(branch){const c=cousinLabels(person,branch);english=c.english;tamil=c.tamil;}}
+        if(!english&&connected.has(id)){
+          const otherAncestors=distances(id,parentsOf),common=array(bloodAncestors.entries()).filter(([aid])=>otherAncestors.has(aid)).map(([aid,egoD])=>({aid,egoD,otherD:otherAncestors.get(aid)})).filter(x=>x.egoD>=2&&x.otherD>=2).sort((a,b)=>Math.max(a.egoD,a.otherD)-Math.max(b.egoD,b.otherD)||(a.egoD+a.otherD)-(b.egoD+b.otherD));
+          if(common.length){const n=common[0],degree=Math.max(1,Math.min(n.egoD,n.otherD)-1),removed=Math.abs(n.egoD-n.otherD),degs=["","முதல்","இரண்டாம்","மூன்றாம்","நான்காம்","ஐந்தாம்","ஆறாம்","ஏழாம்","எட்டாம்","ஒன்பதாம்","பத்தாம்"];english=ordinal(degree)+" cousin"+(removed?(removed===1?" once removed":" "+removed+" times removed"):"");tamil=(degs[degree]||(degree+" ஆம்"))+" நிலை உறவினர்"+(removed?" ("+removed+" தலைமுறை வேறுபாடு)":"");}
+          else{english="Relative by marriage";tamil="திருமண உறவு";}
         }
       }
-      if (english) labels.set(id, state.language === "ta" ? tamil : english);
+      if(english)labels.set(id,state.language==="ta"?tamil:english);
     }
     return labels;
   }
-
   function renderPersonConnectOptions() {
     const select = $("#connect-person");
     if (!select) return;
