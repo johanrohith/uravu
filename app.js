@@ -65,14 +65,14 @@
   interfaceTranslations["Family members"] = "குடும்ப உறுப்பினர்கள்";
   interfaceTranslations["Delete tree"] = "மரத்தை நீக்கு";
   Object.assign(interfaceTranslations, {
-    "Deceased":"இறந்தவர்",
+    "Deceased":"நினைவில் வாழ்பவர்",
     "Connections":"இணைப்புகள்",
     "Select a family member":"குடும்ப உறுப்பினரைத் தேர்ந்தெடுக்கவும்",
     "Select relationship":"உறவைத் தேர்ந்தெடுக்கவும்",
     "Connect to someone":"ஒருவருடன் இணைக்கவும்",
     "Relationship to them":"அவருடனான உறவு",
     "Choose both a family member and relationship to add a connection.":"இணைப்பைச் சேர்க்க குடும்ப உறுப்பினரையும் உறவையும் தேர்ந்தெடுக்கவும்.",
-    "Enter the date of death when Deceased is checked.":"இறந்தவர் என்பதைத் தேர்ந்தெடுத்தால் இறந்த தேதியை உள்ளிடவும்.",
+    "Enter the date of death when Living in Memory is checked.":"இறந்தவர் என்பதைத் தேர்ந்தெடுத்தால் இறந்த தேதியை உள்ளிடவும்.",
     "No connections yet.":"இன்னும் இணைப்புகள் இல்லை.",
     "Remove connection: ":"இணைப்பை நீக்கு: ",
     "Parent":"பெற்றோர்",
@@ -88,7 +88,7 @@
     "Adding connection…":"இணைப்பு சேர்க்கப்படுகிறது…",
     "Use YYYY, YYYY-MM, YYYY-MM-DD, or MM-DD for dates.":"தேதிகளுக்கு YYYY, YYYY-MM, YYYY-MM-DD அல்லது MM-DD பயன்படுத்தவும்.",
     "Run supabase/partial-dates-migration.sql in Supabase before saving partial dates or a death with an unknown date.":"பகுதி தேதிகள் அல்லது தேதி தெரியாத இறப்பு நிலையைச் சேமிக்கும் முன் Supabase-ல் supabase/partial-dates-migration.sql-ஐ இயக்கவும்.",
-    "Deceased":"இறந்தவர்",
+    "Deceased":"நினைவில் வாழ்பவர்",
     "Died / status":"இறந்த தேதி / நிலை"
   });
 
