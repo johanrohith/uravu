@@ -36,13 +36,13 @@ function extractFunction(source, startMarker, endMarker) {
 const recordDetailSource = extractFunction(
   app,
   "function familyRecordDetailLines(person) {",
-  "\\n  function renderPeople"
+  "\n  function renderPeople"
 );
 const createRecordDetailLines = new Function(
   "state",
   "formatFamilyDate",
   "isPersonDeceased",
-  recordDetailSource + "\\nreturn familyRecordDetailLines;"
+  recordDetailSource + "\nreturn familyRecordDetailLines;"
 );
 const recordDetails = createRecordDetailLines(
   { language:"en" },
@@ -60,9 +60,9 @@ assert.ok(
 const renderCardSource = extractFunction(
   app,
   "function renderPersonCard(person, position, relationLabel) {",
-  "\\n  function renderMembers"
+  "\n  function renderMembers"
 );
-assert.match(renderCardSource, /familyRecordDetailLines\\(person\\)/);
+assert.match(renderCardSource, /familyRecordDetailLines\(person\)/);
 assert.doesNotMatch(renderCardSource, /detailLinesFor/);
 
 const generationMapSource = extractFunction(app, "function generationMap() {", "\n  function relationNames");
