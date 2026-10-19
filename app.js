@@ -907,7 +907,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     // labels and displayed lineage, without saving synthetic relationship rows.
     Array.from(childrenByParent.entries()).forEach(([parentId, childIds]) => {
       (spousesByPerson.get(parentId) || new Set()).forEach(spouseId => {
-        array(childIds).forEach(childId => {
+        Array.from(childIds).forEach(childId => {
           if (spouseId === childId) return;
           add(parentsByChild, childId, spouseId);
           add(childrenByParent, spouseId, childId);
@@ -1330,6 +1330,34 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const activePersonId = state.activeMembership?.person_id ||
       state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
     const activeFamilyKey = activePersonId ? parentFamilyByPerson.get(activePersonId) : null;
+
+    // Measure kinship distance from the linked member using the displayed family
+    // graph. When a spouse unit belongs to two sibling families, anchor it to the
+    // side that is closer to the active member, then use sibling count as a tie-break.
+    const relatednessAdjacency = new Map(state.people.map(person => [person.id, new Set()]));
+    const addRelatednessEdge = (a, b) => {
+      if (relatednessAdjacency.has(a) && relatednessAdjacency.has(b) && a !== b) {
+        relatednessAdjacency.get(a).add(b);
+        relatednessAdjacency.get(b).add(a);
+      }
+    };
+    parentEdgesForLayout.forEach(edge => addRelatednessEdge(edge.person_id, edge.related_person_id));
+    state.relationships.filter(edge => edge.relationship_type === "spouse")
+      .forEach(edge => addRelatednessEdge(edge.person_id, edge.related_person_id));
+    const relatednessDistance = new Map();
+    if (activePersonId && relatednessAdjacency.has(activePersonId)) {
+      const queue = [activePersonId];
+      relatednessDistance.set(activePersonId, 0);
+      for (let index = 0; index < queue.length; index++) {
+        const currentId = queue[index];
+        (relatednessAdjacency.get(currentId) || new Set()).forEach(relatedId => {
+          if (relatednessDistance.has(relatedId)) return;
+          relatednessDistance.set(relatedId, relatednessDistance.get(currentId) + 1);
+          queue.push(relatedId);
+        });
+      }
+    }
+
     const primaryFamilyByUnit = new Map();
     levelKeys.forEach(level => {
       const buckets = familyBucketsByLevel.get(level) || new Map();
@@ -1346,6 +1374,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           }, 0) / Math.max(1, unit.people.length);
           candidates.sort((a, b) => {
             const bucketA = buckets.get(a), bucketB = buckets.get(b);
+            const memberDistance = key => {
+              const distances = unit.people
+                .filter(person => parentFamilyByPerson.get(person.id) === key)
+                .map(person => relatednessDistance.get(person.id) ?? Infinity);
+              return distances.length ? Math.min(...distances) : Infinity;
+            };
+            const affinityDifference = memberDistance(a) - memberDistance(b);
+            if (Number.isFinite(affinityDifference) && affinityDifference !== 0) return affinityDifference;
+            if (memberDistance(a) !== memberDistance(b)) {
+              return memberDistance(a) === Infinity ? 1 : -1;
+            }
             const sizeDifference = (bucketB?.children.length || 0) - (bucketA?.children.length || 0);
             if (sizeDifference) return sizeDifference;
             const centerFor = bucket => {
