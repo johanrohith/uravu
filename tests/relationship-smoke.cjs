@@ -155,7 +155,7 @@ assert.match(html, /id="link-existing-form"/);
 assert.match(app, /function displayTreeName/);
 assert.match(app, /const selected = state\.people\.slice\(\)/);
 assert.match(app, /function highlightSearchMatch/);
-assert.match(app, /const siblingSetGap = 118/);
+assert.match(app, /const columnGap = 84/);
 assert.match(app, /is_self_record:!isManager\(\)/);
 assert.match(app, /நினைவில் வாழ்பவர்/);
 assert.match(app, /Living in Memory/);
