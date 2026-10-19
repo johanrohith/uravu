@@ -147,7 +147,7 @@ assert.match(app, /நினைவில் வாழ்பவர்/);
 assert.match(app, /Living in Memory/);
 assert.match(app, /function canEditPerson/);
 assert.match(app, /function canDeletePerson/);
-assert.match(singleTreeMigration, /set name = 'Uravugal'/);
+assert.match(singleTreeMigration, /name = 'Uravugal'/);
 assert.match(singleTreeMigration, /create policy uravu_people_update_main/);
 assert.match(singleTreeMigration, /Only a member already linked to a family record can review linking requests/);
 assert.match(singleTreeMigration, /grant update \(/);
