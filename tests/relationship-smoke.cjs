@@ -260,10 +260,10 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
 }
 
 {
- const people=[person("biological-dad","male","1975-01-01"),person("me","female","2000-01-01"),person("step-mom","female","1978-01-01")];
- const edges=[parent("biological-dad","me"),spouse("biological-dad","step-mom")];
- assert.equal(labelFor("me",people,edges,"step-mom"),"Stepmother");
- assert.equal(labelFor("me",people,edges,"step-mom","ta"),"மாற்றாந்தாய்");
+ const people=[testPerson("biological-dad","male","1975-01-01"),testPerson("me","female","2000-01-01"),testPerson("step-mom","female","1978-01-01")];
+ const edges=[parentLink("biological-dad","me"),spouseLink("biological-dad","step-mom")];
+ assert.equal(relationLabel("me",people,edges,"step-mom","en"),"Stepmother");
+ assert.equal(relationLabel("me",people,edges,"step-mom","ta"),"மாற்றாந்தாய்");
 }
 
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
