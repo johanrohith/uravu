@@ -134,7 +134,7 @@ assert.match(app, /Every connected spouse or co-parent group gets one adjacent b
 assert.ok(!app.includes("coupleGap + 2"));
 assert.match(app, /member.role === "member" && member.person_id/);
 assert.match(schema, /public.uravu_can_edit_tree/);
-assert.match(app, /if \(!person \|\| !isOwner\(\) \|\| !state\.activeTree\) return;/);
+assert.match(app, /if \(!person \|\| !isManager\(\) \|\| !state\.activeTree\) return;/);
 assert.match(app, /isOwner\(\) \? '<button class="danger-button" type="button" data-delete-person=/);
 assert.match(schema, /create policy uravu_people_delete_owner on public\.uravu_people\s+for delete to authenticated using \(public\.uravu_has_tree_role\(tree_id,array\['owner'\]\)\)/);
 assert.match(recordDeletionMigration, /create policy uravu_people_delete_owner on public\.uravu_people/);
@@ -175,7 +175,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app-v2\.js\?v=uravu-member-record-permissions-20261019-1/);
+assert.match(html, /app-v2\.js\?v=uravu-member-edit-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -194,7 +194,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app-v2\.js\?v=uravu-member-record-permissions-20261019-1/);
+assert.match(html, /app-v2\.js\?v=uravu-member-edit-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);

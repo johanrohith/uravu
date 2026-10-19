@@ -1747,7 +1747,7 @@
 
   function beginEditPerson(personId) {
     const person = state.people.find(item => item.id === personId);
-    if (!person || !isOwner() || !state.activeTree) return;
+    if (!person || !isManager() || !state.activeTree) return;
     state.editingPersonId = personId;
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
