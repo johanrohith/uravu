@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-relationships-20261019-1';
+        stylesheet.href = './styles.css?v=uravu-single-tree-20261019-1';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -57,7 +57,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app.js?v=uravu-relationships-20261019-1');
+        await loadScript('./app.js?v=uravu-single-tree-20261019-1');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
