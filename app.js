@@ -967,10 +967,10 @@
     function cousinBranchFor(id){for(const cp of array(parentsOf(id)))for(const ep of egoParents)if(siblingsOf(ep).has(cp)){const details=parentSiblingDetails(cp,ep);if(details)return {details};}return null;}
     function cousinLabels(person,branch){
       const d=branch.details,pathEn=d.pathEnglish+"'s "+gendered(person,"son","daughter","child"),pathTa=d.pathTamil+" "+gendered(person,"மகன்","மகள்","பிள்ளை"),order=age(person,ego);
-      let english="First cousin ("+pathEn+")",tamil=pathTa;if(d.age==="unknown")english+=" "+englishAgeNotSure;if(order==="unknown")english+=" "+englishAgeNotSure;
+      let english="First cousin ("+pathEn+")",tamil=pathTa;const ageUnknown=d.age==="unknown"||order==="unknown";if(ageUnknown)english+=" "+englishAgeNotSure;
       if(d.parallel){if(order==="older")tamil=(gender(person)==="male"?"அண்ணன்":gender(person)==="female"?"அக்கா":"சகோதரர் / சகோதரி")+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"தம்பி":gender(person)==="female"?"தங்கை":"சகோதரர் / சகோதரி")+" ("+pathTa+")";else tamil=(gender(person)==="male"?"சகோதரர்":gender(person)==="female"?"சகோதரி":"சகோதரர் / சகோதரி")+" ("+pathTa.replace(" "+ageNotSure,"")+"; வயது உறுதி இல்லை)";}
       else if(d.cross){if(order==="older")tamil=(gender(person)==="male"?"அத்தான்":gender(person)==="female"?"அண்ணி":pathTa)+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"மச்சான்":gender(person)==="female"?"மச்சினி":pathTa)+" ("+pathTa+")";else tamil=pathTa.replace(" "+ageNotSure,"")+" "+ageNotSure;}
-      else tamil=pathTa+(order==="unknown"?" "+ageNotSure:"");return {english,tamil};
+      else tamil=pathTa.replace(/ \\(வயது உறுதி இல்லை\\)/g,"")+(ageUnknown?" "+ageNotSure:"");return {english,tamil};
     }
     const connected=new Set([egoId]),queue=[egoId];
     for(let i=0;i<queue.length;i++){const cur=queue[i];[...array(parentsOf(cur)),...array(childrenOf(cur)),...array(spousesOf(cur))].forEach(id=>{if(!connected.has(id)){connected.add(id);queue.push(id);}});}
@@ -1065,15 +1065,12 @@
     if (!nodesRoot || !linesRoot || !viewport || !canvas || !empty) return;
 
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
-    const selected = state.people.filter(person => !search ||
-      [person.full_name, person.tamil_name, person.notes].filter(Boolean).join(" ").toLocaleLowerCase().includes(search));
+    const selected = state.people.slice();
 
-    if (!state.people.length || !selected.length) {
+    if (!state.people.length) {
       viewport.hidden = true;
       empty.hidden = false;
-      empty.innerHTML = !state.people.length
-        ? '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"))
-        : escapeHtml(t("noSearchResults"));
+      empty.innerHTML = '<strong>' + escapeHtml(t("noPeople")) + '</strong>' + escapeHtml(t("noPeopleSub"));
       nodesRoot.innerHTML = "";
       linesRoot.innerHTML = "";
       return;
@@ -1099,6 +1096,7 @@
     const nodeWidth = 236;
     const nodeHeight = 178;
     const columnGap = 44;
+    const siblingSetGap = 118;
     const coupleGap = 18;
     const rowHeight = 302;
     const levelUnits = new Map();
@@ -1153,7 +1151,8 @@
         const group = groupIds.map(id => visibleById.get(id)).filter(Boolean)
           .sort((a, b) => a.full_name.localeCompare(b.full_name));
         const width = group.length * nodeWidth + Math.max(0, group.length - 1) * coupleGap;
-        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name });
+        const familyKey = Array.from(new Set(group.flatMap(member => parentsByChild.get(member.id) || []))).sort().join("|") || "unparented:" + group.map(member => member.id).sort().join("|");
+        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name, familyKey });
       });
 
       // Use the centre of the parents' couple where possible. This keeps each
@@ -1197,7 +1196,8 @@
       levelUnits.set(level, units);
 
       let cursorX = 26;
-      units.forEach(unit => {
+      units.forEach((unit, unitIndex) => {
+        if (unitIndex && units[unitIndex - 1].familyKey !== unit.familyKey) cursorX += siblingSetGap;
         unit.people.forEach((person, index) => {
           positions.set(person.id, {
             x: cursorX + index * (nodeWidth + coupleGap),
@@ -1211,9 +1211,21 @@
     });
 
     const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
-      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
+      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap +
+      units.reduce((sum, unit, index) => sum + (index && units[index - 1].familyKey !== unit.familyKey ? siblingSetGap : 0), 0)
     ));
     const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 52);
+    const rowPositions = new Map();
+    positions.forEach((position, id) => {
+      if (!rowPositions.has(position.y)) rowPositions.set(position.y, []);
+      rowPositions.get(position.y).push([id, position]);
+    });
+    rowPositions.forEach(row => {
+      const left = Math.min(...row.map(([, position]) => position.x));
+      const right = Math.max(...row.map(([, position]) => position.x + position.width));
+      const shift = (baseWidth - (right - left)) / 2 - left;
+      row.forEach(([id, position]) => positions.set(id, { ...position, x:position.x + shift }));
+    });
     const baseHeight = Math.max(290, (maxLevel - minLevel) * rowHeight + nodeHeight + 54);
     state.treeBaseWidth = baseWidth;
     state.treeBaseHeight = baseHeight;
@@ -1264,8 +1276,17 @@
     const relationLabels = relationshipLabelsForCurrentUser();
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
+    if (search) {
+      const firstMatch = selected.find(person => [person.full_name, person.tamil_name]
+        .some(value => String(value || "").toLocaleLowerCase().includes(search)));
+      const matchPosition = firstMatch && positions.get(firstMatch.id);
+      if (matchPosition) requestAnimationFrame(() => {
+        viewport.scrollLeft = Math.max(0, (matchPosition.x + matchPosition.width / 2) * state.treeZoom - viewport.clientWidth / 2);
+        viewport.scrollTop = Math.max(0, (matchPosition.y + matchPosition.height / 2) * state.treeZoom - viewport.clientHeight / 2);
+      });
+    }
 
-    $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
+    $("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
     $$("[data-view-person]").forEach(card => {
@@ -1435,28 +1456,41 @@
   }
 
 
+  function highlightSearchMatch(value, query) {
+    const text = String(value || "");
+    if (!query) return escapeHtml(text);
+    const index = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+    if (index < 0) return escapeHtml(text);
+    return escapeHtml(text.slice(0, index)) + '<mark class="search-highlight">' +
+      escapeHtml(text.slice(index, index + query.length)) + '</mark>' + escapeHtml(text.slice(index + query.length));
+  }
+
   function renderPersonCard(person, position, relationLabel) {
     if (!position) return "";
-    const manager = isManager();
+    const canEdit = canEditPerson(person);
+    const canDelete = canDeletePerson(person);
+    const search = ($("#people-search").value || "").trim();
+    const searchMatch = Boolean(search && [person.full_name, person.tamil_name]
+      .some(value => String(value || "").toLocaleLowerCase().includes(search.toLocaleLowerCase())));
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = [];
     const birthValue = person.birth_date_text || person.birth_date;
     const deathValue = person.death_date_text || person.death_date;
     if (birthValue) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
     if (deathValue) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
-    else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "இறந்தவர்" : "Deceased");
-    const viewAttributes = manager ? "" :
+    else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
+    const viewAttributes = canEdit ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
-    return '<article class="family-node-card" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
+    return '<article class="family-node-card' + (searchMatch ? ' search-match' : '') + '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
       '<div class="person-card-top"><span class="person-avatar ' + genderClass + '">' + escapeHtml(initials(person.full_name)) +
-      '</span><div class="graph-person-names"><h4>' + escapeHtml(person.full_name) + '</h4>' +
-      (person.tamil_name ? '<div class="tamil-name">' + escapeHtml(person.tamil_name) + '</div>' : '') + '</div></div>' +
+      '</span><div class="graph-person-names"><h4>' + highlightSearchMatch(person.full_name, search) + '</h4>' +
+      (person.tamil_name ? '<div class="tamil-name">' + highlightSearchMatch(person.tamil_name, search) + '</div>' : '') + '</div></div>' +
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
-      (person.notes && manager ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
-      (manager ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
-      '</button>' + (isOwner() ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
+      (person.notes && canEdit ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
+      (canEdit ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
+      '</button>' + (canDelete ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
       '</article>';
   }
 
