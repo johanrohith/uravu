@@ -546,8 +546,9 @@ for update to authenticated using (public.uravu_can_edit_tree(tree_id))
 with check (public.uravu_can_edit_tree(tree_id));
 drop policy if exists uravu_people_delete_admin on public.uravu_people;
 drop policy if exists uravu_people_delete_editor on public.uravu_people;
-create policy uravu_people_delete_editor on public.uravu_people
-for delete to authenticated using (public.uravu_can_edit_tree(tree_id));
+drop policy if exists uravu_people_delete_owner on public.uravu_people;
+create policy uravu_people_delete_owner on public.uravu_people
+for delete to authenticated using (public.uravu_has_tree_role(tree_id,array['owner']));
 
 drop policy if exists uravu_relationships_select_members on public.uravu_relationships;
 create policy uravu_relationships_select_members on public.uravu_relationships
