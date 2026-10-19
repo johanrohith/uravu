@@ -24,6 +24,7 @@
     treeZoom: 1,
     treeBaseWidth: 0,
     treeBaseHeight: 0,
+    treeExpandedPartnerFamilies: new Set(),
     openPanels: new Set()
   };
 
@@ -1180,6 +1181,108 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
     const selected = state.people.slice();
+    if (!(state.treeExpandedPartnerFamilies instanceof Set)) state.treeExpandedPartnerFamilies = new Set();
+
+    // Build temporary relationship indexes. These are display-only; saved rows are unchanged.
+    const allPeopleById = new Map(selected.map(person => [person.id, person]));
+    const rawParentsByChild = new Map(selected.map(person => [person.id, new Set()]));
+    const rawChildrenByParent = new Map(selected.map(person => [person.id, new Set()]));
+    const rawSpouses = new Map(selected.map(person => [person.id, new Set()]));
+    state.relationships.forEach(edge => {
+      if (edge.relationship_type === "parent") {
+        if (!rawParentsByChild.has(edge.related_person_id) || !rawChildrenByParent.has(edge.person_id)) return;
+        rawParentsByChild.get(edge.related_person_id).add(edge.person_id);
+        rawChildrenByParent.get(edge.person_id).add(edge.related_person_id);
+      } else if (edge.relationship_type === "spouse") {
+        if (!rawSpouses.has(edge.person_id) || !rawSpouses.has(edge.related_person_id)) return;
+        rawSpouses.get(edge.person_id).add(edge.related_person_id);
+        rawSpouses.get(edge.related_person_id).add(edge.person_id);
+      }
+    });
+
+    const activePersonIdForTree = state.activeMembership?.person_id ||
+      state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
+    const treeLineageIds = new Set();
+    if (activePersonIdForTree && allPeopleById.has(activePersonIdForTree)) {
+      // Define the central family tree as the active person's bloodline:
+      // walk upward through parents first, then downward through those ancestors'
+      // descendants. Never walk sideways through a spouse link. That keeps an
+      // aunt/uncle's in-law out of the birth-family branch unless their own
+      // recorded parent-child path independently places them in the lineage.
+      const ancestorQueue = [activePersonIdForTree];
+      const directAncestorIds = new Set([activePersonIdForTree]);
+      for (let index = 0; index < ancestorQueue.length; index++) {
+        const currentId = ancestorQueue[index];
+        (rawParentsByChild.get(currentId) || new Set()).forEach(parentId => {
+          if (directAncestorIds.has(parentId)) return;
+          directAncestorIds.add(parentId);
+          ancestorQueue.push(parentId);
+        });
+      }
+      const descendantQueue = Array.from(directAncestorIds);
+      directAncestorIds.forEach(id => treeLineageIds.add(id));
+      for (let index = 0; index < descendantQueue.length; index++) {
+        const currentId = descendantQueue[index];
+        (rawChildrenByParent.get(currentId) || new Set()).forEach(childId => {
+          if (treeLineageIds.has(childId)) return;
+          treeLineageIds.add(childId);
+          descendantQueue.push(childId);
+        });
+      }
+    }
+
+    const partnerFamilyToggleByPerson = new Map();
+    const hiddenPartnerFamilyIds = new Set();
+    const markExternalAncestors = (personId, seen = new Set()) => {
+      if (seen.has(personId)) return;
+      seen.add(personId);
+      (rawParentsByChild.get(personId) || new Set()).forEach(parentId => {
+        hiddenPartnerFamilyIds.add(parentId);
+        markExternalAncestors(parentId, seen);
+      });
+    };
+    const markExternalSiblingTree = (personId, externalPartnerId, seen = new Set()) => {
+      if (seen.has(personId) || personId === externalPartnerId) return;
+      seen.add(personId);
+      hiddenPartnerFamilyIds.add(personId);
+      markExternalAncestors(personId);
+      (rawSpouses.get(personId) || new Set()).forEach(spouseId => {
+        if (spouseId === externalPartnerId) return;
+        hiddenPartnerFamilyIds.add(spouseId);
+        markExternalAncestors(spouseId);
+        (rawChildrenByParent.get(spouseId) || new Set()).forEach(childId =>
+          markExternalSiblingTree(childId, externalPartnerId, seen));
+      });
+      (rawChildrenByParent.get(personId) || new Set()).forEach(childId =>
+        markExternalSiblingTree(childId, externalPartnerId, seen));
+    };
+
+    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
+      const firstIsLineage = treeLineageIds.has(edge.person_id);
+      const secondIsLineage = treeLineageIds.has(edge.related_person_id);
+      if (firstIsLineage === secondIsLineage) return;
+      const externalPartnerId = firstIsLineage ? edge.related_person_id : edge.person_id;
+      const lineagePartnerId = firstIsLineage ? edge.person_id : edge.related_person_id;
+      if (!(rawParentsByChild.get(externalPartnerId)?.size)) return;
+      const expanded = state.treeExpandedPartnerFamilies.has(externalPartnerId);
+      partnerFamilyToggleByPerson.set(externalPartnerId, { expanded, spouseId:lineagePartnerId });
+      if (expanded) return;
+
+      // Keep the in-law's card beside the family member they married, but collapse
+      // the in-law's own parents, ancestors, and sibling branches by default.
+      markExternalAncestors(externalPartnerId);
+      const siblingIds = new Set();
+      (rawParentsByChild.get(externalPartnerId) || new Set()).forEach(parentId => {
+        (rawChildrenByParent.get(parentId) || new Set()).forEach(childId => {
+          if (childId !== externalPartnerId) siblingIds.add(childId);
+        });
+      });
+      siblingIds.forEach(siblingId => markExternalSiblingTree(siblingId, externalPartnerId));
+    });
+
+    treeLineageIds.forEach(id => hiddenPartnerFamilyIds.delete(id));
+    partnerFamilyToggleByPerson.forEach((toggle, id) => hiddenPartnerFamilyIds.delete(id));
+    const visibleSelected = selected.filter(person => !hiddenPartnerFamilyIds.has(person.id));
 
     if (!state.people.length) {
       viewport.hidden = true;
@@ -1195,7 +1298,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     // Lay out all visible entries into generation rows, treating married/partner
     // people as a single unit before ordering each row.
-    const selectedIds = new Set(selected.map(person => person.id));
+    const selectedIds = new Set(visibleSelected.map(person => person.id));
     const levels = generationMap();
     const grouped = new Map();
     levels.forEach((people, level) => {
@@ -1227,12 +1330,13 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const notesHeight = person.notes && canEditPerson(person)
         ? countLines(person.notes, 40) * 14 + 2 : 0;
       const actionsHeight = state.editMode && canEditPerson(person) ? 32 : 0;
+      const partnerToggleHeight = partnerFamilyToggleByPerson.has(person.id) ? 36 : 0;
       const blocks = 1 + (label ? 1 : 0) + familyRecordDetailLines(person).length +
-        (notesHeight ? 1 : 0) + (actionsHeight ? 1 : 0);
+        (notesHeight ? 1 : 0) + (actionsHeight ? 1 : 0) + (partnerToggleHeight ? 1 : 0);
       return Math.max(82, 24 + nameHeight + labelHeight + detailHeight +
-        notesHeight + actionsHeight + Math.max(0, blocks - 1) * 5 + 8);
+        notesHeight + actionsHeight + partnerToggleHeight + Math.max(0, blocks - 1) * 5 + 8);
     };
-    const cardHeights = new Map(selected.map(person => [person.id, cardHeightFor(person)]));
+    const cardHeights = new Map(visibleSelected.map(person => [person.id, cardHeightFor(person)]));
     const levelByPerson = new Map();
     grouped.forEach((people, level) => people.forEach(person => levelByPerson.set(person.id, level)));
     // A recorded parent's spouse is also treated as a co-parent in the displayed tree.
@@ -1267,6 +1371,76 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, new Set());
       parentsByChild.get(edge.related_person_id).add(edge.person_id);
     });
+
+    // Stable root-family colors make parent/child branches visually distinct.
+    // The key is the topmost recorded ancestor couple, not a person's screen row.
+    const rootFamilyMembers = new Map();
+    const rootFamiliesCache = new Map();
+    const topRootFamilyKeyForPerson = personId => {
+      const members = [personId];
+      (rawSpouses.get(personId) || new Set()).forEach(spouseId => {
+        if (!(rawParentsByChild.get(spouseId)?.size)) members.push(spouseId);
+      });
+      const uniqueMembers = Array.from(new Set(members)).sort();
+      const key = "root:" + uniqueMembers.join("|");
+      rootFamilyMembers.set(key, uniqueMembers);
+      return key;
+    };
+    const rootFamiliesForPerson = (personId, visiting = new Set()) => {
+      if (rootFamiliesCache.has(personId)) return rootFamiliesCache.get(personId);
+      if (visiting.has(personId)) return [topRootFamilyKeyForPerson(personId)];
+      const parentIds = rawParentsByChild.get(personId) || new Set();
+      if (!parentIds.size) {
+        const roots = [topRootFamilyKeyForPerson(personId)];
+        rootFamiliesCache.set(personId, roots);
+        return roots;
+      }
+      const nextVisiting = new Set(visiting);
+      nextVisiting.add(personId);
+      const roots = Array.from(new Set(Array.from(parentIds).flatMap(parentId =>
+        rootFamiliesForPerson(parentId, nextVisiting)))).sort();
+      rootFamiliesCache.set(personId, roots);
+      return roots;
+    };
+    const legendPersonIds = new Set(treeLineageIds);
+    partnerFamilyToggleByPerson.forEach((toggle, personId) => {
+      if (toggle.expanded) legendPersonIds.add(personId);
+    });
+    legendPersonIds.forEach(personId => rootFamiliesForPerson(personId));
+    const rootFamilyLabel = key => (rootFamilyMembers.get(key) || [])
+      .map(id => allPeopleById.get(id)?.full_name)
+      .filter(Boolean).join(" + ");
+    const orderedRootFamilyKeys = Array.from(rootFamilyMembers.keys()).sort((a, b) =>
+      rootFamilyLabel(a).localeCompare(rootFamilyLabel(b)) || a.localeCompare(b));
+    const rootFamilyColorByKey = new Map(orderedRootFamilyKeys.map((key, index) => [
+      key, "hsl(" + ((index * 137.508) % 360).toFixed(1) + " 48% 34%)"
+    ]));
+    const branchColorForKey = key => {
+      if (rootFamilyColorByKey.has(key)) return rootFamilyColorByKey.get(key);
+      let hash = 2166136261;
+      for (let index = 0; index < key.length; index++) {
+        hash ^= key.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return "hsl(" + ((hash >>> 0) % 360) + " 48% 34%)";
+    };
+    const familyColorForParentIds = parentIds => {
+      const inTreeParents = parentIds.filter(id => treeLineageIds.has(id));
+      const colorParents = inTreeParents.length ? inTreeParents : parentIds;
+      const rootKeys = Array.from(new Set(colorParents.flatMap(id => rootFamiliesForPerson(id)))).sort();
+      if (!rootKeys.length) return branchColorForKey("family:" + parentIds.slice().sort().join("|"));
+      if (rootKeys.length === 1) return branchColorForKey(rootKeys[0]);
+      return branchColorForKey("joined-family:" + rootKeys.join("|"));
+    };
+    const branchLegend = $("#family-branch-legend");
+    if (branchLegend) {
+      branchLegend.innerHTML = orderedRootFamilyKeys.map(key =>
+        '<span class="family-branch-legend-item" title="' + escapeHtml(rootFamilyLabel(key)) + '">' +
+        '<span class="family-branch-legend-swatch" style="background-color:' + branchColorForKey(key) + '"></span>' +
+        '<span>' + escapeHtml(rootFamilyLabel(key) || (state.language === "ta" ? "குடும்பக் கிளை" : "Family branch")) + '</span></span>'
+      ).join("");
+      branchLegend.hidden = orderedRootFamilyKeys.length < 2;
+    }
     const rowYByLevel = new Map();
     let nextRowY = 24;
     levelKeys.forEach(level => {
@@ -1447,6 +1621,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       (levelUnits.get(level) || []).forEach(unit => {
         const candidates = Array.from(new Set(unit.people.map(person => parentFamilyByPerson.get(person.id)).filter(Boolean)));
         if (!candidates.length) return;
+        const expandedInLaw = unit.people.find(person => {
+          const toggle = partnerFamilyToggleByPerson.get(person.id);
+          return toggle?.expanded && unit.people.some(candidate => candidate.id === toggle.spouseId);
+        });
+        const expandedFamilyKey = expandedInLaw && parentFamilyByPerson.get(expandedInLaw.id);
+        if (expandedFamilyKey && candidates.includes(expandedFamilyKey)) {
+          // When opened, place the spouse unit in the in-law's birth-family block.
+          // This keeps the in-law's own parents/siblings distinct from the spouse's.
+          primaryFamilyByUnit.set(unit, expandedFamilyKey);
+          return;
+        }
         const chosenKey = choosePrimaryFamilyKey(
           unit, candidates, activePersonId, parentFamilyByPerson,
           relatednessDistance, buckets, positions
@@ -1601,6 +1786,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const children = group.childIds.map(id => positions.get(id)).filter(Boolean)
         .sort((a, b) => (a.x + a.width / 2) - (b.x + b.width / 2));
       if (!parents.length || !children.length) return;
+      const familyColor = familyColorForParentIds(group.parentIds);
       if (!parents.every(parent => parent.y === parents[0].y) ||
           !children.every(child => child.y === children[0].y)) return;
 
@@ -1638,24 +1824,26 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
       // One vertical trunk flows down from the partner link (or parent group),
       // meets a single horizontal child bus, then drops vertically to each child.
-      paths.push('<path class="family-line family-parent-stem" d="M ' +
+      paths.push('<path class="family-line family-parent-stem" style="stroke:' + familyColor + '" d="M ' +
         trunkStartX + ' ' + trunkStartY + ' V ' + busY + '"/>');
       if (busRight - busLeft > 1) {
-        paths.push('<path class="family-line family-child-bus" d="M ' +
+        paths.push('<path class="family-line family-child-bus" style="stroke:' + familyColor + '" d="M ' +
           busLeft + ' ' + busY + ' H ' + busRight + '"/>');
       }
       children.forEach(child => {
         const childCenterX = child.x + child.width / 2;
-        paths.push('<path class="family-line family-child-drop" d="M ' +
+        paths.push('<path class="family-line family-child-drop" style="stroke:' + familyColor + '" d="M ' +
           childCenterX + ' ' + busY + ' V ' + child.y + '"/>');
       });
     });
 
     linesRoot.innerHTML = paths.join("");
-    nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
+    nodesRoot.innerHTML = visibleSelected.map(person => renderPersonCard(
+      person, positions.get(person.id), relationLabels.get(person.id), partnerFamilyToggleByPerson.get(person.id)
+    )).join("");
     applyTreeCanvasScale(false);
     if (search) {
-      const firstMatch = selected.find(person => [person.full_name, person.tamil_name]
+      const firstMatch = visibleSelected.find(person => [person.full_name, person.tamil_name]
         .some(value => String(value || "").toLocaleLowerCase().includes(search)));
       const matchPosition = firstMatch && positions.get(firstMatch.id);
       if (matchPosition) requestAnimationFrame(() => {
@@ -1666,6 +1854,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     $$("[data-edit-person]").forEach(button => button.addEventListener("click", () => beginEditPerson(button.dataset.editPerson)));
     $$("[data-delete-person]").forEach(button => button.addEventListener("click", () => deletePerson(button.dataset.deletePerson)));
+    $$("[data-toggle-partner-family]").forEach(button => button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const personId = button.dataset.togglePartnerFamily;
+      if (!personId) return;
+      if (!(state.treeExpandedPartnerFamilies instanceof Set)) state.treeExpandedPartnerFamilies = new Set();
+      if (state.treeExpandedPartnerFamilies.has(personId)) state.treeExpandedPartnerFamilies.delete(personId);
+      else state.treeExpandedPartnerFamilies.add(personId);
+      renderPeople();
+    }));
     $$("[data-remove-relationship]").forEach(button => button.addEventListener("click", () => deleteRelationship(button.dataset.removeRelationship)));
     $$("[data-view-person]").forEach(card => {
       card.addEventListener("click", () => openPersonDetails(card.dataset.viewPerson));
@@ -1843,7 +2041,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       escapeHtml(text.slice(index, index + query.length)) + '</mark>' + escapeHtml(text.slice(index + query.length));
   }
 
-  function renderPersonCard(person, position, relationLabel) {
+  function renderPersonCard(person, position, relationLabel, partnerFamilyToggle) {
     if (!position) return "";
     const canEdit = canEditPerson(person);
     const canDelete = canDeletePerson(person);
@@ -1853,7 +2051,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       .some(value => String(value || "").toLocaleLowerCase().includes(search.toLocaleLowerCase())));
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
     const details = familyRecordDetailLines(person);
-    const viewAttributes = showActions ? "" :
+    const viewAttributes = (showActions || partnerFamilyToggle) ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
     return '<article class="family-node-card' + (searchMatch ? ' search-match' : '') + '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;min-height:' + position.height + 'px"' + viewAttributes + '>' +
@@ -1863,6 +2061,12 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? details.map(detail => '<div class="person-meta record-meta">' + escapeHtml(detail) + '</div>').join("") : '') +
       (person.notes && canEdit ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
+      (partnerFamilyToggle ? '<div class="partner-family-toggle-wrap"><button class="partner-family-toggle" type="button" data-toggle-partner-family="' +
+        escapeHtml(person.id) + '" aria-expanded="' + String(partnerFamilyToggle.expanded) + '">' +
+        escapeHtml(partnerFamilyToggle.expanded
+          ? (state.language === "ta" ? "உறவினர் குடும்பத்தைச் சுருக்கு" : "Hide parents & siblings")
+          : (state.language === "ta" ? "உறவினர் குடும்பத்தை விரி" : "Show parents & siblings")) +
+        '</button></div>' : '') +
       (showActions ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button>' + (canDelete ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
       '</article>';

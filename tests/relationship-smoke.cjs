@@ -177,7 +177,7 @@ assert.ok(
 );
 const renderCardSource = extractFunction(
   app,
-  "function renderPersonCard(person, position, relationLabel) {",
+  "function renderPersonCard(person, position, relationLabel, partnerFamilyToggle) {",
   "\n  function renderMembers"
 );
 assert.match(renderCardSource, /familyRecordDetailLines\(person\)/);
@@ -575,5 +575,24 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal((en.match(/Age not sure/g)||[]).length,1);
  assert.equal((ta.match(/வயது உறுதி இல்லை/g)||[]).length,1);
 }
+
+
+
+assert.match(app, /const directAncestorIds = new Set\(\[activePersonIdForTree\]\)/);
+assert.match(app, /const descendantQueue = Array\.from\(directAncestorIds\)/);
+assert.match(app, /const legendPersonIds = new Set\(treeLineageIds\)/);
+assert.ok(app.includes('$$("[data-delete-person]").forEach'));
+assert.ok(app.includes('$$("[data-toggle-partner-family]").forEach'));
+assert.ok(app.includes('$$("[data-remove-relationship]").forEach'));
+
+assert.match(html, /id="family-branch-legend"/);
+assert.match(app, /treeExpandedPartnerFamilies/);
+assert.match(app, /partnerFamilyToggleByPerson/);
+assert.match(app, /data-toggle-partner-family/);
+assert.match(app, /familyColorForParentIds/);
+assert.match(app, /rootFamilyColorByKey/);
+assert.match(app, /expandedFamilyKey/);
+assert.match(styles, /\.family-branch-legend/);
+assert.match(styles, /\.partner-family-toggle/);
 
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
