@@ -549,8 +549,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (button) button.disabled = isManager() || Boolean(pending);
   }
   function togglePanel(panelId) {
-    if (state.openPanels.has(panelId)) state.openPanels.delete(panelId);
-    else {
+    if (state.openPanels.has(panelId)) {
+      state.openPanels.delete(panelId);
+    } else {
+      state.openPanels.clear();
       state.openPanels.add(panelId);
       if (panelId === "add-person-panel") {
         if (isManager()) clearPersonForm();
