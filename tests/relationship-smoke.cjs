@@ -64,6 +64,28 @@ const sortUnitPeopleByParentCenter = new Function(
   );
 }
 
+const familyBlockTargetCenterSource = extractFunction(
+  app,
+  "function familyBlockTargetCenter(units, parentPositions) {",
+  "\n  function renderPeople"
+);
+const familyBlockTargetCenter = new Function(
+  familyBlockTargetCenterSource + "\nreturn familyBlockTargetCenter;"
+)();
+{
+  const spouseUnit = { width:560, parentCenter:490 };
+  assert.equal(
+    familyBlockTargetCenter([spouseUnit], [{ x:80, width:270 }]),
+    490,
+    "A spouse unit should be centered between both partners' ancestral branches, not only under its primary family bucket"
+  );
+  assert.equal(
+    familyBlockTargetCenter([{ width:270, parentCenter:null }], [{ x:100, width:270 }, { x:500, width:270 }]),
+    435,
+    "Unaligned blocks should retain the average of their parent records as a fallback"
+  );
+}
+
 const recordDetailSource = extractFunction(
   app,
   "function familyRecordDetailLines(person) {",
