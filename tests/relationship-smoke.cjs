@@ -124,7 +124,7 @@ assert.match(app, /const layoutPartners = new Map/);
 assert.doesNotMatch(app, /addLayoutPartner\(parentId, otherId\)/);
 assert.match(app, /const showActions = state\.editMode && canEdit/);
 assert.match(app, /state\.openPanels\.add\("add-person-panel"\)/);
-assert.match(app, /laneY = startY \+ 14 \+ index \* 10/);
+assert.ok(app.includes("const siblingBusGroups = new Map()"), "Each sibling set should have a shared connector bus");
 assert.match(html, /id="toggle-edit-mode"/);
 assert.match(styles, /\.edit-mode-button\.is-on/);
 assert.match(styles, /\.edit-mode-button\.is-off/);
