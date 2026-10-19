@@ -266,4 +266,61 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(relationLabel("me",people,edges,"step-mom","ta"),"மாற்றாந்தாய்");
 }
 
+
+{
+ // Siblings of the paternal grandfather: age is compared with the grandfather.
+ const people=[
+  person("great-grandpa","male","1920-01-01"),
+  person("grandpa","male","1950-01-01"),
+  person("older-brother","male","1948-01-01"),
+  person("younger-brother","male","1952-01-01"),
+  person("unknown-brother","male"),
+  person("older-sister","female","1945-01-01"),
+  person("younger-sister","female","1955-01-01"),
+  person("unknown-sister","female"),
+  person("dad","male","1980-01-01"),
+  person("me","female","2005-01-01")
+ ];
+ const relationships=[
+  parentLink("great-grandpa","grandpa"),parentLink("great-grandpa","older-brother"),
+  parentLink("great-grandpa","younger-brother"),parentLink("great-grandpa","unknown-brother"),
+  parentLink("great-grandpa","older-sister"),parentLink("great-grandpa","younger-sister"),
+  parentLink("great-grandpa","unknown-sister"),parentLink("grandpa","dad"),parentLink("dad","me")
+ ];
+ assert.equal(relationLabel("me",people,relationships,"older-brother","en"),"Older Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"younger-brother","en"),"Younger Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"unknown-brother","en"),"Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"older-sister","en"),"Older Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"younger-sister","en"),"Younger Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"unknown-sister","en"),"Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"older-brother","ta"),"பெரிய தாத்தா");
+ assert.equal(relationLabel("me",people,relationships,"younger-brother","ta"),"சின்ன தாத்தா");
+ assert.equal(relationLabel("me",people,relationships,"unknown-brother","ta"),"தாத்தா");
+ assert.equal(relationLabel("me",people,relationships,"older-sister","ta"),"பெரிய பாட்டி");
+ assert.equal(relationLabel("me",people,relationships,"younger-sister","ta"),"சின்ன பாட்டி");
+ assert.equal(relationLabel("me",people,relationships,"unknown-sister","ta"),"பாட்டி");
+}
+
+
+{
+ // A brother's wife uses அண்ணி / கொழுந்தியாள்; a wife's sister's husband is சகலை.
+ const people=[
+  person("grandpa","male","1950-01-01"),person("dad","male","1975-01-01"),
+  person("me","female","2000-01-01"),person("older-brother","male","1997-01-01"),
+  person("younger-brother","male","2002-01-01"),person("older-brother-wife","female","1998-01-01"),
+  person("younger-brother-wife","female","2003-01-01"),
+  person("me2","male","2000-01-01"),person("wife","female","2001-01-01"),
+  person("wife-parent","female","1970-01-01"),person("wife-sister","female","1998-01-01"),
+  person("wife-sister-husband","male","1997-01-01")
+ ];
+ const relationships=[
+  parentLink("grandpa","dad"),parentLink("dad","me"),parentLink("dad","older-brother"),parentLink("dad","younger-brother"),
+  spouseLink("older-brother","older-brother-wife"),spouseLink("younger-brother","younger-brother-wife"),
+  spouseLink("me2","wife"),parentLink("wife-parent","wife"),parentLink("wife-parent","wife-sister"),spouseLink("wife-sister","wife-sister-husband")
+ ];
+ assert.equal(relationLabel("me",people,relationships,"older-brother-wife"),"அண்ணி");
+ assert.equal(relationLabel("me",people,relationships,"younger-brother-wife"),"கொழுந்தியாள்");
+ assert.equal(relationLabel("me2",people,relationships,"wife-sister-husband"),"சகலை");
+}
+
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
