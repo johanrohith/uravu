@@ -130,6 +130,28 @@ assert.ok(permissionsMigration.includes("alter table public.uravu_people alter c
 assert.ok(permissionsMigration.includes("alter table public.uravu_people alter column gender set not null"));
 assert.doesNotMatch(html, /id="access-requests-list"/);
 assert.match(html, /id="linking-requests-list"/);
+assert.match(html, /id="toggle-add-person-panel"/);
+assert.match(html, /id="toggle-member-list-panel"/);
+assert.match(html, /id="toggle-linking-requests-panel"/);
+assert.match(html, /data-close-panel="add-person-panel"/);
+assert.match(html, /data-close-panel="member-management-panel"/);
+assert.match(html, /data-close-panel="linking-requests-panel"/);
+assert.doesNotMatch(html, /id="create-tree-form"|id="close-tree-button"|id="delete-tree-button"/);
+assert.match(html, /id="link-existing-form"/);
+assert.match(app, /function displayTreeName/);
+assert.match(app, /const selected = state\.people\.slice\(\)/);
+assert.match(app, /function highlightSearchMatch/);
+assert.match(app, /const siblingSetGap = 118/);
+assert.match(app, /is_self_record:!isManager\(\)/);
+assert.match(app, /நினைவில் வாழ்பவர்/);
+assert.match(app, /Living in Memory/);
+assert.match(app, /function canEditPerson/);
+assert.match(app, /function canDeletePerson/);
+assert.match(singleTreeMigration, /set name = 'Uravugal'/);
+assert.match(singleTreeMigration, /create policy uravu_people_update_main/);
+assert.match(singleTreeMigration, /Only a member already linked to a family record can review linking requests/);
+assert.match(singleTreeMigration, /grant update \(/);
+assert.match(singleTreeMigration, /uravu_main_tree_id/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
 assert.match(app, /Every connected spouse or co-parent group gets one adjacent block/);
 assert.ok(!app.includes("coupleGap + 2"));
@@ -322,6 +344,24 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(relationLabel("me",people,relationships,"older-brother-wife"),"அண்ணி");
  assert.equal(relationLabel("me",people,relationships,"younger-brother-wife"),"கொழுந்தியாள்");
  assert.equal(relationLabel("me2",people,relationships,"wife-sister-husband"),"சகலை");
+}
+
+{
+ const people=[person("great-grandpa","male","1920-01-01"),person("grandpa","male","1950-01-01"),
+   person("grandma-by-marriage","female","1952-01-01"),person("dad","male","1980-01-01"),person("me","female","2005-01-01")];
+ const relationships=[parentLink("great-grandpa","grandpa"),spouseLink("grandpa","grandma-by-marriage"),
+   parentLink("grandpa","dad"),parentLink("dad","me")];
+ assert.equal(relationLabel("me",people,relationships,"grandma-by-marriage","en"),"Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"grandma-by-marriage","ta"),"பாட்டி");
+}
+{
+ const people=[person("gp","male","1950-01-01"),person("dad","male","1980-01-01"),
+   person("uncle","male"),person("me","male","2004-01-01"),person("cousin","female")];
+ const relationships=[parentLink("gp","dad"),parentLink("gp","uncle"),parentLink("dad","me"),parentLink("uncle","cousin")];
+ const en=relationLabel("me",people,relationships,"cousin","en");
+ const ta=relationLabel("me",people,relationships,"cousin","ta");
+ assert.equal((en.match(/Age not sure/g)||[]).length,1);
+ assert.equal((ta.match(/வயது உறுதி இல்லை/g)||[]).length,1);
 }
 
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
