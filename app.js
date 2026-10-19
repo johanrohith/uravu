@@ -1068,6 +1068,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (old && state.people.some(p => p.id === old && p.id !== state.editingPersonId)) select.value = old;
   }
 
+  function familyRecordDetailLines(person) {
+    const lines = [];
+    const birthValue = person.birth_date_text || person.birth_date;
+    const deathValue = person.death_date_text || person.death_date;
+    if (birthValue) lines.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
+    if (deathValue) lines.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
+    else if (isPersonDeceased(person)) lines.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
+    return lines;
+  }
+
   function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
@@ -1114,27 +1124,18 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const relationLabels = relationshipLabelsForCurrentUser();
     const countLines = (value, charsPerLine) => String(value || "").split(/\r?\n/)
       .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / charsPerLine)), 0);
-    const detailLinesFor = person => {
-      const lines = [];
-      const birthValue = person.birth_date_text || person.birth_date;
-      const deathValue = person.death_date_text || person.death_date;
-      if (birthValue) lines.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
-      if (deathValue) lines.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
-      else if (isPersonDeceased(person)) lines.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
-      return lines;
-    };
     const cardHeightFor = person => {
       const label = relationLabels.get(person.id) || "";
       const nameHeight = Math.max(34,
         countLines(person.full_name, 27) * 19 +
         (person.tamil_name ? 3 + countLines(person.tamil_name, 24) * 15 : 0));
       const labelHeight = label ? 12 + countLines(label, 31) * 15 : 0;
-      const detailHeight = detailLinesFor(person).reduce((total, line) =>
+      const detailHeight = familyRecordDetailLines(person).reduce((total, line) =>
         total + countLines(line, 40) * 13 + 2, 0);
       const notesHeight = person.notes && canEditPerson(person)
         ? countLines(person.notes, 40) * 14 + 2 : 0;
       const actionsHeight = state.editMode && canEditPerson(person) ? 32 : 0;
-      const blocks = 1 + (label ? 1 : 0) + detailLinesFor(person).length +
+      const blocks = 1 + (label ? 1 : 0) + familyRecordDetailLines(person).length +
         (notesHeight ? 1 : 0) + (actionsHeight ? 1 : 0);
       return Math.max(82, 24 + nameHeight + labelHeight + detailHeight +
         notesHeight + actionsHeight + Math.max(0, blocks - 1) * 5 + 8);
@@ -1605,7 +1606,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const searchMatch = Boolean(search && [person.full_name, person.tamil_name]
       .some(value => String(value || "").toLocaleLowerCase().includes(search.toLocaleLowerCase())));
     const genderClass = person.gender === "female" ? "female" : person.gender === "other" ? "other" : "";
-    const details = detailLinesFor(person);
+    const details = familyRecordDetailLines(person);
     const viewAttributes = showActions ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
