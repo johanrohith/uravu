@@ -86,6 +86,66 @@ const familyBlockTargetCenter = new Function(
   );
 }
 
+
+const primaryFamilyChooserSource = extractFunction(
+  app,
+  "function choosePrimaryFamilyKey(unit, candidateKeys, activePersonId,",
+  "\\n  function renderPeople"
+);
+const choosePrimaryFamilyKey = new Function(
+  primaryFamilyChooserSource + "\\nreturn choosePrimaryFamilyKey;"
+)();
+{
+  const unit = {
+    people:[
+      { id:"daughter", full_name:"Daughter" },
+      { id:"husband", full_name:"Husband" }
+    ]
+  };
+  const parentFamilyByPerson = new Map([
+    ["daughter", "daughter-family"],
+    ["husband", "husband-family"]
+  ]);
+  const relatednessDistance = new Map([
+    ["daughter", 2],
+    ["husband", Infinity]
+  ]);
+  const buckets = new Map([
+    ["daughter-family", { parentIds:["daughter-parent"], children:["daughter", "daughter-sibling"] }],
+    ["husband-family", { parentIds:["husband-parent"], children:["husband", "husband-brother", "husband-sister"] }]
+  ]);
+  const positions = new Map([
+    ["daughter", { x:300, width:270 }],
+    ["husband", { x:598, width:270 }],
+    ["daughter-parent", { x:280, width:270 }],
+    ["husband-parent", { x:900, width:270 }]
+  ]);
+  assert.equal(
+    choosePrimaryFamilyKey(
+      unit, ["husband-family", "daughter-family"], "daughter-side-relative",
+      parentFamilyByPerson, relatednessDistance, buckets, positions
+    ),
+    "daughter-family",
+    "A married daughter should stay with her own parent/sibling branch when that is the closer recorded bloodline, even if the spouse's branch has more siblings"
+  );
+  assert.equal(
+    choosePrimaryFamilyKey(
+      unit, ["daughter-family", "husband-family"], "husband",
+      parentFamilyByPerson, relatednessDistance, buckets, positions
+    ),
+    "husband-family",
+    "When the linked record is one of the spouses, keep the couple anchored to that linked person's own family branch"
+  );
+}
+const relatednessBlock = extractFunction(
+  app,
+  "const relatednessAdjacency = new Map(",
+  "const primaryFamilyByUnit = new Map();"
+);
+assert.match(relatednessBlock, /state\\.relationships\\.filter\\(edge => edge\\.relationship_type === "parent"\\)/);
+assert.doesNotMatch(relatednessBlock, /relationship_type === "spouse"/);
+assert.doesNotMatch(relatednessBlock, /parentEdgesForLayout\\.forEach/);
+
 const recordDetailSource = extractFunction(
   app,
   "function familyRecordDetailLines(person) {",
@@ -341,7 +401,7 @@ assert.match(app, /death_date_text/);
 assert.match(html, /id="add-connection-button"/);
 assert.match(html, /id="add-connection-heading">Add a connection/);
 assert.match(html, /type="text" inputmode="numeric" maxlength="10"/);
-assert.match(html, /app\.js\?v=uravu-family-layout-ancestor-alignment-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-family-branch-ownership-20261019-1/);
 assert.match(styles, /field-help/);
 assert.match(styles, /connection-add-actions/);
 
@@ -360,7 +420,7 @@ assert.ok(app.includes('$$("[data-remove-relationship]")'));
 assert.match(html, /id="person-details-modal"/);
 assert.match(app, /person-connection-row/);
 assert.match(styles, /person-details-list/);
-assert.match(html, /app\.js\?v=uravu-family-layout-ancestor-alignment-20261019-1/);
+assert.match(html, /app\.js\?v=uravu-family-branch-ownership-20261019-1/);
 assert.match(styles, /graph-relationship-label/);
 assert.doesNotMatch(app, /\$\("#people-list"\)/);
 assert.match(styles, /\.modal-backdrop/);
