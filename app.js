@@ -16,6 +16,7 @@
     members: [],
     requests: [],
     editingPersonId: null,
+    editMode: false,
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
     loadingTree: false,
@@ -554,6 +555,21 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (personForm) personForm.hidden = shouldPauseCreation;
     if (divider) divider.hidden = shouldPauseCreation;
   }
+  function syncEditModeButton() {
+    const button = $("#toggle-edit-mode");
+    if (!button) return;
+    const enabled = Boolean(state.editMode);
+    const label = state.language === "ta"
+      ? (enabled ? "திருத்தும் முறை · ON" : "திருத்தும் முறை · OFF")
+      : (enabled ? "Edit mode · ON" : "Edit mode · OFF");
+    button.classList.toggle("is-on", enabled);
+    button.classList.toggle("is-off", !enabled);
+    button.setAttribute("aria-pressed", String(enabled));
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    button.textContent = label;
+  }
+
   function togglePanel(panelId) {
     if (state.openPanels.has(panelId)) {
       state.openPanels.delete(panelId);
@@ -762,50 +778,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     state.requests = results[3].data || [];
     state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || null;
 
-    // Repair existing one-parent records when a person already has a spouse.
-    // Owners and assigned members can repair linked spouse/child records; unassigned members are read-only.
-    const repaired = await backfillExistingSpouseChildren();
-    if (repaired.error) showDbError(repaired.error, "sync shared children");
-    if (repaired.changed) {
-      const refreshedRelations = await db.from("uravu_relationships")
-        .select("id,tree_id,person_id,related_person_id,relationship_type,created_at")
-        .eq("tree_id", treeId);
-      if (!refreshedRelations.error) state.relationships = refreshedRelations.data || state.relationships;
-      else showDbError(refreshedRelations.error, "refresh family relationships");
-    }
     renderWorkspace();
-  }
-
-  async function backfillExistingSpouseChildren() {
-    if (!isManager() || !state.activeTree) return { changed: false, error: null };
-    const spouseMap = new Map();
-    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
-      if (!spouseMap.has(edge.person_id)) spouseMap.set(edge.person_id, new Set());
-      if (!spouseMap.has(edge.related_person_id)) spouseMap.set(edge.related_person_id, new Set());
-      spouseMap.get(edge.person_id).add(edge.related_person_id);
-      spouseMap.get(edge.related_person_id).add(edge.person_id);
-    });
-    const existing = new Set(state.relationships.filter(edge => edge.relationship_type === "parent")
-      .map(edge => edge.person_id + "|" + edge.related_person_id));
-    const parentChildEdges = state.relationships.filter(edge => edge.relationship_type === "parent");
-    let changed = false;
-
-    for (const edge of parentChildEdges) {
-      for (const spouseId of (spouseMap.get(edge.person_id) || new Set())) {
-        const key = spouseId + "|" + edge.related_person_id;
-        if (spouseId === edge.related_person_id || existing.has(key)) continue;
-        const result = await callRpc("uravu_link_people", {
-          p_tree_id:state.activeTree.id,
-          p_person_id:spouseId,
-          p_related_person_id:edge.related_person_id,
-          p_relationship_type:"parent_of"
-        });
-        if (result.error) return { changed, error: result.error };
-        existing.add(key);
-        changed = true;
-      }
-    }
-    return { changed, error: null };
   }
 
   function renderWorkspace() {
@@ -827,6 +800,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#add-person-panel").hidden = !state.openPanels.has("add-person-panel");
     $("#member-management-panel").hidden = !state.openPanels.has("member-management-panel");
     $("#linking-requests-panel").hidden = !state.openPanels.has("linking-requests-panel");
+    syncEditModeButton();
     renderPersonConnectOptions();
     renderEditorConnections();
     renderExistingLinkOptions();
@@ -863,18 +837,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       .filter(edge => edge.relationship_type === "spouse")
       .forEach(edge => unite(edge.person_id, edge.related_person_id));
 
-    // People who share a child belong to the same generation unit even if a
-    // spouse link was never explicitly recorded between them.
-    const parentsByChild = new Map();
-    parentEdges.forEach(edge => {
-      if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, []);
-      parentsByChild.get(edge.related_person_id).push(edge.person_id);
-    });
-    parentsByChild.forEach(parentIds => {
-      for (let index = 1; index < parentIds.length; index++) {
-        unite(parentIds[0], parentIds[index]);
-      }
-    });
+    // Only explicit spouse links share a generation unit. Parent links alone do not
+    // imply that two people are partners or should be clustered together.
 
     const groups = new Map();
     state.people.forEach(person => {
@@ -958,6 +922,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     // A grandparent's siblings use age relative to that grandparent, not relative to you.
     const grandparentSiblingConnections=[];
     const directBiologicalGrandparents=array(bloodAncestors.entries()).filter(([,distance])=>distance===2);
+    const grandparentSpouseIds = new Set(directBiologicalGrandparents.flatMap(([grandparentId]) => array(spousesOf(grandparentId))));
     directBiologicalGrandparents.forEach(([grandparentId])=>{
       const grandparent=byId.get(grandparentId);
       if(!grandparent)return;
@@ -1018,7 +983,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       else if(egoParents.includes(id)){english=gendered(person,"Father","Mother","Parent");tamil=gender(person)==="male"?"தந்தை":gender(person)==="female"?"தாய்":"பெற்றோர்";}
       else if(egoChildren.includes(id)){english=gendered(person,"Son","Daughter","Child");tamil=gender(person)==="male"?"மகன்":gender(person)==="female"?"மகள்":"பிள்ளை";}
       else if(egoSiblings.has(id)){english=siblingEnglish(person);tamil=siblingTamil(person,ego);}
-      else if(ancestors.has(id)&&ancestors.get(id)===2){english=gendered(person,"Grandfather","Grandmother","Grandparent");tamil=gender(person)==="male"?"தாத்தா":gender(person)==="female"?"பாட்டி":"தாத்தா / பாட்டி";}
+      else if((ancestors.has(id)&&ancestors.get(id)===2)||grandparentSpouseIds.has(id)){english=gendered(person,"Grandfather","Grandmother","Grandparent");tamil=gender(person)==="male"?"தாத்தா":gender(person)==="female"?"பாட்டி":"தாத்தா / பாட்டி";}
       else if(ancestors.has(id)&&ancestors.get(id)>=3){const d=ancestors.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandfather",cap+"grandmother",cap+"grandparent");tamil=d===3?gendered(person,"கொள்ளுத்தாத்தா","கொள்ளுப்பாட்டி","கொள்ளு முன்னோர்"):gendered(person,"தாத்தா ("+d+" தலைமுறைகள் மேலே)","பாட்டி ("+d+" தலைமுறைகள் மேலே)","முன்னோர் ("+d+" தலைமுறைகள் மேலே)");}
       else if(descendants.has(id)&&descendants.get(id)===2){english=gendered(person,"Grandson","Granddaughter","Grandchild");tamil=gender(person)==="male"?"பேரன்":gender(person)==="female"?"பேத்தி":"பேரக்குழந்தை";}
       else if(descendants.has(id)&&descendants.get(id)>=3){const d=descendants.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandson",cap+"granddaughter",cap+"grandchild");tamil=d===3?gendered(person,"கொள்ளுப்பேரன்","கொள்ளுப்பேத்தி","கொள்ளுப் பேரக்குழந்தை"):gendered(person,"பேரன் ("+d+" தலைமுறைகள் கீழே)","பேத்தி ("+d+" தலைமுறைகள் கீழே)","பேரக்குழந்தை ("+d+" தலைமுறைகள் கீழே)");}
@@ -1131,34 +1096,56 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const minLevel = levelKeys[0];
     const maxLevel = levelKeys[levelKeys.length - 1];
     const nodeWidth = 236;
-    const nodeHeight = 178;
-    const columnGap = 44;
-    const siblingSetGap = 118;
-    const coupleGap = 18;
-    const rowHeight = 302;
+    const columnGap = 84;
+    const coupleGap = 24;
     const levelUnits = new Map();
     const positions = new Map();
     const byId = new Map(state.people.map(person => [person.id, person]));
+    const relationLabels = relationshipLabelsForCurrentUser();
+    const countLines = (value, charsPerLine) => String(value || "").split(/\r?\n/)
+      .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / charsPerLine)), 0);
+    const cardHeightFor = person => {
+      const label = relationLabels.get(person.id) || "";
+      const nameHeight = Math.max(30,
+        countLines(person.full_name, 22) * 16 +
+        (person.tamil_name ? 2 + countLines(person.tamil_name, 21) * 13 : 0));
+      const hasDetails = Boolean(person.birth_date_text || person.birth_date ||
+        person.death_date_text || person.death_date || isPersonDeceased(person));
+      const hasNotes = Boolean(person.notes && canEditPerson(person));
+      const hasActions = Boolean(state.editMode && canEditPerson(person));
+      const labelHeight = label ? countLines(label, 34) * 13 : 0;
+      return Math.max(70, 22 + nameHeight +
+        (label ? 5 + labelHeight : 0) +
+        (hasDetails ? 5 + 12 : 0) +
+        (hasNotes ? 5 + 12 : 0) +
+        (hasActions ? 6 + 29 : 0) + 4);
+    };
+    const cardHeights = new Map(selected.map(person => [person.id, cardHeightFor(person)]));
+    const levelByPerson = new Map();
+    grouped.forEach((people, level) => people.forEach(person => levelByPerson.set(person.id, level)));
+    const parentEdgesForLayout = state.relationships.filter(edge =>
+      edge.relationship_type === "parent" && levelByPerson.has(edge.person_id) && levelByPerson.has(edge.related_person_id)
+    );
+    const rowYByLevel = new Map();
+    let nextRowY = 24;
+    levelKeys.forEach(level => {
+      rowYByLevel.set(level, nextRowY);
+      const tallest = Math.max(70, ...grouped.get(level).map(person => cardHeights.get(person.id) || 80));
+      const outgoingCount = parentEdgesForLayout.filter(edge =>
+        levelByPerson.get(edge.person_id) === level &&
+        levelByPerson.get(edge.related_person_id) > level
+      ).length;
+      nextRowY += tallest + Math.max(132, outgoingCount * 10 + 42);
+    });
+
     const layoutPartners = new Map(state.people.map(person => [person.id, new Set()]));
     const addLayoutPartner = (firstId, secondId) => {
       if (firstId === secondId || !layoutPartners.has(firstId) || !layoutPartners.has(secondId)) return;
       layoutPartners.get(firstId).add(secondId);
       layoutPartners.get(secondId).add(firstId);
     };
-    const parentsByChild = new Map();
     state.relationships.forEach(edge => {
-      if (edge.relationship_type === "spouse") {
-        addLayoutPartner(edge.person_id, edge.related_person_id);
-      } else if (edge.relationship_type === "parent") {
-        if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, []);
-        parentsByChild.get(edge.related_person_id).push(edge.person_id);
-      }
-    });
-    parentsByChild.forEach(parentIds => {
-      const uniqueParentIds = Array.from(new Set(parentIds));
-      uniqueParentIds.forEach(parentId => {
-        uniqueParentIds.forEach(otherId => addLayoutPartner(parentId, otherId));
-      });
+      if (edge.relationship_type === "spouse") addLayoutPartner(edge.person_id, edge.related_person_id);
     });
     const layoutPartnersOf = id => Array.from(layoutPartners.get(id) || new Set());
 
@@ -1188,8 +1175,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         const group = groupIds.map(id => visibleById.get(id)).filter(Boolean)
           .sort((a, b) => a.full_name.localeCompare(b.full_name));
         const width = group.length * nodeWidth + Math.max(0, group.length - 1) * coupleGap;
-        const familyKey = Array.from(new Set(group.flatMap(member => parentsByChild.get(member.id) || []))).sort().join("|") || "unparented:" + group.map(member => member.id).sort().join("|");
-        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name, familyKey });
+        units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name });
       });
 
       // Use the centre of the parents' couple where possible. This keeps each
@@ -1233,14 +1219,13 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       levelUnits.set(level, units);
 
       let cursorX = 26;
-      units.forEach((unit, unitIndex) => {
-        if (unitIndex && units[unitIndex - 1].familyKey !== unit.familyKey) cursorX += siblingSetGap;
+      units.forEach(unit => {
         unit.people.forEach((person, index) => {
           positions.set(person.id, {
             x: cursorX + index * (nodeWidth + coupleGap),
-            y: 24 + (level - minLevel) * rowHeight,
+            y: rowYByLevel.get(level) || 24,
             width: nodeWidth,
-            height: nodeHeight
+            height: cardHeights.get(person.id) || 80
           });
         });
         cursorX += unit.width + columnGap;
@@ -1248,8 +1233,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
 
     const widestLevel = Math.max(1, ...Array.from(levelUnits.values()).map(units =>
-      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap +
-      units.reduce((sum, unit, index) => sum + (index && units[index - 1].familyKey !== unit.familyKey ? siblingSetGap : 0), 0)
+      units.reduce((sum, unit) => sum + unit.width, 0) + Math.max(0, units.length - 1) * columnGap
     ));
     const baseWidth = Math.max(viewport.clientWidth || 760, widestLevel + 52);
     const rowPositions = new Map();
@@ -1263,7 +1247,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const shift = (baseWidth - (right - left)) / 2 - left;
       row.forEach(([id, position]) => positions.set(id, { ...position, x:position.x + shift }));
     });
-    const baseHeight = Math.max(290, (maxLevel - minLevel) * rowHeight + nodeHeight + 54);
+    const lowestCardEdge = Math.max(0, ...Array.from(positions.values()).map(position => position.y + position.height));
+    const baseHeight = Math.max(290, lowestCardEdge + 48);
     state.treeBaseWidth = baseWidth;
     state.treeBaseHeight = baseHeight;
 
@@ -1288,17 +1273,31 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     linesRoot.setAttribute("height", String(baseHeight));
 
     const paths = [];
+    const parentRoutes = new Map();
     state.relationships.filter(edge => edge.relationship_type === "parent").forEach(edge => {
       const parent = positions.get(edge.person_id);
       const child = positions.get(edge.related_person_id);
       if (!parent || !child || child.y <= parent.y) return;
-      const startX = parent.x + parent.width / 2;
-      const startY = parent.y + parent.height;
-      const endX = child.x + child.width / 2;
-      const endY = child.y;
-      const middleY = startY + Math.max(14, (endY - startY) / 2);
-      paths.push('<path class="family-line" d="M ' + startX + ' ' + startY + ' V ' + middleY + ' H ' + endX + ' V ' + endY + '"/>');
+      const key = parent.y + "|" + child.y;
+      if (!parentRoutes.has(key)) parentRoutes.set(key, []);
+      parentRoutes.get(key).push({ parent, child });
     });
+    parentRoutes.forEach(routes => {
+      routes.sort((a, b) =>
+        (a.parent.x + a.parent.width / 2) - (b.parent.x + b.parent.width / 2) ||
+        (a.child.x + a.child.width / 2) - (b.child.x + b.child.width / 2)
+      );
+      routes.forEach(({ parent, child }, index) => {
+        const startX = parent.x + parent.width / 2;
+        const startY = parent.y + parent.height;
+        const endX = child.x + child.width / 2;
+        const endY = child.y;
+        const laneY = startY + 14 + index * 10;
+        paths.push('<path class="family-line" d="M ' + startX + ' ' + startY +
+          ' V ' + laneY + ' H ' + endX + ' V ' + endY + '"/>');
+      });
+    });
+
     state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
       const first = positions.get(edge.person_id);
       const second = positions.get(edge.related_person_id);
@@ -1310,7 +1309,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
 
     linesRoot.innerHTML = paths.join("");
-    const relationLabels = relationshipLabelsForCurrentUser();
     nodesRoot.innerHTML = selected.map(person => renderPersonCard(person, positions.get(person.id), relationLabels.get(person.id))).join("");
     applyTreeCanvasScale(false);
     if (search) {
@@ -1506,6 +1504,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!position) return "";
     const canEdit = canEditPerson(person);
     const canDelete = canDeletePerson(person);
+    const showActions = state.editMode && canEdit;
     const search = ($("#people-search").value || "").trim();
     const searchMatch = Boolean(search && [person.full_name, person.tamil_name]
       .some(value => String(value || "").toLocaleLowerCase().includes(search.toLocaleLowerCase())));
@@ -1516,7 +1515,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (birthValue) details.push((state.language === "ta" ? "பிறப்பு " : "Born ") + formatFamilyDate(birthValue));
     if (deathValue) details.push((state.language === "ta" ? "இறப்பு " : "Died ") + formatFamilyDate(deathValue));
     else if (isPersonDeceased(person)) details.push(state.language === "ta" ? "நினைவில் வாழ்பவர்" : "Living in Memory");
-    const viewAttributes = canEdit ? "" :
+    const viewAttributes = showActions ? "" :
       ' data-view-person="' + escapeHtml(person.id) + '" tabindex="0" role="button" aria-label="' +
       escapeHtml((state.language === "ta" ? "உறுப்பினர் விவரங்களைக் காண்க: " : "View member details: ") + person.full_name) + '"';
     return '<article class="family-node-card' + (searchMatch ? ' search-match' : '') + '" style="left:' + position.x + 'px;top:' + position.y + 'px;width:' + position.width + 'px;height:' + position.height + 'px"' + viewAttributes + '>' +
@@ -1526,7 +1525,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       (relationLabel ? '<div class="graph-relationship-label">' + escapeHtml(relationLabel) + '</div>' : '') +
       (details.length ? '<div class="person-meta">' + details.map(escapeHtml).join(" · ") + '</div>' : '') +
       (person.notes && canEdit ? '<div class="person-meta graph-notes">' + escapeHtml(person.notes) + '</div>' : '') +
-      (canEdit ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
+      (showActions ? '<div class="person-card-actions"><button class="secondary-button" type="button" data-edit-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("edit")) +
       '</button>' + (canDelete ? '<button class="danger-button" type="button" data-delete-person="' + escapeHtml(person.id) + '">' + escapeHtml(t("delete")) + '</button>' : '') + '</div>' : '') +
       '</article>';
   }
@@ -1794,6 +1793,12 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   function beginEditPerson(personId) {
     const person = state.people.find(item => item.id === personId);
     if (!person || !canEditPerson(person) || !state.activeTree) return;
+    state.openPanels.clear();
+    state.openPanels.add("add-person-panel");
+    $("#add-person-panel").hidden = false;
+    $("#member-management-panel").hidden = true;
+    $("#linking-requests-panel").hidden = true;
+    $("#toggle-add-person-panel").setAttribute("aria-expanded", "true");
     state.editingPersonId = personId;
     $("#person-name").value = person.full_name || "";
     $("#person-tamil").value = person.tamil_name || "";
@@ -1814,55 +1819,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#connect-person").value = "";
     $("#connect-type").value = "";
     renderEditorConnections();
-  }
-
-  async function syncSpouseChildLinks(personId, connectedId, relationshipType) {
-    if (!personId || !connectedId || !state.activeTree) return null;
-    const treeId = state.activeTree.id;
-    const existingParentLinks = state.relationships.filter(edge => edge.relationship_type === "parent");
-    const hasParentLink = (parentId, childId) => existingParentLinks.some(edge =>
-      edge.person_id === parentId && edge.related_person_id === childId
-    );
-    const linkAsParent = async (parentId, childId) => {
-      if (!parentId || !childId || parentId === childId || hasParentLink(parentId, childId)) return null;
-      const result = await callRpc("uravu_link_people", {
-        p_tree_id:treeId,
-        p_person_id:parentId,
-        p_related_person_id:childId,
-        p_relationship_type:"parent_of"
-      });
-      return result.error || null;
-    };
-
-    if (relationshipType === "spouse_of") {
-      // When a spouse is added, link them to the existing children of either
-      // partner so a child's two parents stay connected in the family graph.
-      const children = new Set(existingParentLinks
-        .filter(edge => edge.person_id === personId || edge.person_id === connectedId)
-        .map(edge => edge.related_person_id));
-      for (const childId of children) {
-        for (const parentId of [personId, connectedId]) {
-          const error = await linkAsParent(parentId, childId);
-          if (error) return error;
-        }
-      }
-      return null;
-    }
-
-    const parentId = relationshipType === "child_of" ? connectedId : personId;
-    const childId = relationshipType === "child_of" ? personId : connectedId;
-    const spouseIds = new Set();
-    state.relationships.filter(edge => edge.relationship_type === "spouse" &&
-      (edge.person_id === parentId || edge.related_person_id === parentId))
-      .forEach(edge => spouseIds.add(edge.person_id === parentId ? edge.related_person_id : edge.person_id));
-
-    // If a child is connected to one parent, add the corresponding parent link
-    // for that parent's spouse as well.
-    for (const spouseId of spouseIds) {
-      const error = await linkAsParent(spouseId, childId);
-      if (error) return error;
-    }
-    return null;
   }
 
   async function savePerson(event) {
@@ -1939,7 +1895,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         p_related_person_id:connectedId, p_relationship_type:relationshipType
       });
       error = linked.error;
-      if (!error) error = await syncSpouseChildLinks(personId, connectedId, relationshipType);
     }
     setBusy(button, false);
     if (error) {
@@ -1997,6 +1952,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#language-button").textContent = state.language === "en" ? "தமிழ்" : "English";
     $("#language-button").setAttribute("aria-label", state.language === "ta" ? "மொழியை மாற்று" : "Change language");
     localizeDom(document.body);
+    syncEditModeButton();
   }
 
   function setLanguage() {
@@ -2010,6 +1966,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function bindEvents() {
     $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
+    $("#toggle-edit-mode").addEventListener("click", () => {
+      state.editMode = !state.editMode;
+      syncEditModeButton();
+      renderPeople();
+    });
     $("#toggle-member-list-panel").addEventListener("click", () => togglePanel("member-management-panel"));
     $("#toggle-linking-requests-panel").addEventListener("click", () => togglePanel("linking-requests-panel"));
     Array.from(document.querySelectorAll("[data-close-panel]")).forEach(button => button.addEventListener("click", () => closePanel(button.dataset.closePanel)));
