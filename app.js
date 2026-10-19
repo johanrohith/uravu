@@ -903,6 +903,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if(edge.relationship_type==="parent"){add(parentsByChild,edge.related_person_id,edge.person_id);add(childrenByParent,edge.person_id,edge.related_person_id);}
       else if(edge.relationship_type==="spouse"){add(spousesByPerson,edge.person_id,edge.related_person_id);add(spousesByPerson,edge.related_person_id,edge.person_id);}
     });
+    // Treat an explicitly recorded parent's spouse as a co-parent for relationship
+    // labels and displayed lineage, without saving synthetic relationship rows.
+    Array.from(childrenByParent.entries()).forEach(([parentId, childIds]) => {
+      (spousesByPerson.get(parentId) || new Set()).forEach(spouseId => {
+        Array.from(childIds).forEach(childId => {
+          if (spouseId === childId) return;
+          add(parentsByChild, childId, spouseId);
+          add(childrenByParent, spouseId, childId);
+        });
+      });
+    });
     const parentsOf=id=>parentsByChild.get(id)||new Set(),childrenOf=id=>childrenByParent.get(id)||new Set(),spousesOf=id=>spousesByPerson.get(id)||new Set(),array=v=>Array.from(v||[]);
     const distances=(startId,nextIds)=>{const map=new Map([[startId,0]]),pending=[startId];for(let i=0;i<pending.length;i++){const current=pending[i],nextDistance=map.get(current)+1;array(nextIds(current)).forEach(id=>{const old=map.get(id);if(old===undefined||nextDistance<old){map.set(id,nextDistance);pending.push(id);}});}return map;};
     const ancestors=distances(egoId,parentsOf);
@@ -1143,19 +1154,53 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const cardHeights = new Map(selected.map(person => [person.id, cardHeightFor(person)]));
     const levelByPerson = new Map();
     grouped.forEach((people, level) => people.forEach(person => levelByPerson.set(person.id, level)));
-    const parentEdgesForLayout = state.relationships.filter(edge =>
-      edge.relationship_type === "parent" && levelByPerson.has(edge.person_id) && levelByPerson.has(edge.related_person_id)
-    );
+    // A recorded parent's spouse is also treated as a co-parent in the displayed tree.
+    // These are virtual layout/display edges only; nothing is written to the database.
+    const spousesForLayout = new Map(state.people.map(person => [person.id, new Set()]));
+    state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
+      if (!spousesForLayout.has(edge.person_id) || !spousesForLayout.has(edge.related_person_id)) return;
+      spousesForLayout.get(edge.person_id).add(edge.related_person_id);
+      spousesForLayout.get(edge.related_person_id).add(edge.person_id);
+    });
+    const effectiveParentEdges = new Map();
+    const addEffectiveParent = (parentId, childId, inferred = false) => {
+      if (parentId === childId || !levelByPerson.has(parentId) || !levelByPerson.has(childId)) return;
+      const key = parentId + "|" + childId;
+      const existing = effectiveParentEdges.get(key);
+      if (!existing || (existing.inferred && !inferred)) {
+        effectiveParentEdges.set(key, {
+          person_id:parentId, related_person_id:childId,
+          relationship_type:"parent", inferred
+        });
+      }
+    };
+    state.relationships.filter(edge => edge.relationship_type === "parent").forEach(edge => {
+      addEffectiveParent(edge.person_id, edge.related_person_id, false);
+      (spousesForLayout.get(edge.person_id) || new Set()).forEach(spouseId => {
+        addEffectiveParent(spouseId, edge.related_person_id, true);
+      });
+    });
+    const parentEdgesForLayout = Array.from(effectiveParentEdges.values());
+    const parentsByChild = new Map();
+    parentEdgesForLayout.forEach(edge => {
+      if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, new Set());
+      parentsByChild.get(edge.related_person_id).add(edge.person_id);
+    });
     const rowYByLevel = new Map();
     let nextRowY = 24;
     levelKeys.forEach(level => {
       rowYByLevel.set(level, nextRowY);
       const tallest = Math.max(70, ...grouped.get(level).map(person => cardHeights.get(person.id) || 80));
-      const outgoingCount = parentEdgesForLayout.filter(edge =>
+      const outgoingFamilies = new Set();
+      parentEdgesForLayout.filter(edge =>
         levelByPerson.get(edge.person_id) === level &&
         levelByPerson.get(edge.related_person_id) > level
-      ).length;
-      nextRowY += tallest + Math.max(132, outgoingCount * 10 + 42);
+      ).forEach(edge => {
+        outgoingFamilies.add(Array.from(parentsByChild.get(edge.related_person_id) || new Set()).sort().join("|"));
+      });
+      // Reserve a separate empty vertical lane for each family bus so unrelated
+      // connector lines do not overlap or run through the same visual row.
+      nextRowY += tallest + Math.max(168, outgoingFamilies.size * 26 + 44);
     });
 
     const layoutPartners = new Map(state.people.map(person => [person.id, new Set()]));
@@ -1205,8 +1250,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         const centers = [];
         const seenParentIds = new Set();
         unit.people.forEach(person => {
-          state.relationships
-            .filter(edge => edge.relationship_type === "parent" && edge.related_person_id === person.id)
+          parentEdgesForLayout
+            .filter(edge => edge.related_person_id === person.id)
             .forEach(edge => {
               const parentPerson = byId.get(edge.person_id);
               if (!parentPerson || seenParentIds.has(parentPerson.id)) return;
@@ -1252,22 +1297,18 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    // Repack each sibling set as its own family block. The block is placed under
-    // the centre of its actual parent group, rather than centring every generation
-    // row across the entire tree. Separate families retain clear horizontal space.
-    const familyChildGap = 34;
-    const parentsByChild = new Map();
-    parentEdgesForLayout.forEach(edge => {
-      if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, new Set());
-      parentsByChild.get(edge.related_person_id).add(edge.person_id);
-    });
-    levelKeys.forEach(level => {
-      const rowY = rowYByLevel.get(level);
-      const people = grouped.get(level) || [];
-      const siblingSets = new Map();
-      const claimed = new Set();
+    // Keep every spouse-connected unit intact when arranging each generation.
+    // Sibling families become wide blocks containing whole person+partner units.
+    const personUnit = new Map();
+    levelUnits.forEach(units => units.forEach(unit => {
+      unit.people.forEach(person => personUnit.set(person.id, unit));
+    }));
 
-      people.forEach(person => {
+    const parentFamilyByPerson = new Map();
+    const familyBucketsByLevel = new Map();
+    levelKeys.forEach(level => {
+      const buckets = new Map();
+      (grouped.get(level) || []).forEach(person => {
         const parentIds = Array.from(parentsByChild.get(person.id) || new Set())
           .filter(parentId => {
             const parentPosition = positions.get(parentId);
@@ -1275,46 +1316,148 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
             return parentPosition && childPosition && parentPosition.y < childPosition.y;
           }).sort();
         if (!parentIds.length) return;
-        const parentsKey = parentIds.join("|");
-        if (!siblingSets.has(parentsKey)) siblingSets.set(parentsKey, { parentIds, people:[] });
-        siblingSets.get(parentsKey).people.push(person);
-        claimed.add(person.id);
+        const key = parentIds.join("|");
+        if (!buckets.has(key)) buckets.set(key, { key, parentIds, children:[] });
+        buckets.get(key).children.push(person.id);
+        parentFamilyByPerson.set(person.id, key);
       });
+      familyBucketsByLevel.set(level, buckets);
+    });
 
+    // The currently linked member's own sibling family is the strongest grouping
+    // anchor. Elsewhere, prefer the sibling set with the most children. This keeps
+    // partners adjacent while leaving space for each partner's separate ancestry.
+    const activePersonId = state.activeMembership?.person_id ||
+      state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
+    const activeFamilyKey = activePersonId ? parentFamilyByPerson.get(activePersonId) : null;
+
+    // Measure kinship distance from the linked member using the displayed family
+    // graph. When a spouse unit belongs to two sibling families, anchor it to the
+    // side that is closer to the active member, then use sibling count as a tie-break.
+    const relatednessAdjacency = new Map(state.people.map(person => [person.id, new Set()]));
+    const addRelatednessEdge = (a, b) => {
+      if (relatednessAdjacency.has(a) && relatednessAdjacency.has(b) && a !== b) {
+        relatednessAdjacency.get(a).add(b);
+        relatednessAdjacency.get(b).add(a);
+      }
+    };
+    parentEdgesForLayout.forEach(edge => addRelatednessEdge(edge.person_id, edge.related_person_id));
+    state.relationships.filter(edge => edge.relationship_type === "spouse")
+      .forEach(edge => addRelatednessEdge(edge.person_id, edge.related_person_id));
+    const relatednessDistance = new Map();
+    if (activePersonId && relatednessAdjacency.has(activePersonId)) {
+      const queue = [activePersonId];
+      relatednessDistance.set(activePersonId, 0);
+      for (let index = 0; index < queue.length; index++) {
+        const currentId = queue[index];
+        (relatednessAdjacency.get(currentId) || new Set()).forEach(relatedId => {
+          if (relatednessDistance.has(relatedId)) return;
+          relatednessDistance.set(relatedId, relatednessDistance.get(currentId) + 1);
+          queue.push(relatedId);
+        });
+      }
+    }
+
+    const primaryFamilyByUnit = new Map();
+    levelKeys.forEach(level => {
+      const buckets = familyBucketsByLevel.get(level) || new Map();
+      (levelUnits.get(level) || []).forEach(unit => {
+        const candidates = Array.from(new Set(unit.people.map(person => parentFamilyByPerson.get(person.id)).filter(Boolean)));
+        if (!candidates.length) return;
+        let chosenKey = null;
+        if (activeFamilyKey && candidates.includes(activeFamilyKey)) {
+          chosenKey = activeFamilyKey;
+        } else {
+          const originalCenter = unit.people.reduce((sum, person) => {
+            const position = positions.get(person.id);
+            return sum + (position ? position.x + position.width / 2 : 0);
+          }, 0) / Math.max(1, unit.people.length);
+          candidates.sort((a, b) => {
+            const bucketA = buckets.get(a), bucketB = buckets.get(b);
+            const memberDistance = key => {
+              const distances = unit.people
+                .filter(person => parentFamilyByPerson.get(person.id) === key)
+                .map(person => relatednessDistance.get(person.id) ?? Infinity);
+              return distances.length ? Math.min(...distances) : Infinity;
+            };
+            const affinityDifference = memberDistance(a) - memberDistance(b);
+            if (Number.isFinite(affinityDifference) && affinityDifference !== 0) return affinityDifference;
+            if (memberDistance(a) !== memberDistance(b)) {
+              return memberDistance(a) === Infinity ? 1 : -1;
+            }
+            const sizeDifference = (bucketB?.children.length || 0) - (bucketA?.children.length || 0);
+            if (sizeDifference) return sizeDifference;
+            const centerFor = bucket => {
+              if (!bucket) return originalCenter;
+              const parentPositions = bucket.parentIds.map(id => positions.get(id)).filter(Boolean);
+              return parentPositions.length
+                ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
+                : originalCenter;
+            };
+            return Math.abs(centerFor(bucketA) - originalCenter) - Math.abs(centerFor(bucketB) - originalCenter) ||
+              a.localeCompare(b);
+          });
+          chosenKey = candidates[0];
+        }
+        primaryFamilyByUnit.set(unit, chosenKey);
+      });
+    });
+
+    const familySiblingGap = 58;
+    const familyBlockGap = 138;
+    levelKeys.forEach(level => {
+      const rowY = rowYByLevel.get(level) || 24;
+      const buckets = familyBucketsByLevel.get(level) || new Map();
       const blocks = [];
-      siblingSets.forEach(family => {
-        const members = family.people.slice().sort((a, b) =>
-          (positions.get(a.id)?.x || 0) - (positions.get(b.id)?.x || 0)
-        );
-        const parentPositions = family.parentIds.map(id => positions.get(id)).filter(Boolean);
+      const ownedUnits = new Set();
+
+      buckets.forEach(bucket => {
+        const units = (levelUnits.get(level) || [])
+          .filter(unit => primaryFamilyByUnit.get(unit) === bucket.key);
+        if (!units.length) return;
+        units.forEach(unit => ownedUnits.add(unit));
+        units.sort((a, b) => (a.sortName || "").localeCompare(b.sortName || ""));
+        const width = units.reduce((sum, unit) => sum + unit.width, 0) +
+          Math.max(0, units.length - 1) * familySiblingGap;
+        const parentPositions = bucket.parentIds.map(id => positions.get(id)).filter(Boolean);
         const targetCenter = parentPositions.length
           ? parentPositions.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parentPositions.length
           : null;
-        const width = members.length * nodeWidth + Math.max(0, members.length - 1) * familyChildGap;
-        const originalLeft = Math.min(...members.map(person => positions.get(person.id).x));
-        blocks.push({ members, width, targetCenter, originalLeft,
-          desiredLeft:targetCenter == null ? originalLeft : targetCenter - width / 2 });
+        const originalLeft = Math.min(...units.flatMap(unit =>
+          unit.people.map(person => positions.get(person.id)?.x ?? 0)));
+        blocks.push({
+          key:bucket.key, units, width, targetCenter, originalLeft,
+          desiredLeft:targetCenter == null ? originalLeft : targetCenter - width / 2,
+          memberGap:familySiblingGap
+        });
       });
 
-      // Root members or people without a visible parent retain their explicit
-      // spouse blocks. They are not merged into another family's sibling row.
+      // Ancestors or unlinked roots stay as separate partner units; do not split
+      // these into individual cards just to fill the row.
       (levelUnits.get(level) || []).forEach(unit => {
-        const members = unit.people.filter(person => !claimed.has(person.id));
-        if (!members.length) return;
-        const width = members.length * nodeWidth + Math.max(0, members.length - 1) * coupleGap;
-        const originalLeft = Math.min(...members.map(person => positions.get(person.id).x));
-        blocks.push({ members, width, targetCenter:null, originalLeft, desiredLeft:originalLeft,
-          memberGap:coupleGap });
+        if (ownedUnits.has(unit)) return;
+        const originalLeft = Math.min(...unit.people.map(person => positions.get(person.id)?.x ?? 0));
+        blocks.push({
+          key:"root:" + (unit.sortName || ""), units:[unit], width:unit.width,
+          targetCenter:null, originalLeft, desiredLeft:originalLeft, memberGap:familySiblingGap
+        });
       });
 
-      blocks.sort((a, b) => a.desiredLeft - b.desiredLeft);
+      blocks.sort((a, b) => a.desiredLeft - b.desiredLeft || String(a.key).localeCompare(String(b.key)));
       let previousRight = -Infinity;
       blocks.forEach(block => {
-        const left = Math.max(block.desiredLeft, previousRight + columnGap);
-        const gap = block.memberGap == null ? familyChildGap : block.memberGap;
-        block.members.forEach((person, index) => {
-          const current = positions.get(person.id);
-          positions.set(person.id, { ...current, x:left + index * (nodeWidth + gap), y:rowY });
+        const left = Math.max(block.desiredLeft, previousRight + familyBlockGap);
+        let unitLeft = left;
+        block.units.forEach(unit => {
+          unit.people.forEach((person, index) => {
+            const current = positions.get(person.id);
+            positions.set(person.id, {
+              ...current,
+              x:unitLeft + index * (nodeWidth + coupleGap),
+              y:rowY
+            });
+          });
+          unitLeft += unit.width + block.memberGap;
         });
         previousRight = left + block.width;
       });
@@ -1393,7 +1536,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       familyChildGroups.get(key).childIds.push(childId);
     });
 
-    familyChildGroups.forEach(group => {
+    const orderedFamilyGroups = Array.from(familyChildGroups.values()).sort((a, b) => {
+      const centerFor = group => {
+        const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
+        return parents.length
+          ? parents.reduce((sum, position) => sum + position.x + position.width / 2, 0) / parents.length
+          : 0;
+      };
+      return centerFor(a) - centerFor(b);
+    });
+    const nextLaneByRowPair = new Map();
+    orderedFamilyGroups.forEach(group => {
       const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
       const children = group.childIds.map(id => positions.get(id)).filter(Boolean)
         .sort((a, b) => (a.x + a.width / 2) - (b.x + b.width / 2));
@@ -1401,9 +1554,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if (!parents.every(parent => parent.y === parents[0].y) ||
           !children.every(child => child.y === children[0].y)) return;
 
-      const parentBottom = Math.max(...parents.map(parent => parent.y + parent.height));
+      const parentRowY = parents[0].y;
+      const parentRowCards = Array.from(positions.values()).filter(position => position.y === parentRowY);
+      const parentRowBottom = Math.max(...parentRowCards.map(position => position.y + position.height));
       const childTop = Math.min(...children.map(child => child.y));
-      if (childTop <= parentBottom + 8) return;
+      if (childTop <= parentRowBottom + 8) return;
 
       // Prefer the centre of a recorded partner link. If no partner relationship
       // exists, use the centre of the recorded parent group without inventing a link.
@@ -1422,14 +1577,14 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         (sum, parent) => sum + parent.x + parent.width / 2, 0
       ) / parents.length;
       const trunkStartX = partnerLine ? partnerLine.centerX : fallbackParentCenterX;
-      const trunkStartY = partnerLine ? partnerLine.y : parentBottom;
+      const trunkStartY = partnerLine ? partnerLine.y : parentRowBottom;
       const childCenters = children.map(child => child.x + child.width / 2);
       const busLeft = Math.min(trunkStartX, ...childCenters);
       const busRight = Math.max(trunkStartX, ...childCenters);
-      const busY = Math.min(
-        childTop - 18,
-        parentBottom + Math.max(24, (childTop - parentBottom) * 0.45)
-      );
+      const rowPairKey = parentRowY + "|" + childTop;
+      const laneIndex = nextLaneByRowPair.get(rowPairKey) || 0;
+      nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
+      const busY = Math.min(childTop - 18, parentRowBottom + 26 + laneIndex * 24);
 
       // One vertical trunk flows down from the partner link (or parent group),
       // meets a single horizontal child bus, then drops vertically to each child.
