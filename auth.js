@@ -45,16 +45,17 @@
       const menu = document.getElementById("user-menu");
       const nameNode = document.getElementById("user-name");
       const avatarNode = document.getElementById("user-avatar");
+      const appAvatarNode = document.getElementById("app-nav-avatar");
       const name = auth.user?.user_metadata?.full_name ||
         auth.user?.user_metadata?.name ||
         auth.user?.email ||
         "Account";
+      const avatar = auth.user?.user_metadata?.avatar_url ||
+        auth.user?.user_metadata?.picture;
       if (signIn) signIn.hidden = Boolean(auth.user) || auth.loading;
       if (menu) menu.hidden = !auth.user || auth.loading;
       if (nameNode) nameNode.textContent = name;
       if (avatarNode) {
-        const avatar = auth.user?.user_metadata?.avatar_url ||
-          auth.user?.user_metadata?.picture;
         if (avatar) {
           const img = document.createElement("img");
           img.src = avatar;
@@ -64,6 +65,21 @@
         } else {
           avatarNode.textContent = name.trim().charAt(0).toUpperCase() || "U";
         }
+      }
+      if (appAvatarNode) {
+        let image = appAvatarNode.querySelector("img");
+        if (avatar) {
+          if (!image) {
+            image = document.createElement("img");
+            image.alt = "";
+            image.referrerPolicy = "no-referrer";
+            appAvatarNode.appendChild(image);
+          }
+          image.src = avatar;
+        } else if (image) {
+          image.remove();
+        }
+        appAvatarNode.classList.toggle("has-photo", Boolean(avatar));
       }
     },
     async init() {
