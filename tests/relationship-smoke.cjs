@@ -1213,6 +1213,8 @@ assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)
 // Mobile-app-only account focus and panel behavior; keep the web fit-to-tree path.
 assert.match(app, /treeInitialViewKey: null/);
 assert.match(app, /const shouldFocusMobileInitialView = appView && state\.treeInitialViewKey !== initialViewKey/);
+assert.match(app, /if \(!mediaQuery\.matches && state\.treeInitialViewKey !== null\)/);
+assert.match(app, /state\.treeZoom = calculateTreeFitScale\(\);\s*applyTreeCanvasScale\(false\);/);
 assert.match(app, /state\.treeZoom = focusPosition \? 1 : 0\.4/);
 assert.match(app, /if \(search && !shouldFocusMobileInitialView\)/);
 assert.match(app, /const showOwnRecordInstruction = appView && Boolean\(/);
