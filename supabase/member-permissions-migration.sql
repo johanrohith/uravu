@@ -1,11 +1,5 @@
--- Uravu: replace admin/viewer roles with Owner/Member and allow assigned members to edit.
--- Run once in Supabase Dashboard -> SQL Editor for an existing Uravu database.
--- Existing family records and relationship links are preserved.
-
 begin;
 
--- Require Tamil name and gender for all future records. Preserve old records by
--- filling blank Tamil names from the existing English name and unknown genders as Other.
 update public.uravu_people set tamil_name = full_name
 where tamil_name is null or length(trim(tamil_name)) = 0;
 update public.uravu_people set gender = 'other' where gender is null;
@@ -16,7 +10,6 @@ alter table public.uravu_people add constraint uravu_people_tamil_name_check che
 alter table public.uravu_people drop constraint if exists uravu_people_gender_check;
 alter table public.uravu_people add constraint uravu_people_gender_check check (gender in ('male', 'female', 'other'));
 
--- Normalize old roles without changing which user owns a tree.
 alter table public.uravu_tree_members
   alter column role set default 'member';
 alter table public.uravu_tree_members
@@ -29,7 +22,6 @@ where role <> 'owner';
 alter table public.uravu_tree_members
   add constraint uravu_tree_members_role_check check (role in ('owner', 'member'));
 
--- There are no longer multiple requested roles: every approved account is a member.
 alter table public.uravu_access_requests
   alter column requested_role set default 'member';
 alter table public.uravu_access_requests
@@ -37,8 +29,6 @@ alter table public.uravu_access_requests
 
 update public.uravu_access_requests set requested_role = 'member';
 
--- Pending role-only changes no longer apply. A pending request that names a record
--- becomes a record-link request; role-only requests are marked rejected.
 update public.uravu_access_requests
 set request_type = 'link', requested_role = 'member'
 where status = 'pending'
@@ -56,8 +46,6 @@ where status = 'pending'
 alter table public.uravu_access_requests
   add constraint uravu_access_requests_requested_role_check check (requested_role = 'member');
 
--- Owners can always edit. A Member gets edit/review permission only after their
--- account has been linked to a family record by the owner.
 create or replace function public.uravu_can_edit_tree(p_tree_id uuid)
 returns boolean
 language sql stable security definer
@@ -179,7 +167,6 @@ begin
   if not public.uravu_can_edit_tree(v_req.tree_id) then
     raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
-
 
   if p_decision='reject' then
     update public.uravu_access_requests set status='rejected', reviewed_by=v_user, reviewed_at=now()
@@ -362,7 +349,6 @@ begin
 end;
 $function$;
 
--- Apply edit permissions at the table level as well as inside RPCs.
 drop policy if exists uravu_trees_update_admin on public.uravu_family_trees;
 drop policy if exists uravu_trees_update_owner on public.uravu_family_trees;
 create policy uravu_trees_update_owner on public.uravu_family_trees
