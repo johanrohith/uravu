@@ -587,12 +587,15 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const form = $("#link-existing-form");
     const desktopTarget = $("#link-form-desktop-target");
     const mobileTarget = $("#link-form-mobile-target");
-    const prompt = $("#link-account-prompt");
-    if (!form || !desktopTarget || !mobileTarget || !prompt) return;
+    const desktopPrompt = $("#link-account-desktop-prompt");
+    const mobilePrompt = $("#link-account-prompt");
+    if (!form || !desktopTarget || !mobileTarget || !desktopPrompt || !mobilePrompt) return;
     const appView = window.matchMedia("(max-width: 760px)").matches;
     const target = appView ? mobileTarget : desktopTarget;
     if (form.parentElement !== target) target.appendChild(form);
-    prompt.hidden = !(appView && state.activeTree && state.user && !isManager());
+    const showPrompt = Boolean(state.activeTree && state.user && !isManager());
+    desktopPrompt.hidden = !(showPrompt && !appView);
+    mobilePrompt.hidden = !(showPrompt && appView);
   }
 
   function syncAppNavigation() {
