@@ -206,6 +206,59 @@ const familyBlockTargetCenter = new Function(
 }
 
 
+const nearestPlacementSource = extractFunction(
+  app,
+  "function placeUnitNearestTarget(",
+  "\n  function computeFamilySubtreeLayout"
+);
+const { placeUnitNearestTarget, placeExpandedPartnerParentsNearSpouses } = new Function(
+  nearestPlacementSource + "\nreturn { placeUnitNearestTarget, placeExpandedPartnerParentsNearSpouses };"
+)();
+{
+  const parent = { id:"in-law-parent", full_name:"Spouse parent" };
+  const parentUnit = { people:[parent], width:270, sortName:parent.full_name };
+  const spouse = { id:"in-law-spouse", full_name:"Spouse" };
+  const positions = new Map([
+    [parent.id,{ x:900,y:24,width:270,height:82 }],
+    ["other-left",{ x:0,y:24,width:270,height:82 }],
+    ["other-right",{ x:600,y:24,width:270,height:82 }],
+    [spouse.id,{ x:300,y:180,width:270,height:82 }]
+  ]);
+  const moved = placeExpandedPartnerParentsNearSpouses(
+    new Map([[spouse.id,{ spouseId:"lineage-sibling" }]]),
+    new Map([[spouse.id,new Set([parent.id])]]),
+    new Map([[parent.id,new Set([spouse.id])]]),
+    new Set(["lineage-sibling"]),
+    new Map([[parent.id,parentUnit],[spouse.id,{ people:[spouse] }]]),
+    new Map(),
+    new Map(),
+    positions,
+    20
+  );
+  assert.equal(moved,1,"A standalone spouse-parent branch should be relocated near the spouse it connects to");
+  assert.equal(positions.get(parent.id).x,300,
+    "The spouse parent should move to the nearest collision-free spot aligned with the spouse");
+  assert.equal(positions.get("other-left").x,0,"Other records on the parent row must not move");
+  assert.equal(positions.get("other-right").x,600,"Other records on the parent row must not move");
+
+  const anchoredPositions = new Map([
+    [parent.id,{ x:900,y:24,width:270,height:82 }],
+    [spouse.id,{ x:300,y:180,width:270,height:82 }]
+  ]);
+  const anchoredParentUnit = { people:[parent] };
+  assert.equal(placeExpandedPartnerParentsNearSpouses(
+    new Map([[spouse.id,{ spouseId:"lineage-sibling" }]]),
+    new Map([[spouse.id,new Set([parent.id])]]),
+    new Map([[parent.id,new Set([spouse.id])]]),
+    new Set(["lineage-sibling"]),
+    new Map([[parent.id,anchoredParentUnit],[spouse.id,{ people:[spouse] }]]),
+    new Map([[anchoredParentUnit,{}]]),
+    new Map(),
+    anchoredPositions,
+    20
+  ),0,"Parents with their own family placement must not be moved out of that branch");
+}
+
 const expandedPartnerGuardSource = extractFunction(
   app,
   "function shouldUseExpandedInLawFamilyBlock(",
