@@ -1184,6 +1184,14 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return candidates[0];
   }
 
+  function familyBusInterferingUnitIds(units, exemptUnitIds, busLeft, busRight) {
+  if (busRight <= busLeft) return [];
+  return units
+    .filter(unit => !exemptUnitIds.has(unit.id) && unit.right > busLeft && unit.left < busRight)
+    .sort((a, b) => a.left - b.left || a.right - b.right)
+    .map(unit => unit.id);
+}
+
   function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
@@ -1751,6 +1759,102 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           unitLeft += unit.width + block.memberGap;
         });
         previousRight = left + block.width;
+      });
+    });
+
+        // Map each couple/person unit to its descendant units. This allows a
+    // displaced record to carry its own children with it instead of leaving
+    // broken-looking long connectors behind.
+    const childUnitsByUnit = new Map();
+    parentEdgesForLayout.forEach(edge => {
+      const parentUnit = personUnit.get(edge.person_id);
+      const childUnit = personUnit.get(edge.related_person_id);
+      if (!parentUnit || !childUnit || parentUnit === childUnit) return;
+      if (!childUnitsByUnit.has(parentUnit)) childUnitsByUnit.set(parentUnit, new Set());
+      childUnitsByUnit.get(parentUnit).add(childUnit);
+    });
+    const shiftUnitBranch = (startUnit, delta) => {
+      if (!startUnit || delta <= 0) return;
+      const queue = [startUnit];
+      const shiftedUnits = new Set();
+      for (let index = 0; index < queue.length; index++) {
+        const unit = queue[index];
+        if (shiftedUnits.has(unit)) continue;
+        shiftedUnits.add(unit);
+        unit.people.forEach(person => {
+          const position = positions.get(person.id);
+          if (position) positions.set(person.id, { ...position, x:position.x + delta });
+        });
+        (childUnitsByUnit.get(unit) || new Set()).forEach(childUnit => {
+          if (!shiftedUnits.has(childUnit)) queue.push(childUnit);
+        });
+      }
+    };
+
+    const clearanceFamilyGroups = new Map();
+    parentsByChild.forEach((parentSet, childId) => {
+      const childPosition = positions.get(childId);
+      const parentIds = Array.from(parentSet).sort();
+      const parentPositions = parentIds.map(id => positions.get(id)).filter(Boolean);
+      if (!childPosition || !parentPositions.length ||
+          !parentPositions.every(parent => parent.y < childPosition.y)) return;
+      const key = parentIds.join("|");
+      if (!clearanceFamilyGroups.has(key)) {
+        clearanceFamilyGroups.set(key, { parentIds, childIds:[] });
+      }
+      clearanceFamilyGroups.get(key).childIds.push(childId);
+    });
+    const orderedClearanceGroups = Array.from(clearanceFamilyGroups.values()).sort((a, b) => {
+      const rowA = Math.max(...a.parentIds.map(id => positions.get(id)?.y ?? 0));
+      const rowB = Math.max(...b.parentIds.map(id => positions.get(id)?.y ?? 0));
+      if (rowA !== rowB) return rowA - rowB;
+      const center = group => group.parentIds.reduce(
+        (sum, id) => sum + (positions.get(id)?.x ?? 0) + (positions.get(id)?.width ?? 0) / 2, 0
+      ) / group.parentIds.length;
+      return center(a) - center(b);
+    });
+    orderedClearanceGroups.forEach(group => {
+      const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
+      const children = group.childIds.map(id => positions.get(id)).filter(Boolean);
+      if (!parents.length || !children.length ||
+          !parents.every(parent => parent.y === parents[0].y) ||
+          !children.every(child => child.y === children[0].y)) return;
+
+      const parentCenterX = parents.reduce((sum, parent) =>
+        sum + parent.x + parent.width / 2, 0) / parents.length;
+      const childCenters = children.map(child => child.x + child.width / 2);
+      const busLeft = Math.min(parentCenterX, ...childCenters);
+      const busRight = Math.max(parentCenterX, ...childCenters);
+      if (busRight - busLeft < 1) return;
+
+      const parentRowUnits = (levelUnits.get(levelByPerson.get(group.parentIds[0])) || [])
+        .map(unit => {
+          const unitPositions = unit.people.map(person => positions.get(person.id)).filter(Boolean);
+          if (!unitPositions.length || !unitPositions.every(position => position.y === parents[0].y)) return null;
+          return {
+            id:unit,
+            left:Math.min(...unitPositions.map(position => position.x)),
+            right:Math.max(...unitPositions.map(position => position.x + position.width))
+          };
+        }).filter(Boolean);
+      const exemptUnits = new Set(group.parentIds.map(id => personUnit.get(id)).filter(Boolean));
+      const interferingUnitIds = familyBusInterferingUnitIds(
+        parentRowUnits, exemptUnits, busLeft, busRight
+      );
+      if (!interferingUnitIds.length) return;
+
+      // Place records after the complete children block and beyond the bus span,
+      // using the usual generation gap. Move spouses and descendants together.
+      const childBlockRight = Math.max(...children.map(child => child.x + child.width));
+      let nextFreeX = Math.max(childBlockRight, busRight) + columnGap;
+      interferingUnitIds.forEach(unit => {
+        const unitPositions = unit.people.map(person => positions.get(person.id)).filter(Boolean);
+        if (!unitPositions.length) return;
+        const unitLeft = Math.min(...unitPositions.map(position => position.x));
+        const unitRight = Math.max(...unitPositions.map(position => position.x + position.width));
+        const delta = Math.max(0, nextFreeX - unitLeft);
+        if (delta > 0) shiftUnitBranch(unit, delta);
+        nextFreeX = Math.max(unitRight + delta, nextFreeX) + columnGap;
       });
     });
 
