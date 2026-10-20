@@ -2458,29 +2458,32 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
     if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
-    const minimumScale = window.matchMedia("(max-width: 760px)").matches ? 0.01 : 0.25;
-    const scale = Math.max(minimumScale, Math.min(2.5, state.treeZoom || 1));
-    const oldWidth = Number(canvas.dataset.scaledWidth || state.treeBaseWidth * scale);
-    const oldScale = oldWidth / state.treeBaseWidth;
+    const appView = window.matchMedia("(max-width: 760px)").matches;
+    const minimumScale = appView ? calculateTreeFitScale() : 0.25;
+    const scale = Math.max(minimumScale, Math.min(2.5, Number(state.treeZoom) || 1));
+    const oldScale = Math.max(0.0001, Number(canvas.dataset.appliedScale) || scale);
     const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
     const ay = Number.isFinite(anchorY) ? anchorY : viewport.clientHeight / 2;
-    const worldX = (viewport.scrollLeft + ax) / (oldScale || 1);
-    const worldY = (viewport.scrollTop + ay) / (oldScale || 1);
+    const worldX = (viewport.scrollLeft + ax) / oldScale;
+    const worldY = (viewport.scrollTop + ay) / oldScale;
 
     state.treeZoom = scale;
     nodesRoot.style.transformOrigin = "0 0";
-    nodesRoot.style.transform = "scale(" + scale + ")";
+    nodesRoot.style.transform = "translateZ(0) scale(" + scale + ")";
     linesRoot.style.transformOrigin = "0 0";
-    linesRoot.style.transform = "scale(" + scale + ")";
+    linesRoot.style.transform = "translateZ(0) scale(" + scale + ")";
     canvas.style.width = Math.ceil(state.treeBaseWidth * scale) + "px";
     canvas.style.height = Math.ceil(state.treeBaseHeight * scale) + "px";
+    canvas.dataset.appliedScale = String(scale);
     canvas.dataset.scaledWidth = String(state.treeBaseWidth * scale);
     const level = $("#tree-zoom-level");
     if (level) level.textContent = Math.round(scale * 100) + "%";
 
     if (preservePosition) {
-      viewport.scrollLeft = Math.max(0, worldX * scale - ax);
-      viewport.scrollTop = Math.max(0, worldY * scale - ay);
+      const maxLeft = Math.max(0, canvas.offsetWidth - viewport.clientWidth);
+      const maxTop = Math.max(0, canvas.offsetHeight - viewport.clientHeight);
+      viewport.scrollLeft = Math.max(0, Math.min(maxLeft, worldX * scale - ax));
+      viewport.scrollTop = Math.max(0, Math.min(maxTop, worldY * scale - ay));
     }
   }
 
@@ -2538,6 +2541,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     let pinchStartScale = 1;
     let moved = false;
     let suppressClickUntil = 0;
+    let zoomFramePending = false;
+    let queuedZoom = null;
 
     const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
     const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
@@ -2572,7 +2577,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         const middle = midpoint(pair[0], pair[1]);
         const rect = viewport.getBoundingClientRect();
         const nextScale = pinchStartScale * distance(pair[0], pair[1]) / pinchStartDistance;
-        setTreeZoom(nextScale, middle.x, middle.y);
+        queuedZoom = { scale: nextScale, x: middle.x, y: middle.y };
+        if (!zoomFramePending) {
+          zoomFramePending = true;
+          requestAnimationFrame(() => {
+            zoomFramePending = false;
+            if (!queuedZoom) return;
+            const zoom = queuedZoom;
+            queuedZoom = null;
+            setTreeZoom(zoom.scale, zoom.x, zoom.y);
+          });
+        }
         moved = true;
         suppressClickUntil = Date.now() + 350;
         event.preventDefault();
