@@ -975,6 +975,34 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
       if(!changed)break;
     }
+
+    // Kinship labels should match the visible generation row, not just a direct
+    // sibling/spouse path. If any direct ancestor is a grandparent (or great-
+    // grandparent), every record in that same generation row gets that ancestor
+    // generation's label, including cousins and relatives whose parent links do
+    // not directly connect them to the ego's ancestor.
+    const generationRows = generationMap();
+    const generationLevelByPerson = new Map();
+    generationRows.forEach((people, level) => {
+      people.forEach(person => generationLevelByPerson.set(person.id, level));
+    });
+    const ancestorDistanceByRow = new Map();
+    array(bloodAncestors.entries()).forEach(([ancestorId, distance]) => {
+      if(distance < 2)return;
+      const level = generationLevelByPerson.get(ancestorId);
+      if(level === undefined)return;
+      const current = ancestorDistanceByRow.get(level);
+      if(current === undefined || distance < current)ancestorDistanceByRow.set(level, distance);
+    });
+    generationRows.forEach((people, level) => {
+      const distance = ancestorDistanceByRow.get(level);
+      if(distance === undefined)return;
+      people.forEach(person => {
+        const current = ancestorGenerationForLabel.get(person.id);
+        if(current === undefined || distance < current)ancestorGenerationForLabel.set(person.id, distance);
+      });
+    });
+
     const siblingsOf=id=>new Set(array(parentsOf(id)).flatMap(pid=>array(childrenOf(pid))).filter(otherId=>otherId!==id));
     const gender=p=>p?.gender||"",fullBirthDate=p=>typeof p?.birth_date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(p.birth_date);
     const age=(p,anchor)=>!fullBirthDate(p)||!fullBirthDate(anchor)||p.birth_date===anchor.birth_date?"unknown":p.birth_date<anchor.birth_date?"older":"younger";
