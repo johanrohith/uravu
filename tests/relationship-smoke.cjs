@@ -940,8 +940,23 @@ assert.ok(app.includes('$("[data-remove-relationship]").forEach'));
 
 assert.match(html, /id="family-branch-legend"/);
 assert.doesNotMatch(html, /YOUR FAMILY WORKSPACE|id="welcome-heading"/);
-assert.match(html, /id="workspace-role"/);
+assert.doesNotMatch(html, /SHARED FAMILY TREE|id="workspace-role"/);
+assert.match(html, /id="workspace-title">Uravugal</);
 assert.match(html, /One shared family tree, across generations\./);
+assert.equal((html.match(/<h3>Family tree<\/h3>/g) || []).length, 1);
+assert.match(html, /id="link-account-prompt"/);
+assert.match(html, /Do you want to know the relation terms for your relations\?/);
+assert.match(html, /id="link-form-desktop-target"/);
+assert.match(html, /id="link-form-mobile-target"/);
+assert.match(html, /id="app-bottom-nav"/);
+for (const id of ["app-nav-add", "app-nav-members", "app-nav-requests", "app-nav-edit", "app-nav-profile", "app-nav-signout"]) {
+  assert.match(html, new RegExp('id="' + id + '"'));
+}
+assert.match(app, /function syncLinkFormPlacement\(\)/);
+assert.match(app, /function syncAppNavigation\(\)/);
+assert.match(app, /$("#app-nav-signout").addEventListener/);
+assert.match(styles, /\.app-bottom-nav:not\(\[hidden\]\)/);
+assert.match(styles, /\.add-person-panel,\.management-panel,\.requests-panel\{position:fixed/);
 assert.match(html, /class="tree-control-actions"/);
 assert.ok(
   html.indexOf('id="tree-zoom-out"') < html.indexOf('id="tree-zoom-level"') &&
