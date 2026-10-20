@@ -31,6 +31,8 @@
     treeBaseWidth: 0,
     treeBaseHeight: 0,
     treeInitialViewKey: null,
+    treeViewSessionInitialized: false,
+    treeViewSaveTimer: null,
     mobileTreeToolbarCollapsed: false,
     openPanels: new Set(),
     familyLegendExpanded: false
@@ -791,6 +793,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       state.members = [];
       state.requests = [];
       state.treeInitialViewKey = null;
+      state.treeViewSessionInitialized = false;
+      if (state.treeViewSaveTimer) clearTimeout(state.treeViewSaveTimer);
+      state.treeViewSaveTimer = null;
       state.openPanels.clear();
       $("#tree-workspace").hidden = true;
       $("#dashboard").classList.remove("tree-open");
@@ -941,7 +946,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         if (!error && !state.loadingTree && state.people.length && state.members.length) {
           const refreshTreeAfterMemberships = () => {
             if (!isCurrentLoad() || state.loadingTree || !state.people.length) return;
-            state.treeInitialViewKey = null;
             try { renderPeople(); }
             catch (renderError) { console.error("Uravu tree refresh after member load failed:", renderError); }
           };
@@ -2632,44 +2636,55 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const linkedPersonId = state.activeMembership?.person_id ||
       state.members.find(member => member.user_id === state.user?.id)?.person_id || null;
     const focusPosition = linkedPersonId ? positions.get(linkedPersonId) : null;
-    const initialViewKey = String(state.user?.id || "") + ":" +
-      (focusPosition ? "linked:" + linkedPersonId : "unlinked");
-    const shouldFocusMobileInitialView = appView && state.treeInitialViewKey !== initialViewKey;
+    // Apply the initial view once for this user/tree, regardless of viewport size.
+    const initialViewKey = String(state.user?.id || "") + ":" + String(state.activeTree?.id || "");
+    const shouldInitializeInitialView = state.treeInitialViewKey !== initialViewKey;
+    const savedTreeView = shouldInitializeInitialView ? readTreeViewSession() : null;
 
-    if (shouldFocusMobileInitialView) {
+    if (shouldInitializeInitialView) {
       state.treeInitialViewKey = initialViewKey;
-      // Keep linked records readable; start unlinked accounts at a moderate zoom.
-      state.treeZoom = focusPosition ? 1 : 0.4;
+      state.treeViewSessionInitialized = false;
+      if (savedTreeView) {
+        state.treeZoom = savedTreeView.zoom;
+      } else if (focusPosition) {
+        // Both the mobile app and desktop web start focused on the linked member's record.
+        state.treeZoom = 1;
+      } else {
+        // When no own record is linked, retain a practical default for that viewport.
+        state.treeZoom = appView ? 0.4 : calculateTreeFitScale();
+      }
     } else if (!hadPreviousTreeLayout) {
-      // Preserve the existing web fit-to-tree behaviour.
       state.treeZoom = calculateTreeFitScale();
     }
     applyTreeCanvasScale(false);
 
-    if (shouldFocusMobileInitialView) {
+    if (shouldInitializeInitialView) {
       requestAnimationFrame(() => {
-        if (!viewport.isConnected || viewport.hidden) return;
-        const currentLinkedPersonId = state.activeMembership?.person_id ||
-          state.members.find(member => member.user_id === state.user?.id)?.person_id || null;
-        // If the account changed before this frame, don't apply a stale focus.
-        if (currentLinkedPersonId !== linkedPersonId) return;
-        if (!focusPosition) {
+        if (!viewport.isConnected) return;
+        if (savedTreeView) {
+          const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+          const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+          viewport.scrollLeft = Math.max(0, Math.min(maxLeft, savedTreeView.scrollLeft));
+          viewport.scrollTop = Math.max(0, Math.min(maxTop, savedTreeView.scrollTop));
+        } else if (focusPosition) {
+          const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+          const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+          const targetLeft = (focusPosition.x + focusPosition.width / 2) * state.treeZoom -
+            viewport.clientWidth / 2;
+          const targetTop = (focusPosition.y + focusPosition.height / 2) * state.treeZoom -
+            viewport.clientHeight / 2;
+          viewport.scrollLeft = Math.max(0, Math.min(maxLeft, targetLeft));
+          viewport.scrollTop = Math.max(0, Math.min(maxTop, targetTop));
+        } else {
           viewport.scrollLeft = 0;
           viewport.scrollTop = 0;
-          return;
         }
-        const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-        const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
-        const targetLeft = (focusPosition.x + focusPosition.width / 2) * state.treeZoom -
-          viewport.clientWidth / 2;
-        const targetTop = (focusPosition.y + focusPosition.height / 2) * state.treeZoom -
-          viewport.clientHeight / 2;
-        viewport.scrollLeft = Math.max(0, Math.min(maxLeft, targetLeft));
-        viewport.scrollTop = Math.max(0, Math.min(maxTop, targetTop));
+        state.treeViewSessionInitialized = true;
+        saveTreeViewSessionNow();
       });
     }
 
-    if (search && !shouldFocusMobileInitialView) {
+    if (search && !shouldInitializeInitialView) {
       const firstMatch = visibleSelected.find(person => [person.full_name, person.tamil_name]
         .some(value => String(value || "").toLocaleLowerCase().includes(search)));
       const matchPosition = firstMatch && positions.get(firstMatch.id);
@@ -2691,6 +2706,58 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         }
       });
     });
+  }
+
+  function treeViewSessionStorageKey() {
+    if (!state.user?.id || !state.activeTree?.id) return null;
+    return "uravu:tree-view:v1:" + encodeURIComponent(String(state.user.id)) +
+      ":" + encodeURIComponent(String(state.activeTree.id));
+  }
+
+  function readTreeViewSession() {
+    const key = treeViewSessionStorageKey();
+    if (!key) return null;
+    try {
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) return null;
+      const saved = JSON.parse(raw);
+      const zoom = Number(saved?.zoom);
+      if (!Number.isFinite(zoom) || zoom <= 0) return null;
+      return {
+        zoom,
+        scrollLeft: Math.max(0, Number(saved.scrollLeft) || 0),
+        scrollTop: Math.max(0, Number(saved.scrollTop) || 0)
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveTreeViewSessionNow() {
+    if (!state.treeViewSessionInitialized || !state.treeBaseWidth || !state.treeBaseHeight) return;
+    const key = treeViewSessionStorageKey();
+    const viewport = $("#family-tree-viewport");
+    if (!key || !viewport || viewport.hidden) return;
+    if (state.treeViewSaveTimer) {
+      clearTimeout(state.treeViewSaveTimer);
+      state.treeViewSaveTimer = null;
+    }
+    try {
+      window.sessionStorage.setItem(key, JSON.stringify({
+        zoom: state.treeZoom,
+        scrollLeft: viewport.scrollLeft,
+        scrollTop: viewport.scrollTop
+      }));
+    } catch (_) {}
+  }
+
+  function scheduleTreeViewSessionSave() {
+    if (!state.treeViewSessionInitialized) return;
+    if (state.treeViewSaveTimer) clearTimeout(state.treeViewSaveTimer);
+    state.treeViewSaveTimer = setTimeout(() => {
+      state.treeViewSaveTimer = null;
+      saveTreeViewSessionNow();
+    }, 140);
   }
 
   function applyTreeCanvasScale(preservePosition = true, anchorX, anchorY) {
@@ -2752,6 +2819,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const minimumScale = appView ? 0.05 : 0.25;
     state.treeZoom = Math.max(minimumScale, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
+    scheduleTreeViewSessionSave();
   }
 
   function fitTreeToView() {
@@ -2760,6 +2828,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     state.treeZoom = calculateTreeFitScale();
     applyTreeCanvasScale(false);
     viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+    scheduleTreeViewSessionSave();
   }
 
   function toggleTreeFullscreen() {
@@ -2783,6 +2852,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const viewport = $("#family-tree-viewport");
     if (!viewport || viewport.dataset.gesturesBound === "1") return;
     viewport.dataset.gesturesBound = "1";
+    viewport.addEventListener("scroll", scheduleTreeViewSessionSave, { passive:true });
     const pointers = new Map();
     let lastDragPoint = null;
     let pinchStartDistance = 0;
@@ -3456,20 +3526,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
     const mediaQuery = window.matchMedia("(max-width: 760px)");
     const handleViewportChange = () => {
-      // If the app viewport grows into the web layout, restore the normal web fit.
-      // This branch runs only after the mobile-only focus behavior has been used.
-      if (!mediaQuery.matches && state.treeInitialViewKey !== null) {
-        state.treeInitialViewKey = null;
-        if (state.treeBaseWidth && state.treeBaseHeight) {
-          state.treeZoom = calculateTreeFitScale();
-          applyTreeCanvasScale(false);
-          const viewport = $("#family-tree-viewport");
-          if (viewport) {
-            viewport.scrollLeft = 0;
-            viewport.scrollTop = 0;
-          }
-        }
-      }
+      // A viewport change must never reset the user's tree zoom or scroll position.
       syncLinkFormPlacement();
       syncMobileTreeToolbar();
       if (state.activeTree) renderWorkspace();
@@ -3519,6 +3576,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
     bindTreeGestures();
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") saveTreeViewSessionNow();
+    });
+    window.addEventListener("pagehide", saveTreeViewSessionNow);
     $("#language-button").addEventListener("click", setLanguage);
     $("#request-modal-close").addEventListener("click", closeRequestDialog);
     $("#request-modal").addEventListener("click", event => {
