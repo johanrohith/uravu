@@ -1208,3 +1208,23 @@ assert.match(styles, /height: 100svh !important/);
 assert.match(styles, /touch-action: none !important/);
 assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)/);
 
+
+
+// Mobile-app-only account focus and panel behavior; keep the web fit-to-tree path.
+assert.match(app, /treeInitialViewKey: null/);
+assert.match(app, /const shouldFocusMobileInitialView = appView && state\.treeInitialViewKey !== initialViewKey/);
+assert.match(app, /state\.treeZoom = focusPosition \? 1 : 0\.4/);
+assert.match(app, /if \(search && !shouldFocusMobileInitialView\)/);
+assert.match(app, /const showOwnRecordInstruction = appView && Boolean\(/);
+assert.match(app, /divider\.hidden = shouldPauseCreation \|\| \(/);
+assert.match(app, /signOut\.hidden = hasOpenPanel \? false : !signOut\.hidden/);
+assert.match(app, /"MEMBERSHIP":"உறுப்பினர் நிலை"/);
+assert.match(app, /"FAMILY RECORDS":"குடும்பப் பதிவுகள்"/);
+assert.match(app, /"Confirm requests from people asking to link their account to a family record\."/);
+assert.match(html, /class="own-record-instruction"/);
+assert.match(html, /uravu-mobile-account-focus-20261020-1/);
+assert.match(styles, /\/\* App-only panel alignment, neutral edit state, and active edit indicator\. \*\//);
+assert.match(styles, /\.requests-panel \.section-heading \{\s*display: grid !important;\s*grid-template-columns: minmax\(0, 1fr\) 34px !important;/);
+assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-off \{\s*background: transparent !important;\s*border-color: transparent !important;\s*color: #789080 !important;/);
+assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-on \{\s*background: #218447 !important;\s*border-color: #218447 !important;\s*color: #fff !important;/);
+assert.match(styles, /@media \(max-width: 760px\)/);
