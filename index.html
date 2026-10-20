@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-sibling-order-priority-20261020-2';
+        stylesheet.href = './styles.css?v=uravu-sibling-order-merge-20261020-4';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -57,7 +57,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app.js?v=uravu-sibling-order-priority-20261020-2');
+        await loadScript('./app.js?v=uravu-sibling-order-merge-20261020-4');
         // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
         try {
           if ('caches' in window) {
@@ -166,7 +166,7 @@
                 <div><label class="field-label" for="person-tamil">Tamil name</label><input class="form-input tamil-input" id="person-tamil" maxlength="120" required aria-required="true" placeholder="தமிழ்ப் பெயர்"></div>
                 <div><label class="field-label" for="person-gender">Gender</label><select class="form-input" id="person-gender" required aria-required="true"><option value="">Select gender</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / prefer not to say</option></select></div>
                 <div><label class="field-label" for="person-birth">Date of birth <span class="optional">Optional</span></label><div class="date-entry-row"><input class="form-input partial-date-input" id="person-birth" type="text" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="off" aria-describedby="birth-date-help"><label class="calendar-picker" for="person-birth-calendar" aria-label="Choose date of birth"><span aria-hidden="true">▦</span><span>Calendar</span><input class="native-calendar-input" id="person-birth-calendar" type="date" aria-label="Choose date of birth"></label></div><p class="field-help" id="birth-date-help">Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.</p></div>
-                <div id="person-birth-order-field"><label class="field-label" for="person-birth-order">Sibling birth order <span class="optional">Optional</span></label><input class="form-input" id="person-birth-order" type="number" min="1" max="999" step="1" inputmode="numeric" placeholder="e.g. 1" aria-describedby="birth-order-help"><p class="field-help" id="birth-order-help">Use when dates are unknown. Enter 1 for the oldest sibling; assign an order to each sibling whose age is unknown.</p></div>
+                <div id="person-birth-order-field"><label class="field-label" for="person-birth-order">Sibling birth order <span class="optional">Optional</span></label><input class="form-input" id="person-birth-order" type="number" min="1" max="999" step="1" inputmode="numeric" placeholder="e.g. 1" aria-describedby="birth-order-help"><p class="field-help" id="birth-order-help">For siblings without birthdates, enter their position (1 = oldest). Siblings with known birthdates are sorted by age and placed around these positions. Do not reuse a number among siblings who share a parent.</p></div>
                 <div class="deceased-field"><label class="checkbox-label" for="person-deceased"><input id="person-deceased" type="checkbox"><span>Living in Memory</span></label></div>
                 <div id="death-date-field" hidden><label class="field-label" for="person-death">Date of death <span class="optional">Optional</span></label><div class="date-entry-row"><input class="form-input partial-date-input" id="person-death" type="text" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="off" aria-describedby="death-date-help"><label class="calendar-picker" for="person-death-calendar" aria-label="Choose date of death"><span aria-hidden="true">▦</span><span>Calendar</span><input class="native-calendar-input" id="person-death-calendar" type="date" aria-label="Choose date of death"></label></div><p class="field-help" id="death-date-help">Enter DD-MM-YYYY, MM-YYYY, YYYY, DD-MM or MM. Use the calendar for a full date.</p></div>
                 <section class="form-wide connection-input-group" aria-labelledby="add-connection-heading">
