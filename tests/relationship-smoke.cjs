@@ -390,7 +390,7 @@ assert.match(app, /function displayTreeName/);
 assert.match(app, /const selected = state\.people\.slice\(\)/);
 assert.match(app, /function highlightSearchMatch/);
 assert.match(app, /const columnGap = 64/);
-assert.match(app, /const coupleGap = 28/);
+assert.match(app, /const coupleGap = 36/);
 assert.match(app, /const familySiblingGap = 24/);
 assert.match(app, /const familyBlockGap = 40/);
 assert.match(app, /is_self_record:!isManager\(\)/);
@@ -405,7 +405,7 @@ assert.match(singleTreeMigration, /grant update \(/);
 assert.match(singleTreeMigration, /uravu_main_tree_id/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
 assert.match(app, /Parents of one child share a generation row/);
-assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
+assert.ok(app.includes("const nodeWidth = 310"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"), "Child connectors should be grouped by their actual parent set, including single-parent links");
 {
