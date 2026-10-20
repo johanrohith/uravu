@@ -1164,7 +1164,7 @@ assert.ok(
 assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
 assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
 assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
-assert.match(html, /uravu-mobile-isolated-tree-20261020-2/);
+assert.match(html, /uravu-account-focus-panels-20261020-1/);
 assert.match(html, /id="family-tree-sizer"/);
 assert.match(html, /id="mobile-tree-toolbar"/);
 assert.match(html, /id="mobile-tree-toolbar-content"/);
@@ -1203,7 +1203,21 @@ assert.match(styles, /\.family-tree-viewport\{position:relative;z-index:0;isolat
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
 
 assert.match(app, /const hadPreviousTreeLayout = state\.treeBaseWidth > 0 && state\.treeBaseHeight > 0/);
-assert.match(app, /if \(!hadPreviousTreeLayout\) state\.treeZoom = calculateTreeFitScale\(\)/);
+assert.match(app, /const shouldSetInitialView = !hadPreviousTreeLayout \|\| state\.treeInitialViewKey !== initialViewKey/);
 assert.match(styles, /height: 100svh !important/);
 assert.match(styles, /touch-action: none !important/);
 assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)/);
+
+assert.match(app, /treeInitialViewKey: null/);
+assert.match(app, /state\.treeZoom = linkedPersonId && focusPosition \? 1 : 0\.4/);
+assert.match(app, /const desiredLeft = \(focusPosition\.x \+ focusPosition\.width \/ 2\) \* scale - viewport\.clientWidth \/ 2/);
+assert.match(app, /const ownRecordInstructionVisible = Boolean\(state\.activeTree && state\.user && !isManager\(\) && !ownRecord\)/);
+assert.match(app, /divider\.hidden = isManager\(\) \|\| shouldPauseCreation/);
+assert.match(app, /const wasSignOutOpen = !signOut\.hidden/);
+assert.match(app, /if \(state\.openPanels\.size\) \{\s*state\.openPanels\.clear\(\);\s*renderWorkspace\(\);/);
+assert.match(app, /"MEMBERSHIP":"உறுப்பினர் நிலை"/);
+assert.match(app, /"FAMILY RECORDS":"குடும்பப் பதிவுகள்"/);
+assert.match(html, /class="own-record-instruction"/);
+assert.match(css, /\.requests-panel \.section-heading \{\s*display: grid !important;\s*grid-template-columns: minmax\(0, 1fr\) 34px !important;/);
+assert.match(css, /\.app-nav-item\.edit-mode-button\.is-off \{\s*background: transparent !important;/);
+assert.match(css, /\.app-nav-item\.edit-mode-button\.is-on \{\s*background: #218447 !important;/);
