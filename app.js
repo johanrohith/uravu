@@ -907,6 +907,15 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return groups;
   }
 
+  function familyParentStemStartY(parents, partnerLine) {
+    // A partner line already joins the parents inside their cards. Without one,
+    // start at the bottom of the recorded parent card(s), not the bottom of the
+    // tallest unrelated card in the same generation row. The bus itself remains
+    // below the complete row to avoid crossing cards.
+    if (partnerLine) return partnerLine.y;
+    return Math.max(...parents.map(parent => parent.y + parent.height));
+  }
+
   function relationNames(person, type) {
     let ids = [];
     if (type === "parents") ids = state.relationships.filter(r => r.relationship_type === "parent" && r.related_person_id === person.id).map(r => r.person_id);
@@ -1946,7 +1955,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         (sum, parent) => sum + parent.x + parent.width / 2, 0
       ) / parents.length;
       const trunkStartX = partnerLine ? partnerLine.centerX : fallbackParentCenterX;
-      const trunkStartY = partnerLine ? partnerLine.y : parentRowBottom;
+      const trunkStartY = familyParentStemStartY(parents, partnerLine);
       const childCenters = children.map(child => child.x + child.width / 2);
       const busLeft = Math.min(trunkStartX, ...childCenters);
       const busRight = Math.max(trunkStartX, ...childCenters);
