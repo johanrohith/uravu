@@ -58,7 +58,7 @@
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
         await loadScript('./app.js?v=uravu-workspace-ui-20261020-9');
-        // The legacy worker may have repopulated Cache Storage while serving fresh-path assets.
+
         try {
           if ('caches' in window) {
             const names = await caches.keys();
