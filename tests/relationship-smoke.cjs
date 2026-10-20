@@ -653,7 +653,7 @@ assert.match(app, /familyBusInterferingUnitIds\(/);
 {
   const familyBusSafeTargetLeft = new Function(
     app.slice(app.indexOf("function familyBusSafeTargetLeft("), app.indexOf("function renderPeople()")) +
-      "\\nreturn familyBusSafeTargetLeft;"
+      "\nreturn familyBusSafeTargetLeft;"
   )();
   assert.equal(familyBusSafeTargetLeft(280,270,[
     {left:300,right:500,childBlockRight:520,exempt:false}
