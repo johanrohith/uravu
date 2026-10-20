@@ -1454,6 +1454,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return candidates[0];
   }
 
+  function shouldUseExpandedInLawFamilyBlock(unit, expandedFamilyKey, candidates, treeLineageIds, parentFamilyByPerson) {
+    if (!expandedFamilyKey || !candidates.includes(expandedFamilyKey)) return false;
+    // An in-law with recorded parents should bring their parent branch into the
+    // tree, but must not pull a sibling/couple away from its own bloodline block.
+    const hasLineageFamilyAnchor = (unit.people || []).some(person =>
+      treeLineageIds.has(person.id) && parentFamilyByPerson.has(person.id)
+    );
+    return !hasLineageFamilyAnchor;
+  }
+
   function computeFamilySubtreeLayout(rootUnits, childrenByUnit, childRecordIdsByUnit, nodeWidth, coupleGap, branchGap, initialCenters) {
   const cache = new Map();
 
@@ -1991,8 +2001,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           return family && unit.people.some(candidate => candidate.id === family.spouseId);
         });
         const expandedFamilyKey = expandedInLaw && parentFamilyByPerson.get(expandedInLaw.id);
-        if (expandedFamilyKey && candidates.includes(expandedFamilyKey)) {
-          // Keep the spouse unit in the in-law's own birth-family block by default.
+        if (shouldUseExpandedInLawFamilyBlock(
+          unit, expandedFamilyKey, candidates, treeLineageIds, parentFamilyByPerson
+        )) {
+          // Show the in-law's parent branch when it does not displace a unit
+          // already anchored to a recorded family in the active bloodline.
           primaryFamilyByUnit.set(unit, expandedFamilyKey);
           return;
         }
