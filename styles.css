@@ -486,6 +486,7 @@
   .app-nav-avatar{display:grid;place-items:center;width:22px;height:22px;flex:0 0 22px;border-radius:50%;overflow:hidden;color:currentColor}
   .app-nav-avatar svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .app-nav-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+  .app-nav-avatar.has-photo svg{display:none}
   .app-nav-item:has(.app-nav-avatar) span:last-child{min-height:22px}
   .family-tree-lines .family-line{stroke-width:2.8px}
 }
