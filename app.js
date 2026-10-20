@@ -1464,6 +1464,93 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return !hasLineageFamilyAnchor;
   }
 
+  function placeUnitNearestTarget(unit, targetCenter, positions, minimumGap = 24) {
+    const people = (unit?.people || []).filter(person => positions.has(person.id));
+    if (!people.length || !Number.isFinite(targetCenter)) return false;
+    const ids = new Set(people.map(person => person.id));
+    const existing = people.map(person => positions.get(person.id));
+    const rowY = existing[0].y;
+    if (existing.some(position => position.y !== rowY)) return false;
+
+    const originalLeft = Math.min(...existing.map(position => position.x));
+    const originalRight = Math.max(...existing.map(position => position.x + position.width));
+    const groupWidth = originalRight - originalLeft;
+    const blockers = Array.from(positions.entries())
+      .filter(([id, position]) => !ids.has(id) && position.y === rowY)
+      .map(([, position]) => position);
+    const desiredLeft = targetCenter - groupWidth / 2;
+    const candidates = new Set([desiredLeft, originalLeft]);
+    blockers.forEach(position => {
+      candidates.add(position.x - minimumGap - groupWidth);
+      candidates.add(position.x + position.width + minimumGap);
+    });
+    if (blockers.length) {
+      const leftmost = Math.min(...blockers.map(position => position.x));
+      const rightmost = Math.max(...blockers.map(position => position.x + position.width));
+      candidates.add(leftmost - minimumGap - groupWidth);
+      candidates.add(rightmost + minimumGap);
+    }
+
+    const valid = Array.from(candidates).filter(left => blockers.every(position =>
+      left + groupWidth + minimumGap <= position.x ||
+      left >= position.x + position.width + minimumGap
+    ));
+    if (!valid.length) return false;
+    valid.sort((a, b) =>
+      Math.abs((a + groupWidth / 2) - targetCenter) -
+        Math.abs((b + groupWidth / 2) - targetCenter) ||
+      Math.abs(a - originalLeft) - Math.abs(b - originalLeft) ||
+      a - b
+    );
+    const shift = valid[0] - originalLeft;
+    if (Math.abs(shift) < 1) return false;
+    people.forEach(person => {
+      const position = positions.get(person.id);
+      positions.set(person.id, { ...position, x:position.x + shift });
+    });
+    return true;
+  }
+
+  function placeExpandedPartnerParentsNearSpouses(
+    expandedPartnerFamiliesByPerson, rawParentsByChild, rawChildrenByParent,
+    treeLineageIds, personUnit, parentUnitForChildUnit, childUnitsByParentUnit,
+    positions, minimumGap = 24
+  ) {
+    const targetsByParentUnit = new Map();
+    expandedPartnerFamiliesByPerson.forEach((family, externalPartnerId) => {
+      const childPosition = positions.get(externalPartnerId);
+      if (!childPosition) return;
+      (rawParentsByChild.get(externalPartnerId) || new Set()).forEach(parentId => {
+        const parentUnit = personUnit.get(parentId);
+        if (!parentUnit || parentUnitForChildUnit.has(parentUnit) ||
+            (childUnitsByParentUnit.get(parentUnit)?.size || 0) > 0 ||
+            parentUnit.people.some(person => treeLineageIds.has(person.id))) return;
+        if (!targetsByParentUnit.has(parentUnit)) targetsByParentUnit.set(parentUnit, new Set());
+        targetsByParentUnit.get(parentUnit).add(externalPartnerId);
+      });
+    });
+
+    let moved = 0;
+    targetsByParentUnit.forEach((targetIds, parentUnit) => {
+      const unitChildIds = new Set();
+      parentUnit.people.forEach(parent => {
+        (rawChildrenByParent.get(parent.id) || new Set()).forEach(childId => unitChildIds.add(childId));
+      });
+      // Only relocate a standalone in-law parent branch when all of its recorded
+      // children are the spouse records it is being placed near. This avoids
+      // disturbing the layout of that parent's other family branches.
+      if (!unitChildIds.size || Array.from(unitChildIds).some(id => !targetIds.has(id))) return;
+      const centers = Array.from(targetIds).map(id => {
+        const position = positions.get(id);
+        return position ? position.x + position.width / 2 : null;
+      }).filter(Number.isFinite);
+      if (!centers.length) return;
+      const targetCenter = centers.reduce((sum, value) => sum + value, 0) / centers.length;
+      if (placeUnitNearestTarget(parentUnit, targetCenter, positions, minimumGap)) moved += 1;
+    });
+    return moved;
+  }
+
   function computeFamilySubtreeLayout(rootUnits, childrenByUnit, childRecordIdsByUnit, nodeWidth, coupleGap, branchGap, initialCenters) {
   const cache = new Map();
 
@@ -2095,6 +2182,15 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         height:cardHeights.get(personId) || previous.height
       });
     });
+
+    // Bring standalone parents of an expanded in-law near the spouse they connect
+    // to. The row is checked for collisions, and sibling/family branches with their
+    // own ancestry or other children are left untouched.
+    placeExpandedPartnerParentsNearSpouses(
+      expandedPartnerFamiliesByPerson, rawParentsByChild, rawChildrenByParent,
+      treeLineageIds, personUnit, parentUnitForChildUnit, childUnitsByParentUnit,
+      positions, columnGap / 2
+    );
 
     // Shift the whole graph only enough to give its leftmost record a margin.
     // This preserves every parent-to-children alignment without centring a row.
