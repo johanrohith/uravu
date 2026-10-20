@@ -485,7 +485,7 @@ const renderCardSource = extractFunction(
 assert.match(renderCardSource, /familyRecordDetailLines\(person\)/);
 assert.doesNotMatch(renderCardSource, /detailLinesFor/);
 
-const generationMapSource = extractFunction(app, "function generationMap() {", "\n  function relationNames");
+const generationMapSource = extractFunction(app, "function generationMap(", "\n  function relationNames");
 const relationshipLabelsSource = extractFunction(
   app,
   "function relationshipLabelsForCurrentUser() {",
@@ -787,7 +787,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
   members:[{user_id:"current-user",person_id:"me"}],
   people,relationships
  };
- const source=extractFunction(app,"function generationMap() {","\n  function groupChildrenByParentIds");
+ const source=extractFunction(app,"function generationMap(","\n  function groupChildrenByParentIds");
  const generationMap=new Function("state",source+"\nreturn generationMap;")(layoutState);
  const generationOf=id=>{
   for(const [level,records] of generationMap())if(records.some(record=>record.id===id))return level;
