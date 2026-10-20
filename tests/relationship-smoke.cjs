@@ -661,7 +661,7 @@ assert.match(singleTreeMigration, /Only a member already linked to a family reco
 assert.match(singleTreeMigration, /grant update \(/);
 assert.match(singleTreeMigration, /uravu_main_tree_id/);
 assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
-assert.match(app, /Parents of one child share a generation row/);
+assert.match(app, /parentsByChild\.forEach\(parentIds => \{\s*for \(let index = 1; index < parentIds\.length; index\+\+\) unite\(parentIds\[0\], parentIds\[index\]\);/);
 assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"), "Child connectors should be grouped by their actual parent set, including single-parent links");
