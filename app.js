@@ -1050,7 +1050,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           const sibSpouse=array(egoSiblings).find(sid=>spousesOf(sid).has(id));
           if(sibSpouse){
             const s=byId.get(sibSpouse),order=age(s,ego);
-            if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil="அத்தான்";}
+            if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil=gender(ego)==="male"?"அத்தான்":"சகலை";}
             else if(gender(s)==="male"&&gender(person)==="female"){
               english=order==="older"?"Older brother's wife":order==="younger"?"Younger brother's wife":"Brother's wife"+(order==="unknown"?" "+englishAgeNotSure:"");
               tamil=order==="older"?"அண்ணி":order==="younger"?"கொழுந்தியாள்":"சகோதரரின் மனைவி "+ageNotSure;
