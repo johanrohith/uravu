@@ -18,7 +18,7 @@
 @media(max-width:420px){.tree-view-controls .people-search{width:140px}.family-tree-viewport{height:55vh}}
 
 
-/* Family graph layout and small-screen refinements */
+
 .tree-workspace,.tree-workspace .panel,.tree-workspace .section-heading{min-width:0}
 .family-tree-viewport{height:min(78vh,780px);min-height:320px;max-width:100%;touch-action:pan-x pan-y}
 .family-tree-lines .spouse-line{stroke:#87b996;stroke-width:2.5}
@@ -72,7 +72,7 @@
 }
 
 
-/* Tree viewer: roomier canvas, proper zoom controls and fullscreen workspace */
+
 .tree-section-heading{align-items:flex-start;gap:14px}
 .tree-view-controls{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;min-width:0}
 .tree-view-controls .people-search{flex:1 1 190px;width:220px;max-width:100%;min-width:120px}
@@ -106,7 +106,7 @@
 }
 
 
-/* Family record cards: keep every date and memorial status readable. */
+
 .family-node-card{overflow:visible;min-height:0;height:auto;padding:13px;gap:6px}
 .family-node-card .person-card-top{align-items:flex-start;min-height:34px}
 .family-node-card .graph-person-names h4{font-size:13px;line-height:1.42;overflow-wrap:anywhere;white-space:normal}
@@ -121,18 +121,18 @@
 .family-node-card .person-card-actions button{min-height:30px;padding:7px 9px;font-size:10px}
 .family-tree-lines .family-line{stroke:#b9cfbd;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 
-/* Single, calculated kinship label on each family card */
+
 .graph-relationship-label{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:4px;padding:5px 8px;min-height:25px;border:1px solid #dcebe0;border-radius:8px;background:#edf5ee;color:#245c43;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
 .graph-relationship-label .text-action{flex:0 0 auto;padding:0 3px;border:0;background:transparent;color:#778279;font-size:16px;line-height:1}
 .people-panel:fullscreen .graph-relationship-label{font-size:12px}
 
 
-/* Compact unlink tools retain relationship editing without showing raw edge labels */
+
 .graph-relationship-tools{display:flex;flex-wrap:wrap;align-items:center;gap:3px;min-height:0;margin-top:1px}
 .graph-relationship-tools .text-action{flex:0 0 auto;min-width:17px;height:18px;padding:0 4px;border:1px solid #e7d9d5;border-radius:5px;background:#fff8f6;color:#9b554c;font-size:12px;line-height:1}
 
 
-/* Keep connection-removal controls hidden until the card's Edit button is pressed */
+
 .family-node-card[data-view-person]{cursor:pointer}
 .family-node-card[data-view-person]:focus-visible{outline:3px solid #a4cdb5;outline-offset:3px}
 .family-node-card[data-view-person]:hover{border-color:#b7d0bc}
@@ -156,7 +156,7 @@
 }
 
 
-/* Family editor: death status and connection editing */
+
 .deceased-field{display:flex;align-items:flex-end;min-width:0}
 .checkbox-label{display:flex;align-items:center;gap:9px;min-height:39px;margin:13px 0 0;padding:9px 12px;border:1px solid #dfe5dd;border-radius:10px;background:#fff;color:#45594a;font-size:12px;font-weight:700;cursor:pointer}
 .checkbox-label input{width:16px;height:16px;margin:0;accent-color:var(--green);flex:0 0 auto}
@@ -186,7 +186,7 @@
 }
 
 
-/* Flexible date inputs: support unknown/partial dates without fake calendar days. */
+
 .partial-date-input{font-variant-numeric:tabular-nums;letter-spacing:.2px}
 .field-help{margin:5px 0 0;color:#89958a;font-size:10px;line-height:1.45}
 .connection-group-title{grid-column:1/-1;margin:0 0 3px;color:#53675a;font-size:12px;font-weight:800}
@@ -202,16 +202,16 @@
 }
 
 
-/* Spouse connectors share one visual style in every generation. */
+
 .family-tree-lines .spouse-line{stroke:#a9c9b0;stroke-width:3;stroke-linecap:round;opacity:1}
 .family-tree-lines .family-line{vector-effect:non-scaling-stroke}
 
 
-/* Keep tree-focused workspaces free of dashboard discovery cards. */
+
 .dashboard.tree-open .action-grid,
 .dashboard.tree-open .my-trees-panel{display:none!important}
 
-/* Paired text and native date picker: text uses DD-MM-YYYY by default. */
+
 .date-entry-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;gap:8px;min-width:0}
 .date-entry-row .partial-date-input{min-width:0}
 .calendar-picker{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:94px;padding:0 12px;border:1px solid #dfe6de;border-radius:10px;background:#f9fbf8;color:#52685a;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -225,13 +225,13 @@
  .calendar-picker>span:last-of-type{display:none}
 }
 
-/* Request queues remain distinct and legible on narrow screens. */
+
 .request-row{align-items:center}
 .request-owner-only{font-size:11px;color:#6b7c6d}
 #access-requests-panel,#linking-requests-panel{scroll-margin-top:16px}
 
 
-/* Single shared Uravugal tree workspace */
+
 .workspace-panel-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 20px}
 .workspace-panel-actions .secondary-button{min-height:40px;padding:10px 15px;font-size:12px}
 .panel-heading-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -258,7 +258,7 @@
 }
 
 
-/* Explicit edit mode: visible controls, with a clear ON/OFF state. */
+
 .edit-mode-button.is-on {
   background: #218447 !important;
   border-color: #218447 !important;
@@ -282,14 +282,14 @@
 }
 
 
-/* Family branch lineage colors and collapsible in-law ancestry. */
+
 .family-branch-legend{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:0 0 12px;padding:10px 12px;border:1px solid #e5ebe3;border-radius:12px;background:#fffdf9}
 .family-branch-legend[hidden]{display:none}
 .family-branch-legend-item{display:inline-flex;align-items:center;gap:6px;max-width:100%;color:#536255;font-size:11px;line-height:1.35}
 .family-branch-legend-item>span:last-child{overflow-wrap:anywhere}
 .family-branch-legend-swatch{display:inline-block;flex:0 0 13px;width:13px;height:13px;border-radius:4px;box-shadow:0 0 0 1px rgba(20,40,25,.14)}
 
-/* Uravu workspace polish: centered shared-tree title, theme-tinted actions and compact controls. */
+
 .dashboard{padding-top:24px}
 .tree-workspace{margin-top:0}
 .workspace-header{
