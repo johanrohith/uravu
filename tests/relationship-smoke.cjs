@@ -766,14 +766,14 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
       "\nreturn computeFamilySubtreeLayout;"
   )();
   const unit = (id, people, width, sortName=id) => ({id,people:people.map(personId=>({id:personId})),width,sortName});
-  const parents = unit("parents",["father","mother"],564,"parents");
-  const childA = unit("child-a",["child-a"],270,"child-a");
-  const childB = unit("child-b",["child-b"],270,"child-b");
+  const parents = unit("parents",["father","mother"],656,"parents");
+  const childA = unit("child-a",["child-a"],310,"child-a");
+  const childB = unit("child-b",["child-b"],310,"child-b");
   const layout = computeFamilySubtreeLayout(
     [parents],
     new Map([[parents,new Set([childA,childB])]]),
     new Map([[parents,new Set(["child-a","child-b"])]]),
-    270,28,40,
+    310,36,64,
     new Map([[parents,0],[childA,0],[childB,1]])
   );
   assert.equal(
@@ -781,11 +781,11 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
     layout.unitCenters.get(parents),
     "Parents must be centered over the horizontal span of their children"
   );
-  assert.ok(layout.personCenters.get("child-b")-layout.personCenters.get("child-a")>=310,
+  assert.ok(layout.personCenters.get("child-b")-layout.personCenters.get("child-a")>=346,
     "Sibling child cards must not overlap");
   const cards = [
-    {left:layout.personCenters.get("child-a")-135,right:layout.personCenters.get("child-a")+135},
-    {left:layout.personCenters.get("child-b")-135,right:layout.personCenters.get("child-b")+135}
+    {left:layout.personCenters.get("child-a")-155,right:layout.personCenters.get("child-a")+155},
+    {left:layout.personCenters.get("child-b")-155,right:layout.personCenters.get("child-b")+155}
   ];
   assert.ok(cards[0].right<=cards[1].left,"One record must never overlap or cover another");
   assert.match(app, /const familyLayout = computeFamilySubtreeLayout\(/);
