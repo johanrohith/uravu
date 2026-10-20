@@ -2431,8 +2431,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     if (!hadPreviousTreeLayout) state.treeZoom = calculateTreeFitScale();
     applyTreeCanvasScale(false);
-    
-
     if (search) {
       const firstMatch = visibleSelected.find(person => [person.full_name, person.tamil_name]
         .some(value => String(value || "").toLocaleLowerCase().includes(search)));
