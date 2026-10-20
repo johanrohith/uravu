@@ -25,7 +25,8 @@
     treeZoom: 1,
     treeBaseWidth: 0,
     treeBaseHeight: 0,
-    openPanels: new Set()
+    openPanels: new Set(),
+    familyLegendExpanded: false
   };
 
   const words = {
@@ -661,9 +662,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#dashboard").hidden = !state.user;
     $("#header-signin").hidden = Boolean(state.user);
     $("#user-menu").hidden = !state.user;
-    $("#welcome-heading").textContent = state.user
-      ? translateUiValue("Welcome, " + ((state.user.user_metadata?.full_name || state.user.user_metadata?.name || state.user.email || "there").split(/\s+/)[0]))
-      : t("Welcome to Uravu");
     if (!state.user) {
       state.trees = [];
       state.memberships = [];
@@ -1975,12 +1973,29 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const branchLegend = $("#family-branch-legend");
     if (branchLegend) {
       const legendKeys = orderedRootFamilyKeys.filter(key => visibleRootFamilyKeys.has(key));
-      branchLegend.innerHTML = legendKeys.map(key =>
+      const maxVisibleLegendItems = 4;
+      const shouldCollapseLegend = legendKeys.length > maxVisibleLegendItems && !state.familyLegendExpanded;
+      const visibleLegendKeys = shouldCollapseLegend
+        ? legendKeys.slice(0, maxVisibleLegendItems)
+        : legendKeys;
+      const legendItemMarkup = key =>
         '<span class="family-branch-legend-item" title="' + escapeHtml(rootFamilyLabel(key)) + '">' +
         '<span class="family-branch-legend-swatch" style="background-color:' + branchColorForKey(key) + '"></span>' +
-        '<span>' + escapeHtml(rootFamilyLabel(key) || (state.language === "ta" ? "குடும்பக் கிளை" : "Family branch")) + '</span></span>'
-      ).join("");
+        '<span>' + escapeHtml(rootFamilyLabel(key) || (state.language === "ta" ? "குடும்பக் கிளை" : "Family branch")) + '</span></span>';
+      branchLegend.innerHTML = visibleLegendKeys.map(legendItemMarkup).join("");
+      if (legendKeys.length > maxVisibleLegendItems) {
+        const toggleLabel = state.language === "ta"
+          ? (shouldCollapseLegend ? "அனைத்தையும் காட்டு (" + legendKeys.length + ")" : "குறைக்கவும்")
+          : (shouldCollapseLegend ? "Show all (" + legendKeys.length + ")" : "Show less");
+        branchLegend.innerHTML += '<button class="family-branch-legend-toggle" type="button" data-family-legend-toggle aria-expanded="' +
+          String(!shouldCollapseLegend) + '">' + escapeHtml(toggleLabel) + '</button>';
+      }
       branchLegend.hidden = legendKeys.length < 2;
+      const toggle = branchLegend.querySelector("[data-family-legend-toggle]");
+      if (toggle) toggle.addEventListener("click", () => {
+        state.familyLegendExpanded = !state.familyLegendExpanded;
+        renderPeople();
+      });
     }
     const rowYByLevel = new Map();
     let nextRowY = 24;
