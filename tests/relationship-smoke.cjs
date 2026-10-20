@@ -389,7 +389,7 @@ assert.match(html, /id="link-existing-form"/);
 assert.match(app, /function displayTreeName/);
 assert.match(app, /const selected = state\.people\.slice\(\)/);
 assert.match(app, /function highlightSearchMatch/);
-assert.match(app, /const columnGap = 40/);
+assert.match(app, /const columnGap = 64/);
 assert.match(app, /const coupleGap = 28/);
 assert.match(app, /const familySiblingGap = 24/);
 assert.match(app, /const familyBlockGap = 40/);
