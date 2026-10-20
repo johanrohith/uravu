@@ -224,7 +224,7 @@ const familyLevels = createGenerationMap(familyState)();
 const levelOf = id => Array.from(familyLevels.entries()).find(([, people]) => people.some(person => person.id === id))?.[0];
 assert.equal(levelOf("grandfather"), levelOf("grandmother"), "Co-parents should share a generation");
 
-const createRelationshipLabeler = new Function("state", relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
+const createRelationshipLabeler = new Function("state", generationMapSource + "\n" + relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
 const labels = createRelationshipLabeler(familyState)();
 assert.equal(labels.get("grandfather"), "Grandfather");
 assert.equal(labels.get("grandmother"), "Grandmother");
@@ -464,7 +464,7 @@ assert.match(schema, /would create a family-tree cycle/);
 
 function relationLabel(egoId,people,relationships,targetId,language="ta"){
  const state={user:{id:"current-user"},language,members:[{user_id:"current-user",person_id:egoId}],people,relationships};
- return new Function("state",relationshipLabelsSource+"\nreturn relationshipLabelsForCurrentUser;")(state)().get(targetId);
+ return new Function("state",generationMapSource+"\n"+relationshipLabelsSource+"\nreturn relationshipLabelsForCurrentUser;")(state)().get(targetId);
 }
 function person(id,gender,birth_date){const p={id,full_name:id,gender};if(birth_date)p.birth_date=birth_date;return p;}
 function parentLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"parent"};}
@@ -681,6 +681,33 @@ assert.doesNotMatch(styles, /\.partner-family-toggle/);
    parentLink("root-great-grandmother","grandparent"),parentLink("grandparent","parent"),parentLink("parent","me")];
  assert.equal(relationLabel("me",people,relationships,"root-great-grandfather-spouse","en"),"Great-grandfather");
  assert.equal(relationLabel("me",people,relationships,"root-great-grandfather-spouse","ta"),"கொள்ளுத்தாத்தா");
+}
+
+
+{
+ // A grandparent's cousin shares the same visual generation row but does not
+ // share a direct parent with the ego's grandparent. The row label still applies.
+ const people=[
+  person("ancient","male"),person("great-great-grandparent","male"),
+  person("great-great-grandparent-sibling","male"),person("great-grandparent","male"),
+  person("great-grandparent-sibling","male"),person("grandparent","male"),
+  person("grandparent-cousin","female"),person("parent","male"),person("me","female")
+ ];
+ const relationships=[
+  parentLink("ancient","great-great-grandparent"),
+  parentLink("ancient","great-great-grandparent-sibling"),
+  parentLink("great-great-grandparent","great-grandparent"),
+  parentLink("great-great-grandparent","great-grandparent-sibling"),
+  parentLink("great-grandparent","grandparent"),
+  parentLink("great-grandparent-sibling","grandparent-cousin"),
+  parentLink("grandparent","parent"),parentLink("parent","me"),
+  parentLink("great-great-grandparent-sibling","great-grandparent-cousin")
+ ];
+ people.push(person("great-grandparent-cousin","female"));
+ assert.equal(relationLabel("me",people,relationships,"grandparent-cousin","en"),"Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"grandparent-cousin","ta"),"பாட்டி");
+ assert.equal(relationLabel("me",people,relationships,"great-grandparent-cousin","en"),"Great-grandmother");
+ assert.equal(relationLabel("me",people,relationships,"great-grandparent-cousin","ta"),"கொள்ளுப்பாட்டி");
 }
 
 assert.match(app, /const ancestorGenerationForLabel = new Map\(bloodAncestors\)/);
