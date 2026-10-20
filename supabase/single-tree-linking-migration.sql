@@ -1,14 +1,8 @@
--- Uravu single shared tree + account-to-record linking permissions.
--- Run once in Supabase SQL Editor after the existing Uravu schema and prior migrations.
--- This preserves existing trees, people and relationships; only one existing tree is designated main.
-
 begin;
 
 alter table public.uravu_family_trees
   add column if not exists is_main boolean not null default false;
 
--- Keep one existing family tree as the shared Uravugal tree. Prefer the requested
--- original name, then an already-renamed Uravugal tree, then the oldest tree.
 update public.uravu_family_trees set is_main = false;
 with chosen as (
   select id
@@ -55,8 +49,6 @@ as $$
   limit 1;
 $$;
 
--- Keep the creator's account linked only when the existing record name exactly
--- matches the OAuth display name. No ambiguous people are guessed or assigned.
 update public.uravu_tree_members m
 set person_id = p.id,
     updated_at = now()
@@ -76,7 +68,6 @@ where m.tree_id = public.uravu_main_tree_id()
       and other_member.user_id <> m.user_id
   );
 
--- Pending join requests do not belong in the single-tree version.
 update public.uravu_access_requests
 set status = 'rejected',
     reviewed_at = now(),
@@ -112,14 +103,14 @@ as $$
     p_tree_id = public.uravu_main_tree_id()
     and auth.uid() is not null
     and (
-      -- Every linked member may maintain their own record.
+
       exists (
         select 1 from public.uravu_tree_members mine
         where mine.tree_id = p_tree_id
           and mine.user_id = auth.uid()
           and mine.person_id = p_person_id
       )
-      -- An unlinked account may maintain only the one self-record it created.
+
       or exists (
         select 1 from public.uravu_people own_person
         where own_person.id = p_person_id
@@ -132,7 +123,7 @@ as $$
               and assigned.person_id = own_person.id
           )
       )
-      -- A linked member may edit other records only while those records are unlinked.
+
       or (
         exists (
           select 1 from public.uravu_tree_members mine
@@ -153,7 +144,6 @@ as $$
     );
 $$;
 
--- Requests only link accounts to a particular, unassigned family record.
 create or replace function public.uravu_request_tree_access(
   p_tree_id uuid,
   p_message text default '',
@@ -202,8 +192,6 @@ begin
     raise exception 'Your account is already linked to a family record.';
   end if;
 
-  -- If this account already created a self-record, its link request must target
-  -- that record. This prevents one account from splitting itself across records.
   if exists (
     select 1 from public.uravu_people own
     where own.tree_id = p_tree_id and own.created_by = v_user and own.is_self_record = true
@@ -211,9 +199,6 @@ begin
   ) then
     raise exception 'Your account already has a self-record. Request linking to that record.';
   end if;
-
-  -- A new account may request any unassigned record; a linked member's
-  -- confirmation is required before the account can edit records.
 
   select coalesce(
       nullif(u.raw_user_meta_data->>'full_name',''),
@@ -337,8 +322,6 @@ begin
 end;
 $$;
 
--- An unlinked user may connect their own new record to existing relatives.
--- A linked member may update relationships elsewhere in the shared tree.
 create or replace function public.uravu_link_people(
   p_tree_id uuid,
   p_person_id uuid,
@@ -419,8 +402,6 @@ begin
 end;
 $$;
 
--- Public database API intentionally has no tree-creation, tree-deletion, member-role
--- editor or direct member-assignment path in the single-tree version.
 create or replace function public.uravu_create_tree(
   p_name text,
   p_description text default '',
@@ -436,7 +417,6 @@ begin
 end;
 $$;
 
--- Policies: signed-in accounts can see the single tree, but edit rights are per-record.
 drop policy if exists uravu_trees_select_auth on public.uravu_family_trees;
 create policy uravu_trees_select_auth on public.uravu_family_trees
 for select to authenticated
@@ -572,7 +552,7 @@ revoke all on public.uravu_access_requests from anon, authenticated;
 
 grant select on public.uravu_family_trees to authenticated;
 grant select, delete on public.uravu_people to authenticated;
--- Keep identity and policy fields immutable through the public data API.
+
 grant insert (
   tree_id, full_name, tamil_name, gender, birth_date, birth_date_text,
   death_date, death_date_text, is_deceased, notes, created_by, is_self_record
