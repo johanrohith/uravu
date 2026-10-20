@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-mobile-isolated-tree-20261020-2';
+        stylesheet.href = './styles.css?v=uravu-account-focus-panels-20261020-1';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -56,8 +56,8 @@
         });
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
-        await loadScript('./auth.js?v=uravu-mobile-isolated-tree-20261020-2');
-        await loadScript('./app.js?v=uravu-mobile-isolated-tree-20261020-2');
+        await loadScript('./auth.js?v=uravu-account-focus-panels-20261020-1');
+        await loadScript('./app.js?v=uravu-account-focus-panels-20261020-1');
 
         try {
           if ('caches' in window) {
@@ -194,7 +194,7 @@
           <section class="link-account-prompt link-account-desktop-prompt" id="link-account-desktop-prompt" hidden>
             <h3>Do you want to know the relation terms for your relations?</h3>
             <p>Link your account to an already existing record!</p>
-            <p>Don't have your record? Add a record for you using the "Add Family Member" button above!</p>
+            <p class="own-record-instruction">Don't have your record? Add a record for you using the "Add Family Member" button above!</p>
             <div id="link-form-desktop-target">
               <form id="link-existing-form" class="link-existing-form">
                 <div><label class="field-label" for="request-person">Already in the tree? Select your family record</label><select class="form-input" id="request-person" required><option value="">Choose a record to link</option></select></div>
@@ -207,7 +207,7 @@
           <section class="link-account-prompt" id="link-account-prompt" hidden>
             <h3>Do you want to know the relation terms for your relations?</h3>
             <p>Link your account to an already existing record!</p>
-            <p>Don't have your record? Add a record for you using the "Add Family Member" button above!</p>
+            <p class="own-record-instruction">Don't have your record? Add a record for you using the "Add Family Member" button above!</p>
             <div id="link-form-mobile-target"></div>
           </section>
 
