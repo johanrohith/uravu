@@ -177,7 +177,7 @@ assert.ok(
 );
 const renderCardSource = extractFunction(
   app,
-  "function renderPersonCard(person, position, relationLabel, partnerFamilyToggle) {",
+  "function renderPersonCard(person, position, relationLabel) {",
   "\n  function renderMembers"
 );
 assert.match(renderCardSource, /familyRecordDetailLines\(person\)/);
@@ -297,7 +297,9 @@ assert.doesNotMatch(app, /addLayoutPartner\(parentId, otherId\)/);
 assert.match(app, /const showActions = state\.editMode && canEdit/);
 assert.match(app, /state\.openPanels\.add\("add-person-panel"\)/);
 assert.ok(app.includes("const partnerLineByPair = new Map()"), "Partner connectors must be tracked by the actual partner pair");
-assert.ok(app.includes("const familyChildGroups = new Map()"), "Children must be grouped by their recorded parents");
+assert.match(app, /function groupChildrenByParentIds\(parentsByChild, positions\)/);
+assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"),
+  "Children must be grouped by their recorded parents, including a single recorded parent");
 assert.ok(app.includes("partnerLine ? partnerLine.centerX : fallbackParentCenterX"), "A family stem should descend from the partner-line midpoint when partners are recorded");
 assert.ok(app.includes("family-parent-stem"), "Parent-to-children routing should use a single vertical stem");
 assert.ok(app.includes("family-child-bus"), "The shared horizontal line should be a parent-to-children connector");
@@ -360,7 +362,7 @@ assert.ok(styles.includes(".dashboard.tree-open .action-grid"));
 assert.match(app, /Parents of one child share a generation row/);
 assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
-assert.ok(app.includes("const familyChildGroups = new Map()"), "Child connectors should be grouped by their actual parent set");
+assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"), "Child connectors should be grouped by their actual parent set, including single-parent links");
 assert.ok(app.includes("Math.max(128, outgoingFamilies.size * 24 + 40)"), "Use a compact generation gap while reserving connector lanes");
 assert.ok(app.includes("parentRowBottom + 22 + laneIndex * 24"), "Use compact parallel connector lanes");
 assert.ok(!app.includes("V ' + laneY + ' H ' + endX + ' V ' + endY"), "Parent-child links should not be drawn as separate H-shaped routes");
@@ -453,6 +455,51 @@ function relationLabel(egoId,people,relationships,targetId,language="ta"){
 function person(id,gender,birth_date){const p={id,full_name:id,gender};if(birth_date)p.birth_date=birth_date;return p;}
 function parentLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"parent"};}
 function spouseLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"spouse"};}
+{
+ // Parents of an expanded spouse must align with the active person's generation.
+ const people=[
+  person("grandpa","male"),person("father","male"),person("me","male"),person("partner","female"),
+  person("partner-parent","male"),person("partner-grandparent","male")
+ ];
+ const relationships=[
+  parentLink("grandpa","father"),parentLink("father","me"),spouseLink("me","partner"),
+  parentLink("partner-parent","partner"),parentLink("partner-grandparent","partner-parent")
+ ];
+ const layoutState={
+  user:{id:"current-user"},
+  activeMembership:{person_id:"me"},
+  members:[{user_id:"current-user",person_id:"me"}],
+  people,relationships
+ };
+ const source=extractFunction(app,"function generationMap() {","\n  function groupChildrenByParentIds");
+ const generationMap=new Function("state",source+"\nreturn generationMap;")(layoutState);
+ const generationOf=id=>{
+  for(const [level,records] of generationMap())if(records.some(record=>record.id===id))return level;
+  return undefined;
+ };
+ assert.equal(generationOf("me"),0);
+ assert.equal(generationOf("partner"),0);
+ assert.equal(generationOf("father"),-1);
+ assert.equal(generationOf("partner-parent"),-1);
+ assert.equal(generationOf("grandpa"),-2);
+ assert.equal(generationOf("partner-grandparent"),-2);
+}
+{
+ // A child with only one recorded parent still gets a family connector group.
+ const source=extractFunction(app,"function groupChildrenByParentIds(parentsByChild, positions)","\n  function relationNames");
+ const groupChildrenByParentIds=new Function(source+"\nreturn groupChildrenByParentIds;")();
+ const positions=new Map([
+  ["only-parent",{x:0,y:0,width:270}],
+  ["child",{x:0,y:180,width:270}]
+ ]);
+ const groups=groupChildrenByParentIds(
+  new Map([["child",new Set(["only-parent"])]]),
+  positions
+ );
+ assert.deepEqual(groups.get("only-parent").parentIds,["only-parent"]);
+ assert.deepEqual(groups.get("only-parent").childIds,["child"]);
+}
+
 {
  const p=[person("gp","male","1950-01-01"),person("dad","male","1980-01-01"),person("uncle","male","1978-01-01"),person("younger","male","1982-01-01"),person("unknown","male"),person("me","male","2004-01-01")];
  const r=[parentLink("gp","dad"),parentLink("gp","uncle"),parentLink("gp","younger"),parentLink("gp","unknown"),parentLink("dad","me")];
@@ -582,22 +629,19 @@ assert.match(app, /const directAncestorIds = new Set\(\[activePersonIdForTree\]\
 assert.match(app, /const descendantQueue = Array\.from\(directAncestorIds\)/);
 assert.match(app, /const legendPersonIds = new Set\(treeLineageIds\)/);
 assert.ok(app.includes('$$("[data-delete-person]").forEach'));
-assert.ok(app.includes('$$("[data-toggle-partner-family]").forEach'));
-assert.ok(app.includes('$$("[data-remove-relationship]").forEach'));
+assert.doesNotMatch(app, /data-toggle-partner-family/);
+assert.ok(app.includes('$("[data-remove-relationship]").forEach'));
 
 assert.match(html, /id="family-branch-legend"/);
-assert.match(app, /treeExpandedPartnerFamilies/);
-assert.match(app, /partnerFamilyToggleByPerson/);
-assert.match(app, /data-toggle-partner-family/);
+assert.doesNotMatch(app, /treeExpandedPartnerFamilies/);
+assert.match(app, /const expandedPartnerFamiliesByPerson = new Map\(\)/);
 assert.match(app, /familyColorForParentIds/);
 assert.match(app, /rootFamilyColorByKey/);
-assert.match(app, /expandedFamilyKey/);
-assert.match(app, /const collapsedInLaw = unit\.people\.find/);
-assert.match(app, /const collapsedFamilyKey = collapsedToggle && parentFamilyByPerson\.get\(collapsedToggle\.spouseId\)/);
-assert.match(app, /primaryFamilyByUnit\.set\(unit, collapsedFamilyKey\)/);
+assert.match(app, /const expandedFamilyKey = expandedInLaw && parentFamilyByPerson\.get\(expandedInLaw\.id\)/);
+assert.doesNotMatch(app, /collapsedInLaw|collapsedFamilyKey|partnerFamilyToggleByPerson/);
 
 assert.match(styles, /\.family-branch-legend/);
-assert.match(styles, /\.partner-family-toggle/);
+assert.doesNotMatch(styles, /\.partner-family-toggle/);
 
 
 {
