@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-canvas-layer-20261020-1';
+        stylesheet.href = './styles.css?v=uravu-mobile-isolated-tree-20261020-1';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -56,8 +56,8 @@
         });
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
-        await loadScript('./auth.js?v=uravu-canvas-layer-20261020-1');
-        await loadScript('./app.js?v=uravu-canvas-layer-20261020-1');
+        await loadScript('./auth.js?v=uravu-mobile-isolated-tree-20261020-1');
+        await loadScript('./app.js?v=uravu-mobile-isolated-tree-20261020-1');
 
         try {
           if ('caches' in window) {
