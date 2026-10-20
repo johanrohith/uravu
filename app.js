@@ -1192,6 +1192,20 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     .map(unit => unit.id);
 }
 
+  function familyBusSafeTargetLeft(left, width, busSpans, gap) {
+  let target = left;
+  // Every move must clear the complete children block. Repeat because the new
+  // position can reach a second family's connector span further to the right.
+  for (let pass = 0; pass <= busSpans.length; pass++) {
+    const conflict = busSpans.find(span =>
+      !span.exempt && target < span.right && target + width > span.left
+    );
+    if (!conflict) return target;
+    target = Math.max(target, conflict.right, conflict.childBlockRight) + gap;
+  }
+  return target;
+}
+
   function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
@@ -1332,8 +1346,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const minLevel = levelKeys[0];
     const maxLevel = levelKeys[levelKeys.length - 1];
     const nodeWidth = 270;
-    const columnGap = 112;
-    const coupleGap = 36;
+    const columnGap = 64;
+    const coupleGap = 32;
     const levelUnits = new Map();
     const positions = new Map();
     const byId = new Map(state.people.map(person => [person.id, person]));
@@ -1504,9 +1518,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       ).forEach(edge => {
         outgoingFamilies.add(Array.from(parentsByChild.get(edge.related_person_id) || new Set()).sort().join("|"));
       });
-      // Reserve a separate empty vertical lane for each family bus so unrelated
-      // connector lines do not overlap or run through the same visual row.
-      nextRowY += tallest + Math.max(220, outgoingFamilies.size * 44 + 96);
+      // Keep a compact generation gap, increasing it only when this row needs
+      // multiple connector lanes between parents and children.
+      nextRowY += tallest + Math.max(148, outgoingFamilies.size * 26 + 46);
     });
 
     const layoutPartners = new Map(state.people.map(person => [person.id, new Set()]));
@@ -1704,8 +1718,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    const familySiblingGap = 76;
-    const familyBlockGap = 190;
+    const familySiblingGap = 34;
+    const familyBlockGap = 68;
     levelKeys.forEach(level => {
       const rowY = rowYByLevel.get(level) || 24;
       const buckets = familyBucketsByLevel.get(level) || new Map();
@@ -1762,35 +1776,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-        // Map each couple/person unit to its descendant units. This allows a
-    // displaced record to carry its own children with it instead of leaving
-    // broken-looking long connectors behind.
-    const childUnitsByUnit = new Map();
-    parentEdgesForLayout.forEach(edge => {
-      const parentUnit = personUnit.get(edge.person_id);
-      const childUnit = personUnit.get(edge.related_person_id);
-      if (!parentUnit || !childUnit || parentUnit === childUnit) return;
-      if (!childUnitsByUnit.has(parentUnit)) childUnitsByUnit.set(parentUnit, new Set());
-      childUnitsByUnit.get(parentUnit).add(childUnit);
-    });
-    const shiftUnitBranch = (startUnit, delta) => {
-      if (!startUnit || delta <= 0) return;
-      const queue = [startUnit];
-      const shiftedUnits = new Set();
-      for (let index = 0; index < queue.length; index++) {
-        const unit = queue[index];
-        if (shiftedUnits.has(unit)) continue;
-        shiftedUnits.add(unit);
-        unit.people.forEach(person => {
-          const position = positions.get(person.id);
-          if (position) positions.set(person.id, { ...position, x:position.x + delta });
-        });
-        (childUnitsByUnit.get(unit) || new Set()).forEach(childUnit => {
-          if (!shiftedUnits.has(childUnit)) queue.push(childUnit);
-        });
-      }
-    };
-
+        // Keep each generation row compact and clear of unrelated family buses.
+    // Crucially, only move the person/spouse unit here, never the entire descendant
+    // subtree. Children are placed independently in their own generation row, so
+    // one crossing can no longer shove many later generations into huge gaps.
     const clearanceFamilyGroups = new Map();
     parentsByChild.forEach((parentSet, childId) => {
       const childPosition = positions.get(childId);
@@ -1804,58 +1793,87 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       }
       clearanceFamilyGroups.get(key).childIds.push(childId);
     });
-    const orderedClearanceGroups = Array.from(clearanceFamilyGroups.values()).sort((a, b) => {
-      const rowA = Math.max(...a.parentIds.map(id => positions.get(id)?.y ?? 0));
-      const rowB = Math.max(...b.parentIds.map(id => positions.get(id)?.y ?? 0));
-      if (rowA !== rowB) return rowA - rowB;
-      const center = group => group.parentIds.reduce(
-        (sum, id) => sum + (positions.get(id)?.x ?? 0) + (positions.get(id)?.width ?? 0) / 2, 0
-      ) / group.parentIds.length;
-      return center(a) - center(b);
-    });
-    orderedClearanceGroups.forEach(group => {
-      const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
-      const children = group.childIds.map(id => positions.get(id)).filter(Boolean);
-      if (!parents.length || !children.length ||
-          !parents.every(parent => parent.y === parents[0].y) ||
-          !children.every(child => child.y === children[0].y)) return;
 
-      const parentCenterX = parents.reduce((sum, parent) =>
-        sum + parent.x + parent.width / 2, 0) / parents.length;
-      const childCenters = children.map(child => child.x + child.width / 2);
-      const busLeft = Math.min(parentCenterX, ...childCenters);
-      const busRight = Math.max(parentCenterX, ...childCenters);
-      if (busRight - busLeft < 1) return;
-
-      const parentRowUnits = (levelUnits.get(levelByPerson.get(group.parentIds[0])) || [])
-        .map(unit => {
-          const unitPositions = unit.people.map(person => positions.get(person.id)).filter(Boolean);
-          if (!unitPositions.length || !unitPositions.every(position => position.y === parents[0].y)) return null;
-          return {
-            id:unit,
-            left:Math.min(...unitPositions.map(position => position.x)),
-            right:Math.max(...unitPositions.map(position => position.x + position.width))
-          };
-        }).filter(Boolean);
-      const exemptUnits = new Set(group.parentIds.map(id => personUnit.get(id)).filter(Boolean));
-      const interferingUnitIds = familyBusInterferingUnitIds(
-        parentRowUnits, exemptUnits, busLeft, busRight
-      );
-      if (!interferingUnitIds.length) return;
-
-      // Place records after the complete children block and beyond the bus span,
-      // using the usual generation gap. Move spouses and descendants together.
-      const childBlockRight = Math.max(...children.map(child => child.x + child.width));
-      let nextFreeX = Math.max(childBlockRight, busRight) + columnGap;
-      interferingUnitIds.forEach(unit => {
-        const unitPositions = unit.people.map(person => positions.get(person.id)).filter(Boolean);
-        if (!unitPositions.length) return;
-        const unitLeft = Math.min(...unitPositions.map(position => position.x));
-        const unitRight = Math.max(...unitPositions.map(position => position.x + position.width));
-        const delta = Math.max(0, nextFreeX - unitLeft);
-        if (delta > 0) shiftUnitBranch(unit, delta);
-        nextFreeX = Math.max(unitRight + delta, nextFreeX) + columnGap;
+    const unitBounds = unit => {
+      const unitPositions = unit.people.map(person => positions.get(person.id)).filter(Boolean);
+      if (!unitPositions.length) return null;
+      const left = Math.min(...unitPositions.map(position => position.x));
+      const right = Math.max(...unitPositions.map(position => position.x + position.width));
+      return { left, right, width:right - left, y:unitPositions[0].y };
+    };
+    const moveUnitOnly = (unit, newLeft) => {
+      const bounds = unitBounds(unit);
+      if (!bounds || newLeft <= bounds.left) return false;
+      const dx = newLeft - bounds.left;
+      unit.people.forEach(person => {
+        const position = positions.get(person.id);
+        if (position) positions.set(person.id, { ...position, x:position.x + dx });
       });
+      return true;
+    };
+    const busSpansForRow = rowY => Array.from(clearanceFamilyGroups.values()).flatMap(group => {
+      const parents = group.parentIds.map(id => positions.get(id)).filter(Boolean);
+      const children = group.childIds.map(id => positions.get(id)).filter(Boolean)
+        .sort((a,b) => (a.x+a.width/2) - (b.x+b.width/2));
+      if (!parents.length || !children.length ||
+          !parents.every(parent => parent.y === rowY) ||
+          !children.every(child => child.y > rowY) ||
+          !parents.every(parent => parent.y === parents[0].y) ||
+          !children.every(child => child.y === children[0].y)) return [];
+      const parentCenterX = parents.reduce((sum,parent) => sum + parent.x + parent.width/2,0) / parents.length;
+      const childCenters = children.map(child => child.x + child.width/2);
+      const left = Math.min(parentCenterX,...childCenters);
+      const right = Math.max(parentCenterX,...childCenters);
+      if (right - left < 1) return [];
+      const childBlockRight = Math.max(...children.map(child => child.x + child.width));
+      return [{ parentIds:group.parentIds, left, right, childBlockRight }];
+    });
+
+    levelKeys.forEach(level => {
+      const rowY = rowYByLevel.get(level) || 24;
+      const rowUnits = (levelUnits.get(level) || []).slice();
+      const maxAttempts = Math.max(8, rowUnits.length * (clearanceFamilyGroups.size + 2));
+      for (let pass = 0; pass < maxAttempts; pass++) {
+        rowUnits.sort((a,b) => (unitBounds(a)?.left ?? 0) - (unitBounds(b)?.left ?? 0));
+        let previousUnit = null;
+        let previousRight = -Infinity;
+        let moved = false;
+
+        for (const unit of rowUnits) {
+          const bounds = unitBounds(unit);
+          if (!bounds || bounds.y !== rowY) continue;
+
+          // Preserve the compact spacing inside sibling groups and between
+          // different family blocks while resolving any cards that now overlap.
+          const sameFamily = previousUnit &&
+            primaryFamilyByUnit.get(unit) &&
+            primaryFamilyByUnit.get(unit) === primaryFamilyByUnit.get(previousUnit);
+          const minimumGap = sameFamily ? familySiblingGap : familyBlockGap;
+          const collisionFreeLeft = Number.isFinite(previousRight)
+            ? Math.max(bounds.left, previousRight + minimumGap)
+            : bounds.left;
+          if (collisionFreeLeft > bounds.left + 0.5) {
+            moveUnitOnly(unit, collisionFreeLeft);
+            moved = true;
+            break;
+          }
+
+          const spans = busSpansForRow(rowY).map(span => ({
+            ...span,
+            exempt:span.parentIds.some(parentId => unit.people.some(person => person.id === parentId))
+          }));
+          const safeLeft = familyBusSafeTargetLeft(bounds.left,bounds.width,spans,columnGap);
+          if (safeLeft > bounds.left + 0.5) {
+            moveUnitOnly(unit,safeLeft);
+            moved = true;
+            break;
+          }
+
+          previousUnit = unit;
+          previousRight = bounds.right;
+        }
+        if (!moved) break;
+      }
     });
 
     // Shift the whole graph only enough to give its leftmost record a margin.
@@ -1980,7 +1998,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const rowPairKey = parentRowY + "|" + childTop;
       const laneIndex = nextLaneByRowPair.get(rowPairKey) || 0;
       nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
-      const busY = Math.min(childTop - 26, parentRowBottom + 36 + laneIndex * 38);
+      const busY = Math.min(childTop - 18, parentRowBottom + 24 + laneIndex * 26);
 
       // One vertical trunk flows down from the partner link (or parent group),
       // meets a single horizontal child bus, then drops vertically to each child.
