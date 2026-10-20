@@ -88,6 +88,17 @@ const { compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSibling
   assert.ok(compareSiblingUnitsByAge(manuallyOlder,manuallyYounger,unknownDateParents) < 0,
     "Manual birth order must sort siblings left-to-right even when birth dates are unknown and names sort in the opposite direction");
 
+  const manuallyOldWithoutDate = { people:[{ id:"manual-first", full_name:"Z Manual First", birth_order:1 }] };
+  const datedSiblingWithoutRank = { people:[{ id:"dated-no-rank", full_name:"A Dated Sibling", birth_date:"1950-01-01" }] };
+  const mixedBirthDataParents = new Map([
+    ["manual-first",new Set(["shared-parent"])],
+    ["dated-no-rank",new Set(["shared-parent"])]
+  ]);
+  assert.ok(compareSiblingUnitsByAge(manuallyOldWithoutDate,datedSiblingWithoutRank,mixedBirthDataParents) < 0,
+    "A manually ordered sibling must come before an unranked sibling even if the unranked sibling has a known earlier birthdate");
+  assert.ok(compareSiblingUnitsByAge(datedSiblingWithoutRank,manuallyOldWithoutDate,mixedBirthDataParents) > 0,
+    "The unranked dated sibling must follow a manually ranked sibling when comparison order is reversed");
+
   assert.match(html, /id="person-birth-order" type="number" min="1" max="999" step="1"/);
   assert.match(app, /data\.birth_order = birthOrder/);
   assert.match(app, /person\.birth_order == null \? "" : String\(person\.birth_order\)/);
