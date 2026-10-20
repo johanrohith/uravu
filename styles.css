@@ -918,3 +918,50 @@
     z-index: 40 !important;
   }
 }
+
+
+/* Account-focused first view and consistent mobile panel controls. */
+.edit-mode-button.is-off {
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: #46564a !important;
+}
+.edit-mode-button.is-on {
+  background: #218447 !important;
+  border-color: #218447 !important;
+  color: #fff !important;
+}
+@media (max-width: 760px) {
+  .app-nav-item.edit-mode-button.is-off {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: #789080 !important;
+  }
+  .app-nav-item.edit-mode-button.is-on {
+    background: #218447 !important;
+    border-color: #218447 !important;
+    color: #fff !important;
+  }
+  .requests-panel .section-heading {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 34px !important;
+    align-items: start !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+  .requests-panel .section-heading > div:first-child {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+  .requests-panel .section-heading > .panel-close-button {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: start !important;
+    justify-self: end !important;
+    margin: 0 !important;
+  }
+  .requests-panel .section-heading .panel-description {
+    overflow-wrap: anywhere;
+  }
+}
