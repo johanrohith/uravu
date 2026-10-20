@@ -383,3 +383,60 @@
   .tree-control-actions #fit-tree-button,
   .tree-control-actions #tree-fullscreen-button{letter-spacing:-.15px}
 }
+
+.workspace-header{padding:12px 0 18px;border:0;border-radius:0;background:transparent;box-shadow:none;margin-bottom:10px}
+.workspace-header h2{font-size:clamp(27px,3vw,34px);line-height:1.15;letter-spacing:-1px;margin:0 0 7px}
+.workspace-header .subheading{font-size:14px;line-height:1.5;color:#66746a}
+.link-account-prompt{padding:16px 18px;margin:0 0 15px;border:1px solid #dce8dc;border-radius:15px;background:#f5f9f3}
+.link-account-prompt h3{font-size:16px;line-height:1.35;letter-spacing:-.2px;margin:0 0 6px;color:#274a35}
+.link-account-prompt p{font-size:12px;line-height:1.55;color:#66746a;margin:4px 0}
+.link-account-prompt .link-existing-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-top:10px;padding-top:11px;border-top:1px solid #e0e9df}
+.link-account-prompt .link-existing-form>div{min-width:0}
+.link-account-prompt .field-label{margin:0 0 6px}
+.link-account-prompt .field-help{grid-column:1/-1;margin:0}
+.link-account-prompt .form-input{background:#fff}
+.app-bottom-nav{display:none}
+.app-nav-profile{position:relative;display:flex;justify-content:center;min-width:0}
+.app-nav-signout{position:absolute;right:0;bottom:calc(100% + 9px);padding:10px 15px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);box-shadow:0 8px 24px rgba(25,45,29,.15);font-size:12px;font-weight:700;white-space:nowrap}
+.app-nav-signout[hidden]{display:none!important}
+@media(max-width:760px){
+  .app-shell{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+  .topbar .user-menu{display:none!important}
+  .workspace-header{padding:11px 2px 15px;margin-bottom:8px}
+  .workspace-header h2{font-size:31px;letter-spacing:-1.1px;margin-bottom:6px}
+  .workspace-header .subheading{font-size:14px;line-height:1.5;max-width:360px}
+  .workspace-panel-actions{display:none!important}
+  .dashboard.tree-open{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .link-account-prompt{padding:14px;margin:0 0 14px;border-radius:14px}
+  .link-account-prompt h3{font-size:15px}
+  .link-account-prompt p{font-size:11px}
+  .link-account-prompt .link-existing-form{grid-template-columns:minmax(0,1fr);gap:8px}
+  .link-account-prompt .link-existing-form .secondary-button{width:100%;white-space:normal}
+  .link-account-prompt .field-help{grid-column:auto}
+  .add-person-panel,.management-panel,.requests-panel{position:fixed;left:10px;right:10px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:140;max-height:min(74dvh,calc(100dvh - 112px));overflow-y:auto;overscroll-behavior:contain;margin:0;border-radius:20px;box-shadow:0 18px 60px rgba(20,44,28,.24);padding:17px;background:#fff}
+  .add-person-panel{max-height:min(77dvh,calc(100dvh - 106px))}
+  .add-person-panel .section-heading,.management-panel .section-heading,.requests-panel .section-heading{position:sticky;top:-17px;z-index:2;margin:-2px -1px 12px;padding:3px 0 10px;background:#fff}
+  .add-person-panel .section-heading>div,.management-panel .section-heading>div,.requests-panel .section-heading>div{min-width:0}
+  .app-bottom-nav:not([hidden]){position:fixed;left:0;right:0;bottom:0;z-index:160;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:2px;padding:7px 7px calc(7px + env(safe-area-inset-bottom));border-top:1px solid #e0e8de;background:rgba(255,255,255,.97);box-shadow:0 -5px 22px rgba(34,58,39,.07);backdrop-filter:blur(18px)}
+  .app-nav-item{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;min-width:0;min-height:52px;padding:4px 2px;border:0;border-radius:12px;background:transparent;color:#789080;font:inherit;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .app-nav-item svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .app-nav-item span{font-size:10px;line-height:1.2;white-space:nowrap}
+  .app-nav-item.is-active{background:#edf5ed;color:#235d47}
+  .app-nav-item.edit-mode-button.is-off{background:transparent;color:#789080}
+  .app-nav-item.edit-mode-button.is-on{background:#235d47;color:#fff}
+  .app-nav-item:focus-visible,.app-nav-signout:focus-visible{outline:2px solid #6fa17a;outline-offset:2px}
+  .app-nav-profile{align-items:stretch}
+  .app-nav-profile>.app-nav-item{width:100%}
+  .tree-section-heading h3{font-size:17px}
+  .people-panel{margin-bottom:10px}
+  .family-tree-viewport{height:68dvh;min-height:330px}
+}
+@media(max-width:450px){
+  .workspace-header h2{font-size:29px}
+  .link-account-prompt .form-input{font-size:12px}
+  .add-person-panel,.management-panel,.requests-panel{left:7px;right:7px;padding:14px;bottom:calc(76px + env(safe-area-inset-bottom))}
+  .add-person-panel .section-heading,.management-panel .section-heading,.requests-panel .section-heading{top:-14px}
+  .app-bottom-nav:not([hidden]){padding-left:4px;padding-right:4px}
+  .app-nav-item svg{width:21px;height:21px}
+  .app-nav-item span{font-size:9px}
+}
