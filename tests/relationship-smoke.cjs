@@ -629,4 +629,25 @@ assert.match(app, /const ancestorGenerationForLabel = new Map\(bloodAncestors\)/
 assert.match(app, /const rootFamilyKeyForPerson = personId =>/);
 assert.doesNotMatch(app, /joined-family:/);
 assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
+
+{
+  const familyBusInterferingUnitIds = new Function(
+    app.slice(app.indexOf("function familyBusInterferingUnitIds("), app.indexOf("\n  function renderPeople()")) +
+      "\nreturn familyBusInterferingUnitIds;"
+  )();
+  const parentUnit = { id:"parents", left:100, right:260 };
+  const unrelatedLeft = { id:"unrelated-left", left:270, right:360 };
+  const unrelatedRight = { id:"unrelated-right", left:520, right:620 };
+  assert.deepEqual(
+    familyBusInterferingUnitIds([parentUnit, unrelatedLeft, unrelatedRight],
+      new Set(["parents"]), 200, 450),
+    ["unrelated-left"],
+    "Cards overlapping another family's parent-to-children bus must be identified for side placement"
+  );
+  assert.match(app, /const childUnitsByUnit = new Map\(\)/);
+  assert.match(app, /const shiftUnitBranch = \(startUnit, delta\) =>/);
+  assert.match(app, /const childBlockRight = Math\.max\(\.\.\.children\.map\(child => child\.x \+ child\.width\)\)/);
+}
+
+assert.match(app, /familyBusInterferingUnitIds\(/);
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
