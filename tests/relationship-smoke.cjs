@@ -423,7 +423,7 @@ assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(paren
    "When a partner connector exists, start the stem at that connector");
 }
 assert.ok(app.includes("Math.max(128, outgoingFamilies.size * 24 + 40)"), "Use a compact generation gap while reserving connector lanes");
-assert.ok(app.includes("parentRowBottom + 22 + laneIndex * 24"), "Use compact parallel connector lanes");
+assert.ok(app.includes("parentRowBottom + 30 + laneIndex * 28"), "Keep sibling connector lanes below the parent generation");
 assert.ok(!app.includes("V ' + laneY + ' H ' + endX + ' V ' + endY"), "Parent-child links should not be drawn as separate H-shaped routes");
 assert.ok(styles.includes(".family-node-card .person-meta.record-meta"), "Card metadata must not be clamped to one line");
 assert.ok(!app.includes("coupleGap + 2"));
