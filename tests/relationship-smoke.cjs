@@ -471,7 +471,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
   members:[{user_id:"current-user",person_id:"me"}],
   people,relationships
  };
- const source=extractFunction(app,"function generationMap() {","\\n  function groupChildrenByParentIds");
+ const source=extractFunction(app,"function generationMap() {","\n  function groupChildrenByParentIds");
  const generationMap=new Function("state",source+"\\nreturn generationMap;")(layoutState);
  const generationOf=id=>{
   for(const [level,records] of generationMap())if(records.some(record=>record.id===id))return level;
@@ -486,7 +486,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
 }
 {
  // A child with only one recorded parent still gets a family connector group.
- const source=extractFunction(app,"function groupChildrenByParentIds(parentsByChild, positions)","\\n  function relationNames");
+ const source=extractFunction(app,"function groupChildrenByParentIds(parentsByChild, positions)","\n  function relationNames");
  const groupChildrenByParentIds=new Function(source+"\\nreturn groupChildrenByParentIds;")();
  const positions=new Map([
   ["only-parent",{x:0,y:0,width:270}],
