@@ -62,7 +62,6 @@
     }
   };
 
-
   const interfaceTranslations = {"Uravu — Family tree":"உறவு — குடும்ப மரம்","Uravu home":"உறவு முகப்பு","Change language":"மொழியை மாற்று","Sign in with Google":"Google மூலம் உள்நுழைக","Sign out":"வெளியேறு","YOUR FAMILY, CONNECTED":"உங்கள் குடும்பம், ஒன்றிணைந்து","Every generation has a story.":"ஒவ்வொரு தலைமுறைக்கும் ஒரு கதை உண்டு.","Build your family tree, preserve names and relationships, and invite family members to contribute with the right permissions.":"உங்கள் குடும்ப மரத்தை உருவாக்கி, பெயர்களையும் உறவுகளையும் பாதுகாத்து, சரியான அனுமதிகளுடன் குடும்ப உறுப்பினர்களைப் பங்களிக்க அழைக்கவும்.","Continue with Google":"Google மூலம் தொடரவும்","Your family tree is private to its members. Nothing is shown here until you sign in and open or create a tree.":"உங்கள் குடும்ப மரத்தை அதன் உறுப்பினர்கள் மட்டுமே பார்க்க முடியும். உள்நுழைந்து ஒரு மரத்தைத் திறக்கும் அல்லது உருவாக்கும் வரை இங்கு எதுவும் காட்டப்படாது.","Generation":"தலைமுறை","before us":"நமக்கு முன்","Parents &":"பெற்றோர் மற்றும்","guardians":"பாதுகாவலர்கள்","You":"நீங்கள்","and yours":"உங்கள் குடும்பம்","The next":"அடுத்த","generation":"தலைமுறை","YOUR FAMILY WORKSPACE":"உங்கள் குடும்பப் பணியிடம்","Welcome to Uravu":"உறவுக்கு வரவேற்கிறோம்","Create a tree or request access to one that already exists.":"புதிய குடும்ப மரத்தை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள மரத்திற்கு அணுகலைக் கோரவும்.","Create a family tree":"குடும்ப மரத்தை உருவாக்கு","Start a new family space. You become its owner.":"புதிய குடும்ப இடத்தைத் தொடங்குங்கள். அதன் உரிமையாளர் நீங்களாக இருப்பீர்கள்.","Family tree name":"குடும்ப மரத்தின் பெயர்","e.g. The Kumar family":"எ.கா. குமார் குடும்பம்","Description":"விளக்கம்","Optional":"விருப்பத்தேர்வு","A short note about this family tree":"இந்தக் குடும்ப மரத்தைப் பற்றிய சிறு குறிப்பு","Primary language":"முதன்மை மொழி","Create tree":"மரத்தை உருவாக்கு","Find a family tree":"குடும்ப மரத்தைக் கண்டுபிடி","Request access and ask for the role you need.":"அணுகலைக் கோரி, உங்களுக்குத் தேவையான பங்கைக் கேளுங்கள்.","Search trees":"குடும்ப மரங்களைத் தேடு","Search by tree name...":"குடும்ப மரத்தின் பெயரால் தேடுங்கள்...","Loading available trees…":"கிடைக்கும் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","YOUR MEMBERSHIPS":"உங்கள் உறுப்பினர் நிலைகள்","My family trees":"எனது குடும்ப மரங்கள்","Refresh":"புதுப்பி","Loading your trees…":"உங்கள் குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","Loading trees…":"குடும்ப மரங்கள் ஏற்றப்படுகின்றன…","TREE MEMBER":"குடும்ப மர உறுப்பினர்","Family tree":"குடும்ப மரம்","Request role / link":"பங்கு / இணைப்பைக் கோரு","Close tree":"மரத்தை மூடு","Tree accounts":"மரக் கணக்குகள்","Pending requests":"நிலுவையிலுள்ள கோரிக்கைகள்","TREE EDITING":"குடும்ப மரத் திருத்தம்","Add a family member":"குடும்ப உறுப்பினரைச் சேர்","Cancel edit":"திருத்தத்தை ரத்து செய்","Name":"பெயர்","Full name":"முழுப் பெயர்","Tamil name":"தமிழ்ப் பெயர்","Gender":"பாலினம்","Not specified":"குறிப்பிடப்படவில்லை","Male":"ஆண்","Female":"பெண்","Other / prefer not to say":"மற்றவை / தெரிவிக்க விருப்பமில்லை","Date of birth":"பிறந்த தேதி","Sibling birth order":"உடன்பிறப்புகளின் பிறப்பு வரிசை","Use when dates are unknown. Enter 1 for the oldest sibling; assign an order to each sibling whose age is unknown.":"தேதிகள் தெரியாதபோது பயன்படுத்தவும். 1 என்பது மூத்த உடன்பிறப்பு; வயது தெரியாத ஒவ்வொருவருக்கும் வரிசை எண்ணை அமைக்கவும்.","Date of death":"இறந்த தேதி","Connect to someone":"ஒருவருடன் இணை","No connection yet":"இன்னும் உறவு இணைக்கப்படவில்லை","Relationship to them":"அவருடனான உறவு","Child of selected person":"தேர்ந்தெடுத்த நபரின் பிள்ளை","Parent of selected person":"தேர்ந்தெடுத்த நபரின் பெற்றோர்","Spouse / partner":"துணைவர் / துணைவி","Notes":"குறிப்புகள்","Additional details (avoid sensitive information)":"கூடுதல் விவரங்கள் (முக்கியமான தனிப்பட்ட தகவல்களைத் தவிர்க்கவும்)","FAMILY TREE":"குடும்ப மரம்","Search names…":"பெயர்களைத் தேடு…","Reset view":"காட்சியை மீட்டமை","Fit tree":"மரத்தைப் பொருத்து","Zoom out":"சிறிதாக்கு","Zoom in":"பெரிதாக்கு","Full screen":"முழுத்திரை","Exit full screen":"முழுத்திரையிலிருந்து வெளியேறு","Pinch to zoom · drag to move · Ctrl + scroll to zoom":"பெரிதாக்க இரண்டு விரல்களைப் பயன்படுத்தவும் · நகர்த்த இழுக்கவும்","ACCESS CONTROL":"அணுகல் கட்டுப்பாடு","Manage members":"உறுப்பினர்களை நிர்வகி","Change roles and link an account to a family member. Only the owner can grant or remove admin access.":"பங்குகளை மாற்றி, கணக்கை குடும்ப உறுப்பினருடன் இணைக்கவும். நிர்வாகி அணுகலை வழங்கவோ நீக்கவோ உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","NEEDS REVIEW":"பரிசீலனை தேவை","Access, role and linking requests":"அணுகல், பங்கு மற்றும் இணைப்புக் கோரிக்கைகள்","Review each request and choose the role to assign. Only the owner can make someone an admin.":"ஒவ்வொரு கோரிக்கையையும் பரிசீலித்து வழங்க வேண்டிய பங்கைத் தேர்ந்தெடுக்கவும். ஒருவரை நிர்வாகியாக்க உரிமையாளருக்கு மட்டுமே அதிகாரம் உண்டு.","Delete this family tree":"இந்தக் குடும்ப மரத்தை நீக்கு","This permanently deletes its people, relationships, memberships and requests.":"இதனால் அதன் உறுப்பினர்கள், உறவுகள், உறுப்பினர் நிலைகள் மற்றும் கோரிக்கைகள் நிரந்தரமாக நீக்கப்படும்.","FAMILY TREE REQUEST":"குடும்ப மரக் கோரிக்கை","Request access":"அணுகலைக் கோரு","Close":"மூடு","Uravu could not start":"உறவைத் தொடங்க முடியவில்லை","One of the app files did not load.":"செயலியின் கோப்புகளில் ஒன்று ஏற்றப்படவில்லை.","Try again":"மீண்டும் முயற்சி செய்","Uravu could not start because a required file or service could not load. Refresh the page or try again later.":"தேவையான கோப்பு அல்லது சேவை ஏற்றப்படாததால் உறவைத் தொடங்க முடியவில்லை. பக்கத்தைப் புதுப்பிக்கவும் அல்லது சிறிது நேரம் கழித்து முயற்சிக்கவும்.","Could not load family trees":"குடும்ப மரங்களை ஏற்ற முடியவில்லை","Database setup or permissions need attention.":"தரவுத்தள அமைப்பு அல்லது அனுமதிகளைச் சரிபார்க்க வேண்டும்.","No description provided.":"விளக்கம் வழங்கப்படவில்லை.","Loading family members from Supabase…":"Supabase-இலிருந்து குடும்ப உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","Loading members…":"உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…","No members yet.":"இதுவரை உறுப்பினர்கள் இல்லை.","Role":"பங்கு","Assigned family entry":"ஒதுக்கப்பட்ட குடும்பப் பதிவு","Not linked":"இணைக்கப்படவில்லை","Family member":"குடும்ப உறுப்பினர்","Signed in":"உள்நுழைந்துள்ளார்","Approved member":"ஒப்புதல் பெற்ற உறுப்பினர்","Assign role":"பங்கை ஒதுக்கு","No message added.":"செய்தி எதுவும் சேர்க்கப்படவில்லை.","Requested family entry:":"கோரப்பட்ட குடும்பப் பதிவு:","New join, role and linking requests will appear here.":"புதிய இணைப்பு, பங்கு மற்றும் இணைப்புக் கோரிக்கைகள் இங்கே தோன்றும்.","Remove connection":"உறவு இணைப்பை நீக்கு","No connections yet":"இன்னும் உறவுகள் இல்லை","Linked account:":"இணைக்கப்பட்ட கணக்கு:","Born":"பிறப்பு","Died":"இறப்பு","Spouse / partner:":"துணைவர் / துணைவி:","Parent of:":"பெற்றோர்:","Child of:":"பிள்ளை:","Request approved and role assigned.":"கோரிக்கை ஏற்கப்பட்டு பங்கு ஒதுக்கப்பட்டது.","Request rejected.":"கோரிக்கை நிராகரிக்கப்பட்டது.","Member role updated.":"உறுப்பினரின் பங்கு புதுப்பிக்கப்பட்டது.","Family entry assigned to the account.":"குடும்பப் பதிவு கணக்குடன் இணைக்கப்பட்டது.","Family entry unlinked.":"குடும்பப் பதிவு கணக்கிலிருந்து துண்டிக்கப்பட்டது.","Family member updated.":"குடும்ப உறுப்பினர் விவரங்கள் புதுப்பிக்கப்பட்டன.","Family member added.":"குடும்ப உறுப்பினர் சேர்க்கப்பட்டார்.","Family member and connections deleted.":"குடும்ப உறுப்பினரும் அவருடைய உறவு இணைப்புகளும் நீக்கப்பட்டன.","Family connection removed.":"குடும்ப உறவு இணைப்பு நீக்கப்பட்டது.","Family tree deleted.":"குடும்ப மரம் நீக்கப்பட்டது.","Enter a family tree name with at least 2 characters.":"குடும்ப மரத்தின் பெயர் குறைந்தது 2 எழுத்துகள் கொண்டிருக்க வேண்டும்.","Creating…":"உருவாக்கப்படுகிறது…","Family tree created. You are the owner.":"குடும்ப மரம் உருவாக்கப்பட்டது. நீங்கள் அதன் உரிமையாளர்.","You must be an approved member to open this tree.":"இந்த மரத்தைத் திறக்க ஒப்புதல் பெற்ற உறுப்பினராக இருக்க வேண்டும்.","Family connections across generations.":"தலைமுறைகளைக் கடந்து இணையும் குடும்ப உறவுகள்.","Your tree access request is awaiting review. You can submit a family-record request if needed.":"உங்கள் குடும்ப மர அணுகல் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your family-entry link request is awaiting review. You can submit an updated request if needed.":"உங்கள் குடும்பப் பதிவு இணைப்புக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","Your role-change request is awaiting review. You can submit an updated request if needed.":"உங்கள் பங்கு மாற்றக் கோரிக்கை பரிசீலனைக்காகக் காத்திருக்கிறது. தேவைப்பட்டால் புதுப்பிக்கப்பட்ட கோரிக்கையை அனுப்பலாம்.","A name is required.":"பெயர் அவசியம்.","Date of death cannot be earlier than date of birth.":"இறந்த தேதி, பிறந்த தேதிக்கு முந்தையதாக இருக்க முடியாது.","Saving…":"சேமிக்கப்படுகிறது…","Approving…":"ஏற்கப்படுகிறது…","Rejecting…":"நிராகரிக்கப்படுகிறது…","Sending…":"அனுப்பப்படுகிறது…","Request a role change or family-entry link":"பங்கு மாற்றம் அல்லது குடும்பப் பதிவு இணைப்பைக் கோரு","The owner or a member linked to a family record will review this request.":"இந்தக் கோரிக்கையை குடும்ப மர உரிமையாளர் அல்லது நிர்வாகி பரிசீலிப்பார்.","Choose the role you want to request. The owner or an admin decides what to approve.":"நீங்கள் கோர விரும்பும் பங்கைத் தேர்ந்தெடுக்கவும். எதை ஏற்க வேண்டும் என்பதை உரிமையாளர் அல்லது நிர்வாகி தீர்மானிப்பார்.","Requested role":"கோரப்படும் பங்கு","Request to link your account to a family member":"உங்கள் கணக்கை ஒரு குடும்ப உறுப்பினருடன் இணைக்கக் கோரு","Message":"செய்தி","Explain your request briefly":"உங்கள் கோரிக்கையைச் சுருக்கமாக விளக்குங்கள்","Send request":"கோரிக்கையை அனுப்பு","Request sent for the owner or an admin to review.":"உரிமையாளர் அல்லது நிர்வாகி பரிசீலிக்கக் கோரிக்கை அனுப்பப்பட்டது.","Add family member":"குடும்ப உறுப்பினரைச் சேர்","Edit family member":"குடும்ப உறுப்பினரைத் திருத்து","Save changes":"மாற்றங்களைச் சேமி","This family tree is empty":"இந்தக் குடும்ப மரம் காலியாக உள்ளது","Add the first family member to begin building your tree.":"குடும்ப மரத்தை உருவாக்கத் தொடங்க முதல் உறுப்பினரைச் சேர்க்கவும்.","You have not joined any family trees yet.":"நீங்கள் இன்னும் எந்தக் குடும்ப மரத்திலும் இணையவில்லை.","Create one or request access to an existing tree.":"புதிய மரத்தை உருவாக்கவும் அல்லது இருக்கும் மரத்திற்கு அணுகலைக் கோரவும்.","No other family trees are available to request.":"அணுகல் கோர வேறு குடும்ப மரங்கள் இல்லை.","Request pending":"கோரிக்கை நிலுவையில் உள்ளது","Requested":"கோரப்பட்டது","Open tree":"மரத்தைத் திற","Members":"உறுப்பினர்கள்","Save":"சேமி","Cancel":"ரத்து செய்","Approve":"ஏற்கவும்","Reject":"நிராகரி","No requests need review.":"பரிசீலிக்க வேண்டிய கோரிக்கைகள் இல்லை.","No connection added.":"உறவு இணைப்பு சேர்க்கப்படவில்லை.","The new Uravu database schema is not installed yet. Run supabase/schema.sql in your Supabase SQL Editor.":"Uravu-வின் புதிய தரவுத்தள அமைப்பு இன்னும் நிறுவப்படவில்லை. Supabase SQL Editor-ல் supabase/schema.sql-ஐ இயக்கவும்.","Database permission blocked this action. Check the Supabase policies in supabase/schema.sql.":"தரவுத்தள அனுமதி இந்தச் செயலைத் தடுத்தது. supabase/schema.sql-இல் உள்ள Supabase கொள்கைகளைச் சரிபார்க்கவும்.","Something went wrong. Please try again.":"ஏதோ தவறு ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.","Sign in with Google to continue.":"தொடர Google மூலம் உள்நுழைக.","Supabase client is not initialized.":"Supabase கிளையன்ட் தொடங்கப்படவில்லை.","Supabase client is missing. Check supabase-config.js.":"Supabase கிளையன்ட் இல்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Uravu could not connect to Supabase. Check supabase-config.js.":"Uravu-வால் Supabase-உடன் இணைக்க முடியவில்லை. supabase-config.js-ஐச் சரிபார்க்கவும்.","Delete this family connection?":"இந்தக் குடும்ப உறவு இணைப்பை நீக்கவா?","As the owner, use Manage members to link your own family entry.":"உரிமையாளராக, உங்கள் குடும்பப் பதிவை இணைக்க உறுப்பினர்களை நிர்வகி என்பதைப் பயன்படுத்தவும்.","Family tree not found.":"குடும்ப மரத்தைக் காணவில்லை.","Could not load this family tree.":"இந்தக் குடும்ப மரத்தை ஏற்ற முடியவில்லை."};
   interfaceTranslations["YOUR ROLE"] = "உங்கள் பங்கு";
   interfaceTranslations["Family members"] = "குடும்ப உறுப்பினர்கள்";
@@ -289,7 +288,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     window.uravuLanguageObserver.observe(document.body, {subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:["placeholder","aria-label","title"]});
   }
 
-
   function t(key) { return translateUiValue((words[state.language] && words[state.language][key]) || words.en[key] || key); }
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, char => ({
@@ -321,7 +319,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return { valid:true, value:match[1], date:null, precision:"year" };
     }
 
-
     if (!stored && (match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/))) {
       const day = Number(match[1]), month = Number(match[2]), year = Number(match[3]);
       if (!datePartsValid(year, month, day)) return { valid:false };
@@ -329,13 +326,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return { valid:true, value:canonical, date:canonical, precision:"day" };
     }
 
-
     if ((match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
       const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
       if (!datePartsValid(year, month, day)) return { valid:false };
       return { valid:true, value:match[1] + "-" + match[2] + "-" + match[3], date:match[1] + "-" + match[2] + "-" + match[3], precision:"day" };
     }
-
 
     if ((match = raw.match(/^(\d{4})-(\d{2})$/))) {
       const month = Number(match[2]);
@@ -834,9 +829,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     ).sort((a, b) => String(a.user_id || "").localeCompare(String(b.user_id || "")));
     if (ownerLinks.length) return ownerLinks[0].person_id;
 
-
-
-
     const childIds = new Set(relationships
       .filter(edge => edge.relationship_type === "parent")
       .map(edge => edge.related_person_id));
@@ -853,8 +845,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function generationMap(anchorPersonId = treeLayoutAnchorPersonId()) {
-
-
 
     const parent = new Map(state.people.map(person => [person.id, person.id]));
     const find = id => {
@@ -892,7 +882,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if (!groups.has(root)) groups.set(root, []);
       groups.get(root).push(person.id);
     });
-
 
     const groupIds = Array.from(groups.keys());
     const adjacency = new Map(groupIds.map(id => [id, []]));
@@ -950,9 +939,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function familyParentStemStartY(parents, partnerLine) {
 
-
-
-
     if (partnerLine) return partnerLine.y;
     return Math.max(...parents.map(parent => parent.y + parent.height));
   }
@@ -977,7 +963,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       else if(edge.relationship_type==="spouse"){add(spousesByPerson,edge.person_id,edge.related_person_id);add(spousesByPerson,edge.related_person_id,edge.person_id);}
     });
 
-
     Array.from(childrenByParent.entries()).forEach(([parentId, childIds]) => {
       (spousesByPerson.get(parentId) || new Set()).forEach(spouseId => {
         Array.from(childIds).forEach(childId => {
@@ -990,8 +975,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const parentsOf=id=>parentsByChild.get(id)||new Set(),childrenOf=id=>childrenByParent.get(id)||new Set(),spousesOf=id=>spousesByPerson.get(id)||new Set(),array=v=>Array.from(v||[]);
     const distances=(startId,nextIds)=>{const map=new Map([[startId,0]]),pending=[startId];for(let i=0;i<pending.length;i++){const current=pending[i],nextDistance=map.get(current)+1;array(nextIds(current)).forEach(id=>{const old=map.get(id);if(old===undefined||nextDistance<old){map.set(id,nextDistance);pending.push(id);}});}return map;};
     const bloodAncestors=distances(egoId,parentsOf),descendants=distances(egoId,childrenOf);
-
-
 
     const generationSiblingsOf = id => new Set(
       array(parentsOf(id)).flatMap(parentId=>array(childrenOf(parentId)))
@@ -1016,11 +999,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
       if(!changed)break;
     }
-
-
-
-
-
 
     const generationRows = generationMap(egoId);
     const generationLevelByPerson = new Map();
@@ -1223,10 +1201,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       let match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (match) return { year:Number(match[1]), month:Number(match[2]), day:Number(match[3]), precision:3 };
 
-
       match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
       if (match) return { year:Number(match[3]), month:Number(match[2]), day:Number(match[1]), precision:3 };
-
 
       match = value.match(/^(\d{1,2})-(\d{4})$/);
       if (match) return { year:Number(match[2]), month:Number(match[1]), day:null, precision:2 };
@@ -1266,9 +1242,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return 0;
   }
 
-
-
-
   function buildSiblingOrderPositions(siblings) {
     const people = Array.from(new Map((siblings || []).filter(Boolean)
       .map(person => [person.id, person])).values());
@@ -1281,8 +1254,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const manuallyOrderedUnknown = people
       .filter(person => !birthDateParts(person) && manualBirthOrder(person) != null)
       .sort((a, b) => manualBirthOrder(a) - manualBirthOrder(b) || nameOrder(a, b));
-
-
 
     manuallyOrderedUnknown.forEach(person => {
       let slot = manualBirthOrder(person);
@@ -1301,8 +1272,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       occupied.add(nextSlot);
       nextSlot += 1;
     });
-
-
 
     const unorderedUnknown = people
       .filter(person => !birthDateParts(person) && manualBirthOrder(person) == null)
@@ -1370,8 +1339,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-
-
     candidates.sort((a, b) =>
       b.sharedParentCount - a.sharedParentCount ||
       a.sharedParentKey.localeCompare(b.sharedParentKey)
@@ -1409,9 +1376,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function familyBlockTargetCenter(units, parentPositions) {
 
-
-
-
     if (parentPositions.length) {
       return parentPositions.reduce(
         (sum, position) => sum + position.x + position.width / 2, 0
@@ -1424,14 +1388,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       : null;
   }
 
-
   function choosePrimaryFamilyKey(unit, candidateKeys, activePersonId, parentFamilyByPerson, relatednessDistance, buckets, positions) {
     const candidates = Array.from(new Set(candidateKeys.filter(Boolean)));
     if (!candidates.length) return null;
-
-
-
-
 
     if (activePersonId && unit.people.some(person => person.id === activePersonId)) {
       const activeKey = parentFamilyByPerson.get(activePersonId);
@@ -1477,7 +1436,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function shouldUseExpandedInLawFamilyBlock(unit, expandedFamilyKey, candidates, treeLineageIds, parentFamilyByPerson) {
     if (!expandedFamilyKey || !candidates.includes(expandedFamilyKey)) return false;
-
 
     const hasLineageFamilyAnchor = (unit.people || []).some(person =>
       treeLineageIds.has(person.id) && parentFamilyByPerson.has(person.id)
@@ -1558,8 +1516,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         (rawChildrenByParent.get(parent.id) || new Set()).forEach(childId => unitChildIds.add(childId));
       });
 
-
-
       if (!unitChildIds.size || Array.from(unitChildIds).some(id => !targetIds.has(id))) return;
       const centers = Array.from(targetIds).map(id => {
         const position = positions.get(id);
@@ -1619,7 +1575,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
 
     targetRootsByInLawRoot.forEach((lineageRoots, inLawRoot) => {
-
 
       if (lineageRoots.size !== 1) return;
       const lineageRoot = lineageRoots.values().next().value;
@@ -1683,7 +1638,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const anchors = childAnchors.length ? childAnchors : fallbackAnchors;
     if (anchors.length) {
 
-
       const shift = (Math.min(...anchors) + Math.max(...anchors)) / 2;
       unitCenters.forEach((center,descendant) => {
         if (descendant !== unit) unitCenters.set(descendant,center-shift);
@@ -1732,7 +1686,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
     const selected = state.people.slice();
 
-
     const allPeopleById = new Map(selected.map(person => [person.id, person]));
     const rawParentsByChild = new Map(selected.map(person => [person.id, new Set()]));
     const rawChildrenByParent = new Map(selected.map(person => [person.id, new Set()]));
@@ -1752,10 +1705,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const layoutAnchorPersonId = treeLayoutAnchorPersonId();
     const treeLineageIds = new Set();
     if (layoutAnchorPersonId && allPeopleById.has(layoutAnchorPersonId)) {
-
-
-
-
 
       const ancestorQueue = [layoutAnchorPersonId];
       const directAncestorIds = new Set([layoutAnchorPersonId]);
@@ -1778,8 +1727,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         });
       }
     }
-
-
 
     const expandedPartnerFamiliesByPerson = new Map();
     state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
@@ -1805,8 +1752,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     viewport.hidden = false;
     empty.hidden = true;
-
-
 
     const selectedIds = new Set(visibleSelected.map(person => person.id));
     const levels = generationMap();
@@ -1849,7 +1794,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const levelByPerson = new Map();
     grouped.forEach((people, level) => people.forEach(person => levelByPerson.set(person.id, level)));
 
-
     const spousesForLayout = new Map(state.people.map(person => [person.id, new Set()]));
     state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
       if (!spousesForLayout.has(edge.person_id) || !spousesForLayout.has(edge.related_person_id)) return;
@@ -1881,9 +1825,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       parentsByChild.get(edge.related_person_id).add(edge.person_id);
     });
 
-
-
-
     const rootFamilyMembers = new Map();
     const rootFamiliesCache = new Map();
     const topRootFamilyKeyForPerson = personId => {
@@ -1913,8 +1854,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return roots;
     };
 
-
-
     selected.forEach(person => rootFamiliesForPerson(person.id));
     const rootFamilyLabel = key => (rootFamilyMembers.get(key) || [])
       .map(id => allPeopleById.get(id)?.full_name)
@@ -1942,9 +1881,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     legendPersonIds.forEach(personId => {
       rootFamiliesForPerson(personId).forEach(key => visibleRootFamilyKeys.add(key));
     });
-
-
-
 
     const rootFamilyKeyForPerson = personId => {
       const unit = personUnit.get(personId);
@@ -2030,8 +1966,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const used = new Set();
       const units = [];
 
-
-
       people.forEach(person => {
         if (used.has(person.id)) return;
         const groupIds = [];
@@ -2052,9 +1986,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         const width = group.length * nodeWidth + Math.max(0, group.length - 1) * coupleGap;
         units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name });
       });
-
-
-
 
       const parentCenter = unit => {
         const centers = [];
@@ -2084,17 +2015,12 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         return centers.length ? centers.reduce((sum, center) => sum + center, 0) / centers.length : null;
       };
 
-
-
-
       units.forEach(unit => {
         sortUnitPeopleByParentCenter(unit, parentCenter);
         unit.parentCenter = parentCenter(unit);
       });
 
       units.sort((a, b) => {
-
-
 
         const siblingAgeOrder = compareSiblingUnitsByAge(a, b, parentsByChild, grouped.get(level) || []);
         if (siblingAgeOrder) return siblingAgeOrder;
@@ -2121,8 +2047,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-
-
     const personUnit = new Map();
     levelUnits.forEach(units => units.forEach(unit => {
       unit.people.forEach(person => personUnit.set(person.id, unit));
@@ -2147,9 +2071,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
       familyBucketsByLevel.set(level, buckets);
     });
-
-
-
 
     const activePersonId = layoutAnchorPersonId;
     const relatednessAdjacency = new Map(state.people.map(person => [person.id, new Set()]));
@@ -2190,7 +2111,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           unit, expandedFamilyKey, candidates, treeLineageIds, parentFamilyByPerson
         )) {
 
-
           primaryFamilyByUnit.set(unit, expandedFamilyKey);
           return;
         }
@@ -2204,8 +2124,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     const familySiblingGap = 24;
     const familyBlockGap = 40;
-
-
 
     const unitsByFamilyKey = new Map();
     primaryFamilyByUnit.forEach((familyKey,unit) => {
@@ -2255,17 +2173,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     let rootUnits = allUnits.filter(unit => !parentUnitForChildUnit.has(unit));
     if (!rootUnits.length) rootUnits = allUnits.slice();
 
-
-
-
     rootUnits = orderExpandedInLawRootsNearSpouses(
       rootUnits, expandedPartnerFamiliesByPerson, rawParentsByChild, treeLineageIds,
       personUnit, parentUnitForChildUnit, childUnitsByParentUnit
     );
-
-
-
-
 
     const familyLayout = computeFamilySubtreeLayout(
       rootUnits,
@@ -2289,16 +2200,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-
-
-
     placeExpandedPartnerParentsNearSpouses(
       expandedPartnerFamiliesByPerson, rawParentsByChild, rawChildrenByParent,
       treeLineageIds, personUnit, parentUnitForChildUnit, childUnitsByParentUnit,
       positions, columnGap / 2
     );
-
-
 
     const leftmostCard = Math.min(0, ...Array.from(positions.values()).map(position => position.x));
     const treeShiftX = 26 - leftmostCard;
@@ -2311,8 +2217,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const baseHeight = Math.max(290, lowestCardEdge + 48);
     state.treeBaseWidth = baseWidth;
     state.treeBaseHeight = baseHeight;
-
-
 
     canvas.style.minWidth = "0";
     canvas.style.minHeight = "0";
@@ -2336,8 +2240,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const partnerLineByPair = new Map();
     const partnerEdges = state.relationships.filter(edge => edge.relationship_type === "spouse");
 
-
-
     partnerEdges.forEach(edge => {
       const first = positions.get(edge.person_id);
       const second = positions.get(edge.related_person_id);
@@ -2357,8 +2259,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       paths.push('<path class="family-line spouse-line" d="M ' +
         lineLeft + ' ' + lineY + ' H ' + lineRight + '"/>');
     });
-
-
 
     const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions);
 
@@ -2387,8 +2287,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const childTop = Math.min(...children.map(child => child.y));
       if (childTop <= parentRowBottom + 8) return;
 
-
-
       let partnerLine = null;
       for (let i = 0; i < group.parentIds.length && !partnerLine; i++) {
         for (let j = i + 1; j < group.parentIds.length; j++) {
@@ -2412,8 +2310,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const laneIndex = nextLaneByRowPair.get(rowPairKey) || 0;
       nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
       const busY = Math.min(childTop - 18, parentRowBottom + 22 + laneIndex * 24);
-
-
 
       paths.push('<path class="family-line family-parent-stem" style="stroke:' + familyColor + '" d="M ' +
         trunkStartX + ' ' + trunkStartY + ' V ' + busY + '"/>');
@@ -2611,7 +2507,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       setTreeZoom(state.treeZoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1), event.clientX - rect.left, event.clientY - rect.top);
     }, { passive: false });
   }
-
 
   function highlightSearchMatch(value, query) {
     const text = String(value || "");
@@ -3009,7 +2904,6 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const treeId = state.activeTree.id;
     let personId = state.editingPersonId;
     let error = null;
-
 
     if (personId) {
       const result = await db.from("uravu_people").update(data)
