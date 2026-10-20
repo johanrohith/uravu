@@ -146,13 +146,6 @@
 
           <section class="panel add-person-panel" id="add-person-panel" hidden>
             <div class="section-heading"><div><p class="eyebrow">TREE EDITING</p><h3 id="person-form-title">Add a family member</h3></div><div class="panel-heading-actions"><button class="quiet-button" id="cancel-edit-button" type="button" hidden>Cancel edit</button><button class="panel-close-button" type="button" data-close-panel="add-person-panel" aria-label="Close section">×</button></div></div>
-            <div id="link-form-desktop-target">
-              <form id="link-existing-form" class="link-existing-form">
-                <div><label class="field-label" for="request-person">Already in the tree? Select your family record</label><select class="form-input" id="request-person" required><option value="">Choose a record to link</option></select></div>
-                <button class="secondary-button" id="request-existing-link-button" type="submit">Request to link this account</button>
-                <p class="field-help">An existing linked family member must confirm the link before you can edit other records.</p>
-              </form>
-            </div>
             <div class="form-divider" id="self-record-divider"><span>OR ADD YOUR OWN RECORD</span></div>
             <form id="person-form" class="person-form">
               <div class="form-grid">
@@ -187,6 +180,19 @@
           <section class="panel requests-panel" id="linking-requests-panel" hidden>
             <div class="section-heading"><div><p class="eyebrow">FAMILY RECORDS</p><h3>Linking Requests</h3><p class="panel-description">Confirm requests from people asking to link their account to a family record.</p></div><button class="panel-close-button" type="button" data-close-panel="linking-requests-panel" aria-label="Close section">×</button></div>
             <div id="linking-requests-list" class="request-list"></div>
+          </section>
+
+          <section class="link-account-prompt link-account-desktop-prompt" id="link-account-desktop-prompt" hidden>
+            <h3>Do you want to know the relation terms for your relations?</h3>
+            <p>Link your account to an already existing record!</p>
+            <p>Don't have your record? Add a record for you using the "Add Family Member" button above!</p>
+            <div id="link-form-desktop-target">
+              <form id="link-existing-form" class="link-existing-form">
+                <div><label class="field-label" for="request-person">Already in the tree? Select your family record</label><select class="form-input" id="request-person" required><option value="">Choose a record to link</option></select></div>
+                <button class="secondary-button" id="request-existing-link-button" type="submit">Request to link this account</button>
+                <p class="field-help">An existing linked family member must confirm the link before you can edit other records.</p>
+              </form>
+            </div>
           </section>
 
           <section class="link-account-prompt" id="link-account-prompt" hidden>
