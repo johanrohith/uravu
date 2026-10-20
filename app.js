@@ -569,18 +569,53 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (divider) divider.hidden = shouldPauseCreation;
   }
   function syncEditModeButton() {
-    const button = $("#toggle-edit-mode");
-    if (!button) return;
     const enabled = Boolean(state.editMode);
     const label = state.language === "ta"
       ? (enabled ? "திருத்தும் முறை · ON" : "திருத்தும் முறை · OFF")
       : (enabled ? "Edit mode · ON" : "Edit mode · OFF");
-    button.classList.toggle("is-on", enabled);
-    button.classList.toggle("is-off", !enabled);
-    button.setAttribute("aria-pressed", String(enabled));
-    button.setAttribute("aria-label", label);
-    button.title = label;
-    button.textContent = label;
+    [$("#toggle-edit-mode"), $("#app-nav-edit")].filter(Boolean).forEach(button => {
+      button.classList.toggle("is-on", enabled);
+      button.classList.toggle("is-off", !enabled);
+      button.setAttribute("aria-pressed", String(enabled));
+      button.setAttribute("aria-label", label);
+      button.title = label;
+      if (button.id !== "app-nav-edit") button.textContent = label;
+    });
+  }
+
+  function syncLinkFormPlacement() {
+    const form = $("#link-existing-form");
+    const desktopTarget = $("#link-form-desktop-target");
+    const mobileTarget = $("#link-form-mobile-target");
+    const prompt = $("#link-account-prompt");
+    if (!form || !desktopTarget || !mobileTarget || !prompt) return;
+    const appView = window.matchMedia("(max-width: 760px)").matches;
+    const target = appView ? mobileTarget : desktopTarget;
+    if (form.parentElement !== target) target.appendChild(form);
+    prompt.hidden = !(appView && state.activeTree && state.user && !isManager() && !requestPendingForUser());
+  }
+
+  function syncAppNavigation() {
+    const nav = $("#app-bottom-nav");
+    if (!nav) return;
+    const appView = window.matchMedia("(max-width: 760px)").matches;
+    const dashboard = $("#dashboard");
+    const visible = appView && dashboard && !dashboard.hidden && dashboard.classList.contains("tree-open");
+    nav.hidden = !visible;
+    if (!visible) {
+      const profileButton = $("#app-nav-profile");
+      const signOutButton = $("#app-nav-signout");
+      if (profileButton) profileButton.setAttribute("aria-expanded", "false");
+      if (signOutButton) signOutButton.hidden = true;
+    }
+    const mark = (id, active) => {
+      const button = $("#" + id);
+      if (button) button.classList.toggle("is-active", Boolean(active));
+    };
+    mark("app-nav-add", state.openPanels.has("add-person-panel"));
+    mark("app-nav-members", state.openPanels.has("member-management-panel"));
+    mark("app-nav-requests", state.openPanels.has("linking-requests-panel"));
+    syncEditModeButton();
   }
 
   function togglePanel(panelId) {
@@ -657,6 +692,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#dashboard").hidden = !state.user;
     $("#header-signin").hidden = Boolean(state.user);
     $("#user-menu").hidden = !state.user;
+    syncAppNavigation();
     if (!state.user) {
       state.trees = [];
       state.memberships = [];
@@ -670,6 +706,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       state.openPanels.clear();
       $("#tree-workspace").hidden = true;
       $("#dashboard").classList.remove("tree-open");
+      syncAppNavigation();
       return;
     }
     refreshDashboard();
@@ -796,8 +833,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function renderWorkspace() {
     if (!state.activeTree) return;
-    $("#workspace-role").textContent = state.language === "ta" ? "பகிரப்பட்ட குடும்ப மரம்" : "SHARED FAMILY TREE";
-    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-title").textContent = state.language === "ta" ? "உறவுகள்" : "Uravugal";
     $("#workspace-description").textContent = state.language === "ta"
       ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
       : "One shared family tree, across generations.";
@@ -817,9 +853,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     renderPersonConnectOptions();
     renderEditorConnections();
     renderExistingLinkOptions();
+    syncLinkFormPlacement();
     renderPeople();
     renderMembers();
     renderRequests();
+    syncAppNavigation();
   }
 
   function chooseTreeLayoutAnchorPersonId(people, relationships, members) {
@@ -2823,7 +2861,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     syncCalendarFromText("person-death", "person-death-calendar");
     syncDeathDateField();
     $("#person-notes").value = person.notes || "";
-    $("#person-form-title").textContent = "Edit family member";
+    $("#person-form-title").textContent = "Edit member";
     $("#save-person-button").textContent = "Save changes";
     $("#cancel-edit-button").hidden = false;
     $("#add-person-panel").scrollIntoView({ behavior:"smooth", block:"start" });
@@ -2917,7 +2955,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       personId = result.data?.id;
       if (!error && personId) {
         state.editingPersonId = personId;
-        $("#person-form-title").textContent = "Edit family member";
+        $("#person-form-title").textContent = "Edit member";
         $("#save-person-button").textContent = "Save changes";
         $("#cancel-edit-button").hidden = false;
       }
@@ -2999,12 +3037,46 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function bindEvents() {
+    syncLinkFormPlacement();
+    syncAppNavigation();
     $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
-    $("#toggle-edit-mode").addEventListener("click", () => {
+    const toggleEditMode = () => {
       state.editMode = !state.editMode;
       syncEditModeButton();
       renderPeople();
+    };
+    $("#toggle-edit-mode").addEventListener("click", toggleEditMode);
+    $("#app-nav-add").addEventListener("click", () => $("#toggle-add-person-panel").click());
+    $("#app-nav-members").addEventListener("click", () => $("#toggle-member-list-panel").click());
+    $("#app-nav-requests").addEventListener("click", () => $("#toggle-linking-requests-panel").click());
+    $("#app-nav-edit").addEventListener("click", toggleEditMode);
+    $("#app-nav-profile").addEventListener("click", () => {
+      const button = $("#app-nav-profile");
+      const signOut = $("#app-nav-signout");
+      signOut.hidden = !signOut.hidden;
+      button.setAttribute("aria-expanded", String(!signOut.hidden));
     });
+    $("#app-nav-signout").addEventListener("click", () => {
+      $("#app-nav-signout").hidden = true;
+      $("#app-nav-profile").setAttribute("aria-expanded", "false");
+      $("#sign-out-button").click();
+    });
+    document.addEventListener("click", event => {
+      if (event.target instanceof Element && !event.target.closest(".app-nav-profile")) {
+        const signOut = $("#app-nav-signout");
+        const profile = $("#app-nav-profile");
+        if (signOut) signOut.hidden = true;
+        if (profile) profile.setAttribute("aria-expanded", "false");
+      }
+    });
+    const mediaQuery = window.matchMedia("(max-width: 760px)");
+    const handleViewportChange = () => {
+      syncLinkFormPlacement();
+      if (state.activeTree) renderWorkspace();
+      else syncAppNavigation();
+    };
+    if (mediaQuery.addEventListener) mediaQuery.addEventListener("change", handleViewportChange);
+    else if (mediaQuery.addListener) mediaQuery.addListener(handleViewportChange);
     $("#toggle-member-list-panel").addEventListener("click", () => togglePanel("member-management-panel"));
     $("#toggle-linking-requests-panel").addEventListener("click", () => togglePanel("linking-requests-panel"));
     Array.from(document.querySelectorAll("[data-close-panel]")).forEach(button => button.addEventListener("click", () => closePanel(button.dataset.closePanel)));
