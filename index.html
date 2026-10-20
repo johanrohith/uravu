@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-link-form-desktop-20261020-1';
+        stylesheet.href = './styles.css?v=uravu-mobile-canvas-20261020-1';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -57,7 +57,7 @@
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-clean-20261018');
-        await loadScript('./app.js?v=uravu-link-form-desktop-20261020-1');
+        await loadScript('./app.js?v=uravu-mobile-canvas-20261020-1');
 
         try {
           if ('caches' in window) {
@@ -227,7 +227,7 @@
       </button>
       <div class="app-nav-profile">
         <button class="app-nav-item" id="app-nav-profile" type="button" aria-label="Profile" aria-expanded="false">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span>
+          <span class="app-nav-avatar" id="app-nav-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span>Profile</span>
         </button>
         <button class="app-nav-signout" id="app-nav-signout" type="button" hidden>Sign out</button>
       </div>
