@@ -1,5 +1,5 @@
-// Uravu no-cache transition worker.
-// This replaces the old cache-first PWA worker and removes its stale app shell.
+
+
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
 });
@@ -13,4 +13,4 @@ self.addEventListener('activate', event => {
   })());
 });
 
-// Deliberately no fetch handler: app files must come from the network.
+
