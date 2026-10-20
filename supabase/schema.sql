@@ -21,6 +21,7 @@ create table if not exists public.uravu_people (
   gender text not null check (gender in ('male', 'female', 'other')),
   birth_date date,
   birth_date_text text,
+  birth_order integer,
   death_date date,
   death_date_text text,
   is_deceased boolean not null default false,
@@ -45,7 +46,10 @@ alter table public.uravu_people drop constraint if exists uravu_people_gender_ch
 alter table public.uravu_people add constraint uravu_people_gender_check check (gender in ('male', 'female', 'other'));
 
 alter table public.uravu_people add column if not exists birth_date_text text;
+alter table public.uravu_people add column if not exists birth_order integer;
 alter table public.uravu_people add column if not exists death_date_text text;
+alter table public.uravu_people drop constraint if exists uravu_people_birth_order_check;
+alter table public.uravu_people add constraint uravu_people_birth_order_check check (birth_order is null or birth_order between 1 and 999);
 alter table public.uravu_people add column if not exists is_deceased boolean not null default false;
 
 update public.uravu_people
