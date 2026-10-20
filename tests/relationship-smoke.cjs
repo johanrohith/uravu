@@ -632,8 +632,8 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
 
 {
   const computeFamilySubtreeLayout = new Function(
-    app.slice(app.indexOf("function computeFamilySubtreeLayout("), app.indexOf("\\n  function renderPeople()")) +
-      "\\nreturn computeFamilySubtreeLayout;"
+    app.slice(app.indexOf("function computeFamilySubtreeLayout("), app.indexOf("\n  function renderPeople()")) +
+      "\nreturn computeFamilySubtreeLayout;"
   )();
   const unit = (id, people, width, sortName=id) => ({id,people:people.map(personId=>({id:personId})),width,sortName});
   const parents = unit("parents",["father","mother"],564,"parents");
