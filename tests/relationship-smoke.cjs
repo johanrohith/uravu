@@ -954,7 +954,7 @@ for (const id of ["app-nav-add", "app-nav-members", "app-nav-requests", "app-nav
 }
 assert.match(app, /function syncLinkFormPlacement\(\)/);
 assert.match(app, /function syncAppNavigation\(\)/);
-assert.match(app, /$("#app-nav-signout").addEventListener/);
+assert.ok(app.includes('$("#app-nav-signout").addEventListener'));
 assert.match(styles, /\.app-bottom-nav:not\(\[hidden\]\)/);
 assert.match(styles, /\.add-person-panel,\.management-panel,\.requests-panel\{position:fixed/);
 assert.match(html, /class="tree-control-actions"/);
