@@ -941,7 +941,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
 
 
 
-assert.match(app, /const directAncestorIds = new Set\(\[activePersonIdForTree\]\)/);
+assert.match(app, /const directAncestorIds = new Set\(\[layoutAnchorPersonId\]\)/);
 assert.match(app, /const descendantQueue = Array\.from\(directAncestorIds\)/);
 assert.match(app, /const legendPersonIds = new Set\(treeLineageIds\)/);
 assert.ok(app.includes('$$("[data-delete-person]").forEach'));
@@ -949,6 +949,23 @@ assert.doesNotMatch(app, /data-toggle-partner-family/);
 assert.ok(app.includes('$("[data-remove-relationship]").forEach'));
 
 assert.match(html, /id="family-branch-legend"/);
+assert.doesNotMatch(html, /YOUR FAMILY WORKSPACE|id="welcome-heading"/);
+assert.match(html, /id="workspace-role"/);
+assert.match(html, /One shared family tree, across generations\./);
+assert.match(html, /class="tree-control-actions"/);
+assert.ok(
+  html.indexOf('id="tree-zoom-out"') < html.indexOf('id="tree-zoom-level"') &&
+  html.indexOf('id="tree-zoom-level"') < html.indexOf('id="tree-zoom-in"') &&
+  html.indexOf('id="tree-zoom-in"') < html.indexOf('id="fit-tree-button"') &&
+  html.indexOf('id="fit-tree-button"') < html.indexOf('id="tree-fullscreen-button"'),
+  "Zoom out, zoom level, zoom in, Fit tree and Full screen should be ordered in one control row"
+);
+assert.match(app, /maxVisibleLegendItems = 4/);
+assert.match(app, /data-family-legend-toggle/);
+assert.match(styles, /workspace-panel-actions \.secondary-button:not\(\.edit-mode-button\)/);
+assert.match(styles, /\.tree-control-actions\s*\{/);
+assert.match(styles, /\.family-branch-legend-toggle/);
+
 assert.doesNotMatch(app, /treeExpandedPartnerFamilies/);
 assert.match(app, /const expandedPartnerFamiliesByPerson = new Map\(\)/);
 assert.match(app, /familyColorForParentIds/);
