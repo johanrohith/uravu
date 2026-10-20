@@ -1,5 +1,3 @@
--- Optional manual sibling birth order for records without reliable birth dates.
--- Run in Supabase SQL Editor for an existing Uravu database.
 alter table public.uravu_people
   add column if not exists birth_order integer;
 
