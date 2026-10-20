@@ -1048,17 +1048,35 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     state.relationships = results[1].data || [];
     state.activeMembership = state.memberships.find(member => member.tree_id === treeId) || null;
 
-    // A render failure should not leave side panels stuck on their initial loading text.
+    // Retry one failed first render after the mobile layout has had a paint cycle.
+    // A failed first pass must not require a user to tap a bottom-deck button to redraw the tree.
+    const recoverWorkspaceRender = (firstError) => {
+      console.error("Uravu workspace render failed on first pass; retrying after layout settles:", firstError);
+      const retryRender = () => {
+        if (!isCurrentLoad()) return;
+        try {
+          renderWorkspace();
+        } catch (retryError) {
+          console.error("Uravu workspace render failed after automatic retry:", retryError);
+          $("#family-tree-viewport").hidden = true;
+          $("#people-empty").hidden = false;
+          $("#people-empty").textContent = t("treeLoadError");
+          try { renderMembers(); } catch (memberError) { console.error("Uravu member panel render failed:", memberError); }
+          try { renderRequests(); } catch (requestError) { console.error("Uravu request panel render failed:", requestError); }
+          syncAppNavigation();
+        }
+      };
+      if (typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(() => setTimeout(retryRender, 0));
+      } else {
+        setTimeout(retryRender, 80);
+      }
+    };
+
     try {
       renderWorkspace();
     } catch (error) {
-      console.error("Uravu workspace rendering failed:", error);
-      $("#family-tree-viewport").hidden = true;
-      $("#people-empty").hidden = false;
-      $("#people-empty").textContent = t("treeLoadError");
-      try { renderMembers(); } catch (memberError) { console.error("Uravu member panel render failed:", memberError); }
-      try { renderRequests(); } catch (requestError) { console.error("Uravu request panel render failed:", requestError); }
-      syncAppNavigation();
+      recoverWorkspaceRender(error);
     }
   }
 
