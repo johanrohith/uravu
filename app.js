@@ -1173,6 +1173,75 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return lines;
   }
 
+  function birthDateParts(person) {
+    const candidates = [person?.birth_date, person?.birth_date_text]
+      .filter(value => typeof value === "string" && value.trim())
+      .map(value => value.trim());
+
+    for (const value of candidates) {
+      let match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (match) return { year:Number(match[1]), month:Number(match[2]), day:Number(match[3]), precision:3 };
+
+      // Full dates in the UI use DD-MM-YYYY.
+      match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      if (match) return { year:Number(match[3]), month:Number(match[2]), day:Number(match[1]), precision:3 };
+
+      // Partial dates are useful when their known precision allows comparison.
+      match = value.match(/^(\d{1,2})-(\d{4})$/);
+      if (match) return { year:Number(match[2]), month:Number(match[1]), day:null, precision:2 };
+
+      match = value.match(/^(\d{4})-(\d{1,2})$/);
+      if (match) return { year:Number(match[1]), month:Number(match[2]), day:null, precision:2 };
+
+      match = value.match(/^(\d{4})$/);
+      if (match) return { year:Number(match[1]), month:null, day:null, precision:1 };
+    }
+    return null;
+  }
+
+  function compareBirthDatesOlderFirst(firstPerson, secondPerson) {
+    const first = birthDateParts(firstPerson);
+    const second = birthDateParts(secondPerson);
+    if (!first || !second) return 0;
+    if (first.year !== second.year) return first.year - second.year;
+    // A year-only record can't be reliably ordered within its year.
+    if (first.precision < 2 || second.precision < 2) return 0;
+    if (first.month !== second.month) return first.month - second.month;
+    if (first.precision < 3 || second.precision < 3) return 0;
+    return first.day - second.day;
+  }
+
+  function compareSiblingUnitsByAge(firstUnit, secondUnit, parentsByChild) {
+    const candidates = [];
+    (firstUnit.people || []).forEach(firstPerson => {
+      const firstParents = parentsByChild.get(firstPerson.id) || new Set();
+      if (!firstParents.size) return;
+      (secondUnit.people || []).forEach(secondPerson => {
+        const secondParents = parentsByChild.get(secondPerson.id) || new Set();
+        const sharedParents = Array.from(firstParents).filter(parentId => secondParents.has(parentId));
+        if (!sharedParents.length) return;
+        candidates.push({
+          firstPerson,
+          secondPerson,
+          sharedParentCount:sharedParents.length,
+          sharedParentKey:sharedParents.slice().sort().join("|")
+        });
+      });
+    });
+
+    // A unit can contain a married pair from two different birth families. Prefer
+    // the member pair with the most shared parents when deciding sibling order.
+    candidates.sort((a, b) =>
+      b.sharedParentCount - a.sharedParentCount ||
+      a.sharedParentKey.localeCompare(b.sharedParentKey)
+    );
+    for (const candidate of candidates) {
+      const order = compareBirthDatesOlderFirst(candidate.firstPerson, candidate.secondPerson);
+      if (order) return order;
+    }
+    return 0;
+  }
+
   function sortUnitPeopleByParentCenter(unit, parentCenter) {
     unit.people.sort((a, b) => {
       const ac = parentCenter({ people:[a] });
@@ -1697,6 +1766,12 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
 
       units.sort((a, b) => {
+        // Siblings must read oldest-to-youngest left-to-right, even when names
+        // are alphabetical in the opposite direction. Only order by age when
+        // the units share at least one recorded/effective parent.
+        const siblingAgeOrder = compareSiblingUnitsByAge(a, b, parentsByChild);
+        if (siblingAgeOrder) return siblingAgeOrder;
+
         const ac = a.parentCenter, bc = b.parentCenter;
         if (ac != null && bc != null && Math.abs(ac - bc) > 1) return ac - bc;
         if (ac != null && bc == null) return -1;
