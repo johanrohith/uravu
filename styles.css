@@ -640,3 +640,281 @@
   .family-tree-nodes{position:absolute!important;left:0!important;top:0!important;right:auto!important;bottom:auto!important;overflow:visible!important}
   .people-panel #people-empty{position:absolute!important;inset:0!important;z-index:1!important;overflow:auto!important}
 }
+
+
+/* Mobile tree viewport isolation: stable app frame, independent tree gestures. */
+@media (max-width: 760px) {
+  html,
+  body {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    overflow-anchor: none !important;
+  }
+
+  body:has(#dashboard.tree-open) {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  .app-shell {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    min-height: 0 !important;
+    max-height: 100svh !important;
+    max-width: none !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    padding: 0 9px 0 !important;
+    transform: none !important;
+    translate: none !important;
+    contain: none !important;
+    overflow-anchor: none !important;
+  }
+
+  .topbar {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    flex: 0 0 56px !important;
+    width: 100% !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    transform: none !important;
+    translate: none !important;
+    transition: none !important;
+    z-index: 30 !important;
+    overflow: visible !important;
+    overflow-anchor: none !important;
+  }
+
+  .app-shell > main {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 0 !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    overflow-anchor: none !important;
+    padding-bottom: calc(69px + env(safe-area-inset-bottom)) !important;
+    box-sizing: border-box !important;
+  }
+
+  .dashboard.tree-open {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 0 !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    overflow-anchor: none !important;
+    padding-top: 7px !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    contain: none !important;
+  }
+
+  .tree-workspace {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 0 !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    width: 100% !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    overflow-anchor: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    contain: none !important;
+  }
+
+  .mobile-tree-toolbar {
+    position: relative !important;
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    overflow-anchor: none !important;
+    z-index: 5 !important;
+    background: var(--bg) !important;
+  }
+
+  .mobile-tree-toolbar-content {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    contain: layout paint !important;
+    transform: none !important;
+    translate: none !important;
+    will-change: auto !important;
+    transition: max-height .22s ease, opacity .16s ease !important;
+  }
+
+  .mobile-tree-toolbar.is-collapsed .mobile-tree-toolbar-content {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    pointer-events: none !important;
+  }
+
+  .mobile-tree-toolbar-toggle {
+    position: relative !important;
+    flex: 0 0 24px !important;
+    min-height: 24px !important;
+    transform: none !important;
+    translate: none !important;
+    z-index: 6 !important;
+    touch-action: manipulation !important;
+  }
+
+  .people-panel {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 0 !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    overflow-anchor: none !important;
+    isolation: auto !important;
+    contain: none !important;
+    transform: none !important;
+    translate: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .people-panel .tree-section-heading {
+    display: none !important;
+  }
+
+  .family-tree-viewport {
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    touch-action: none !important;
+    contain: layout paint !important;
+    isolation: isolate !important;
+    will-change: auto !important;
+    overflow-anchor: none !important;
+    transform: none !important;
+    translate: none !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+  }
+
+  .family-tree-sizer {
+    position: relative !important;
+    display: block !important;
+    flex: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    contain: none !important;
+  }
+
+  .family-tree-canvas {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    display: block !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform-origin: 0 0 !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    contain: none !important;
+  }
+
+  .family-tree-lines,
+  .family-tree-nodes {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    transform-origin: 0 0 !important;
+    max-width: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    contain: none !important;
+    overflow: visible !important;
+  }
+
+  .people-panel #people-empty {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    overflow: auto !important;
+  }
+
+  .app-bottom-nav:not([hidden]) {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 40 !important;
+  }
+}
