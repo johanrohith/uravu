@@ -2770,6 +2770,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!person) return;
     const modal = $("#person-details-modal");
     if (!modal) return;
+    modal.dataset.personId = personId;
     const labels = state.language === "ta"
       ? { eyebrow:"குடும்ப உறுப்பினர்", relation:"உறவு", tamilName:"தமிழ்ப் பெயர்", gender:"பாலினம்", born:"பிறந்த தேதி", died:"இறந்த தேதி", notes:"குறிப்புகள்", close:"மூடு" }
       : { eyebrow:"FAMILY MEMBER", relation:"Relationship", tamilName:"Tamil name", gender:"Gender", born:"Born", died:"Died", notes:"Notes", close:"Close" };
@@ -3074,6 +3075,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     renderTreeLists();
     if (state.activeTree) renderWorkspace();
     localizeDom(document.body);
+    const detailsModal = $("#person-details-modal");
+    if (detailsModal && !detailsModal.hidden && detailsModal.dataset.personId) {
+      openPersonDetails(detailsModal.dataset.personId);
+    }
   }
 
   function bindEvents() {
