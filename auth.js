@@ -80,7 +80,7 @@
       supabase.auth.onAuthStateChange((_event, session) => {
         auth.user = session?.user ?? null;
         auth.loading = false;
-        // Publish outside Supabase's auth callback so app queries cannot re-enter the auth lock.
+
         setTimeout(() => auth.publish(), 0);
       });
       return auth.user;
