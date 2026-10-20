@@ -1,7 +1,3 @@
--- Uravu: allow an assigned Member to link an unlinked account and review link requests.
--- Run this once in Supabase SQL Editor after member-permissions-migration.sql.
--- The Owner retains sole authority to reassign or unlink an already-linked account.
-
 begin;
 
 create or replace function public.uravu_review_tree_request(
@@ -33,7 +29,6 @@ begin
   if not public.uravu_can_edit_tree(v_req.tree_id) then
     raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
-
 
   if p_decision='reject' then
     update public.uravu_access_requests set status='rejected', reviewed_by=v_user, reviewed_at=now()
