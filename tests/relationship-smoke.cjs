@@ -209,10 +209,10 @@ const familyBlockTargetCenter = new Function(
 const layoutAnchorSource = extractFunction(
   app,
   "function chooseTreeLayoutAnchorPersonId(",
-  "\\n  function treeLayoutAnchorPersonId"
+  "\n  function treeLayoutAnchorPersonId"
 );
 const chooseTreeLayoutAnchorPersonId = new Function(
-  layoutAnchorSource + "\\nreturn chooseTreeLayoutAnchorPersonId;"
+  layoutAnchorSource + "\nreturn chooseTreeLayoutAnchorPersonId;"
 )();
 {
   const ownerPerson = { id:"owner-person", full_name:"Owner", created_at:"2020-01-01" };
