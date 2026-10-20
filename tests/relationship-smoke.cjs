@@ -206,6 +206,44 @@ const familyBlockTargetCenter = new Function(
 }
 
 
+const layoutAnchorSource = extractFunction(
+  app,
+  "function chooseTreeLayoutAnchorPersonId(",
+  "\\n  function treeLayoutAnchorPersonId"
+);
+const chooseTreeLayoutAnchorPersonId = new Function(
+  layoutAnchorSource + "\\nreturn chooseTreeLayoutAnchorPersonId;"
+)();
+{
+  const ownerPerson = { id:"owner-person", full_name:"Owner", created_at:"2020-01-01" };
+  const otherPerson = { id:"other-person", full_name:"Other", created_at:"2019-01-01" };
+  const olderRoot = { id:"older-root", full_name:"Family root", created_at:"2000-01-01" };
+  const people = [otherPerson, ownerPerson, olderRoot];
+  const members = [
+    { user_id:"owner-account", role:"owner", person_id:ownerPerson.id },
+    { user_id:"second-account", role:"member", person_id:otherPerson.id }
+  ];
+  const relationships = [
+    { relationship_type:"parent", person_id:olderRoot.id, related_person_id:ownerPerson.id },
+    { relationship_type:"parent", person_id:olderRoot.id, related_person_id:otherPerson.id }
+  ];
+  assert.equal(
+    chooseTreeLayoutAnchorPersonId(people, relationships, members),
+    ownerPerson.id,
+    "Tree layout should use the same linked owner record regardless of which member is signed in"
+  );
+
+  const noOwnerLink = [
+    { user_id:"owner-account", role:"owner", person_id:null },
+    { user_id:"second-account", role:"member", person_id:otherPerson.id }
+  ];
+  assert.equal(
+    chooseTreeLayoutAnchorPersonId(people, relationships, noOwnerLink),
+    olderRoot.id,
+    "Without an owner link, layout should choose a stable parent-graph root instead of the signed-in member"
+  );
+}
+
 const inLawRootOrderingSource = extractFunction(
   app,
   "function orderExpandedInLawRootsNearSpouses(",
