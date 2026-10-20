@@ -1164,7 +1164,7 @@ assert.ok(
 assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
 assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
 assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
-assert.match(html, /uravu-mobile-isolated-tree-20261020-2/);
+assert.match(html, /uravu-mobile-account-focus-20261020-1/);
 assert.match(html, /id="family-tree-sizer"/);
 assert.match(html, /id="mobile-tree-toolbar"/);
 assert.match(html, /id="mobile-tree-toolbar-content"/);
