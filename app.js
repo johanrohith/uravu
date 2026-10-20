@@ -183,7 +183,19 @@
   "No family record requested yet.":"இதுவரை குடும்பப் பதிவு கோரப்படவில்லை.",
   "Create your own family record first, or sign in with an existing family account.":"முதலில் உங்கள் குடும்பப் பதிவை உருவாக்கவும் அல்லது ஏற்கனவே உள்ள குடும்பக் கணக்கில் உள்நுழையவும்.",
   "Your account is already linked to a family record.":"உங்கள் கணக்கு ஏற்கனவே குடும்பப் பதிவுடன் இணைக்கப்பட்டுள்ளது.",
-  "This is my newly created family record.":"இது நான் புதிதாக உருவாக்கிய குடும்பப் பதிவு."
+  "This is my newly created family record.":"இது நான் புதிதாக உருவாக்கிய குடும்பப் பதிவு.",
+  "Family members":"குடும்ப உறுப்பினர்கள்",
+  "Tree accounts":"குடும்பக் கணக்குகள்",
+  "Pending requests":"நிலுவைக் கோரிக்கைகள்",
+  "Don't have your record? Add a record for you using the \"Add Family Member\" button above!":"உங்கள் பதிவு இல்லையா? மேலே உள்ள குடும்ப உறுப்பினரைச் சேர் பொத்தானைப் பயன்படுத்தி உங்களுக்கான பதிவைச் சேர்க்கவும்.",
+  "Do you want to know the relation terms for your relations?":"உங்கள் உறவுகளுக்கான உறவுப் பெயர்களை அறிய விரும்புகிறீர்களா?",
+  "Link your account to an already existing record!":"ஏற்கனவே உள்ள குடும்பப் பதிவுடன் உங்கள் கணக்கை இணைக்கவும்.",
+  "Add":"சேர்",
+  "Members":"உறுப்பினர்கள்",
+  "Requests":"கோரிக்கைகள்",
+  "Edit":"திருத்து",
+  "Profile":"சுயவிவரம்",
+  "Edit member":"உறுப்பினரைத் திருத்து"
 });
 
 tamilToEnglish["உறவுகள்"] = "Uravugal";
