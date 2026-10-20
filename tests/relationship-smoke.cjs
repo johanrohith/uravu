@@ -1240,7 +1240,7 @@ assert.match(app, /Loading the family tree timed out/);
 assert.match(app, /data-retry-workspace/);
 assert.match(app, /const queryTimeoutMs = 15000/);
 assert.match(app, /\$\$\("\.own-record-instruction"\)\.forEach\(/);
-assert.doesNotMatch(app, /\$\("\.own-record-instruction"\)\.forEach\(/);
+assert.doesNotMatch(app, /(^|[^$])\$\("\.own-record-instruction"\)\.forEach\(/);
 assert.match(app, /recoverWorkspaceRender = \(firstError\) =>/);
 assert.match(app, /workspace render failed on first pass; retrying after layout settles/);
 assert.match(app, /workspace render failed after automatic retry/);
