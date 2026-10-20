@@ -590,3 +590,20 @@
   .dashboard.tree-open{flex:1 1 0;height:auto;min-height:0}
   .tree-workspace{flex:1 1 0;height:100%;min-height:0}
 }
+
+@media(max-width:760px){
+  body:has(#dashboard.tree-open){position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;overscroll-behavior:none}
+  .app-shell{position:fixed;inset:0;width:auto;max-width:none;height:100dvh;min-height:0;max-height:100dvh;overflow:hidden;overscroll-behavior:none}
+  .app-shell>main{width:100%;min-width:0;max-width:100%;overflow:hidden;overscroll-behavior:none}
+  .dashboard.tree-open,.tree-workspace,.mobile-tree-toolbar,.mobile-tree-toolbar-content,.people-panel{min-width:0;max-width:100%;overflow-x:clip}
+  .mobile-tree-toolbar{position:relative;z-index:5;flex-shrink:0;align-self:stretch;background:var(--bg)}
+  .mobile-tree-toolbar-content{position:relative;z-index:1;width:100%;overflow:hidden;contain:layout paint}
+  .mobile-tree-controls-target .tree-zoom-controls{justify-content:flex-start!important;margin-left:0!important}
+  .mobile-tree-controls-target .tree-control-actions{grid-template-columns:minmax(0,1fr) auto;justify-items:stretch}
+  .people-panel{position:relative;z-index:0;isolation:isolate;contain:layout paint;overflow:hidden;flex:1 1 0;height:0;min-height:0}
+  .family-tree-viewport{position:absolute!important;inset:0!important;z-index:0;width:auto!important;height:auto!important;min-width:0;min-height:0;max-width:100%;max-height:100%;margin:0;overflow:auto!important;overflow-x:auto!important;overflow-y:auto!important;overscroll-behavior:contain;touch-action:none;contain:strict;isolation:isolate}
+  .family-tree-canvas{position:relative;display:block;flex:none;min-width:0;min-height:0;max-width:none}
+  .family-tree-lines,.family-tree-nodes{transform-origin:0 0;max-width:none}
+  .people-panel #people-empty{position:absolute;inset:0;z-index:1;overflow:auto}
+  .mobile-tree-toolbar-toggle{position:relative;z-index:2;touch-action:manipulation}
+}
