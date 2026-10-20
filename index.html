@@ -48,7 +48,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-zoom-guard-20261020-1';
+        stylesheet.href = './styles.css?v=uravu-mobile-toolbar-20261020-1';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -56,8 +56,8 @@
         });
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
-        await loadScript('./auth.js?v=uravu-zoom-guard-20261020-1');
-        await loadScript('./app.js?v=uravu-zoom-guard-20261020-1');
+        await loadScript('./auth.js?v=uravu-mobile-toolbar-20261020-1');
+        await loadScript('./app.js?v=uravu-mobile-toolbar-20261020-1');
 
         try {
           if ('caches' in window) {
@@ -136,7 +136,16 @@
           </div>
 
           <p class="status-message" id="member-request-status" hidden></p>
-          <div class="workspace-stats"><div><strong id="people-count">0</strong><span>Family members</span></div><div><strong id="member-count">0</strong><span>Tree accounts</span></div><div><strong id="pending-count">0</strong><span>Pending requests</span></div></div>
+          <section class="mobile-tree-toolbar" id="mobile-tree-toolbar" aria-label="Tree controls">
+            <div class="mobile-tree-toolbar-content" id="mobile-tree-toolbar-content">
+              <div class="workspace-stats"><div><strong id="people-count">0</strong><span>Family members</span></div><div><strong id="member-count">0</strong><span>Tree accounts</span></div><div><strong id="pending-count">0</strong><span>Pending requests</span></div></div>
+              <div class="mobile-tree-controls-target" id="mobile-tree-controls-target"></div>
+            </div>
+            <button class="mobile-tree-toolbar-toggle" id="mobile-tree-toolbar-toggle" type="button" aria-controls="mobile-tree-toolbar-content" aria-expanded="true" aria-label="Hide tree controls" title="Hide tree controls">
+              <svg class="toolbar-arrow-up" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+              <svg class="toolbar-arrow-down" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </section>
           <div class="workspace-panel-actions" aria-label="Family management">
             <button class="secondary-button" id="toggle-add-person-panel" type="button">Add Family Member</button>
             <button class="secondary-button" id="toggle-member-list-panel" type="button">Member list</button>
@@ -203,7 +212,7 @@
           </section>
 
           <section class="panel people-panel">
-            <div class="section-heading tree-section-heading"><div><h3>Family tree</h3></div><div class="tree-view-controls"><input class="form-input people-search" id="people-search" placeholder="Search names…"><div class="tree-control-actions"><div class="tree-zoom-controls"><button class="secondary-button tree-control-button" id="tree-zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button><span class="tree-zoom-level" id="tree-zoom-level" aria-live="polite">100%</span><button class="secondary-button tree-control-button" id="tree-zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button></div><button class="secondary-button tree-control-button" id="fit-tree-button" type="button">Fit tree</button><button class="secondary-button tree-control-button" id="tree-fullscreen-button" type="button" aria-label="Full screen">Full screen</button></div></div></div>
+            <div class="section-heading tree-section-heading"><div><h3>Family tree</h3></div><div id="desktop-tree-controls-target"><div class="tree-view-controls"><input class="form-input people-search" id="people-search" placeholder="Search names…"><div class="tree-control-actions"><div class="tree-zoom-controls"><button class="secondary-button tree-control-button" id="tree-zoom-out" type="button" aria-label="Zoom out" title="Zoom out">−</button><span class="tree-zoom-level" id="tree-zoom-level" aria-live="polite">100%</span><button class="secondary-button tree-control-button" id="tree-zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button></div><button class="secondary-button tree-control-button" id="fit-tree-button" type="button">Fit tree</button><button class="secondary-button tree-control-button" id="tree-fullscreen-button" type="button" aria-label="Full screen">Full screen</button></div></div></div>
             <p class="tree-gesture-hint">Pinch to zoom · drag to move · Ctrl + scroll to zoom</p>
             <div class="family-branch-legend" id="family-branch-legend" hidden aria-label="Family branch line colors"></div>
             <div class="empty-state" id="people-empty" hidden></div><div class="family-tree-viewport" id="family-tree-viewport" hidden><div class="family-tree-canvas" id="family-tree-canvas"><svg class="family-tree-lines" id="family-tree-lines" aria-hidden="true"></svg><div class="family-tree-nodes" id="family-tree-nodes"></div></div></div>
