@@ -1239,15 +1239,98 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   function compareBirthOrderOlderFirst(firstPerson, secondPerson) {
     const first = manualBirthOrder(firstPerson);
     const second = manualBirthOrder(secondPerson);
-    // A manually ranked sibling takes precedence over siblings with no manual
-    // rank, even when those other records have known birthdates.
     if (first != null && second != null) return first - second;
     if (first != null) return -1;
     if (second != null) return 1;
     return 0;
   }
 
-  function compareSiblingUnitsByAge(firstUnit, secondUnit, parentsByChild) {
+  // Build one consistent order for a sibling set instead of making pairwise
+  // decisions that can contradict each other. Dated siblings are sorted by age;
+  // manual slots are reserved only for siblings whose birthdate is unknown.
+  function buildSiblingOrderPositions(siblings) {
+    const people = Array.from(new Map((siblings || []).filter(Boolean)
+      .map(person => [person.id, person])).values());
+    const positions = new Map();
+    const occupied = new Set();
+    const nameOrder = (a, b) =>
+      String(a.full_name || "").localeCompare(String(b.full_name || "")) ||
+      String(a.id || "").localeCompare(String(b.id || ""));
+
+    const manuallyOrderedUnknown = people
+      .filter(person => !birthDateParts(person) && manualBirthOrder(person) != null)
+      .sort((a, b) => manualBirthOrder(a) - manualBirthOrder(b) || nameOrder(a, b));
+
+    // Reserve explicit positions. If legacy data already has duplicate numbers,
+    // place the conflicting records deterministically until the user corrects them.
+    manuallyOrderedUnknown.forEach(person => {
+      let slot = manualBirthOrder(person);
+      while (occupied.has(slot)) slot += 1;
+      positions.set(person.id, slot);
+      occupied.add(slot);
+    });
+
+    const dated = people
+      .filter(person => Boolean(birthDateParts(person)))
+      .sort((a, b) => compareBirthDatesOlderFirst(a, b) || nameOrder(a, b));
+    let nextSlot = 1;
+    dated.forEach(person => {
+      while (occupied.has(nextSlot)) nextSlot += 1;
+      positions.set(person.id, nextSlot);
+      occupied.add(nextSlot);
+      nextSlot += 1;
+    });
+
+    // Records with neither usable date nor manual order follow the ordered
+    // records in a predictable way rather than jumping ahead of known ages.
+    const unorderedUnknown = people
+      .filter(person => !birthDateParts(person) && manualBirthOrder(person) == null)
+      .sort(nameOrder);
+    nextSlot = Math.max(0, ...occupied) + 1;
+    unorderedUnknown.forEach(person => {
+      while (occupied.has(nextSlot)) nextSlot += 1;
+      positions.set(person.id, nextSlot);
+      occupied.add(nextSlot);
+      nextSlot += 1;
+    });
+    return positions;
+  }
+
+  function buildSiblingParentContext(relationships) {
+    const spousesByPerson = new Map();
+    (relationships || []).filter(edge => edge.relationship_type === "spouse").forEach(edge => {
+      if (!spousesByPerson.has(edge.person_id)) spousesByPerson.set(edge.person_id, new Set());
+      if (!spousesByPerson.has(edge.related_person_id)) spousesByPerson.set(edge.related_person_id, new Set());
+      spousesByPerson.get(edge.person_id).add(edge.related_person_id);
+      spousesByPerson.get(edge.related_person_id).add(edge.person_id);
+    });
+    const parentsByChild = new Map();
+    const addParent = (childId, parentId) => {
+      if (!parentsByChild.has(childId)) parentsByChild.set(childId, new Set());
+      parentsByChild.get(childId).add(parentId);
+    };
+    (relationships || []).filter(edge => edge.relationship_type === "parent").forEach(edge => {
+      addParent(edge.related_person_id, edge.person_id);
+      (spousesByPerson.get(edge.person_id) || new Set()).forEach(spouseId =>
+        addParent(edge.related_person_id, spouseId)
+      );
+    });
+    return { parentsByChild, spousesByPerson };
+  }
+
+  function findDuplicateSiblingBirthOrder(personId, birthOrder, parentIds, people, parentsByChild) {
+    const order = Number(birthOrder);
+    if (!Number.isInteger(order) || order < 1 || order > 999) return null;
+    const relevantParents = new Set(parentIds || []);
+    if (!relevantParents.size) return null;
+    return (people || []).find(person => {
+      if (!person || person.id === personId || manualBirthOrder(person) !== order) return false;
+      const otherParents = parentsByChild.get(person.id) || new Set();
+      return Array.from(relevantParents).some(parentId => otherParents.has(parentId));
+    }) || null;
+  }
+
+  function compareSiblingUnitsByAge(firstUnit, secondUnit, parentsByChild, siblingPeople = []) {
     const candidates = [];
     (firstUnit.people || []).forEach(firstPerson => {
       const firstParents = parentsByChild.get(firstPerson.id) || new Set();
@@ -1259,6 +1342,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         candidates.push({
           firstPerson,
           secondPerson,
+          sharedParents,
           sharedParentCount:sharedParents.length,
           sharedParentKey:sharedParents.slice().sort().join("|")
         });
@@ -1271,16 +1355,20 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       b.sharedParentCount - a.sharedParentCount ||
       a.sharedParentKey.localeCompare(b.sharedParentKey)
     );
-    // Check manual ranks for all relevant sibling pairs before considering
-    // any birthdates, so a dated spouse-pair candidate cannot override a
-    // manual rank on the actual shared-parent sibling pair.
     for (const candidate of candidates) {
-      const manualOrder = compareBirthOrderOlderFirst(candidate.firstPerson, candidate.secondPerson);
-      if (manualOrder) return manualOrder;
-    }
-    for (const candidate of candidates) {
-      const order = compareBirthDatesOlderFirst(candidate.firstPerson, candidate.secondPerson);
-      if (order) return order;
+      const relatedSiblings = (siblingPeople || []).filter(person => {
+        const parents = parentsByChild.get(person.id) || new Set();
+        return candidate.sharedParents.some(parentId => parents.has(parentId));
+      });
+      [candidate.firstPerson, candidate.secondPerson].forEach(person => {
+        if (!relatedSiblings.some(item => item.id === person.id)) relatedSiblings.push(person);
+      });
+      const positions = buildSiblingOrderPositions(relatedSiblings);
+      const firstPosition = positions.get(candidate.firstPerson.id);
+      const secondPosition = positions.get(candidate.secondPerson.id);
+      if (firstPosition != null && secondPosition != null && firstPosition !== secondPosition) {
+        return firstPosition - secondPosition;
+      }
     }
     return 0;
   }
@@ -1812,7 +1900,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         // Siblings must read oldest-to-youngest left-to-right, even when names
         // are alphabetical in the opposite direction. Only order by age when
         // the units share at least one recorded/effective parent.
-        const siblingAgeOrder = compareSiblingUnitsByAge(a, b, parentsByChild);
+        const siblingAgeOrder = compareSiblingUnitsByAge(a, b, parentsByChild, grouped.get(level) || []);
         if (siblingAgeOrder) return siblingAgeOrder;
 
         const ac = a.parentCenter, bc = b.parentCenter;
@@ -2636,11 +2724,31 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     renderEditorConnections();
   }
 
+  function validateSiblingBirthOrder(personId, data, additionalParentIds = []) {
+    if (state.birthOrderSupported === false || data?.birth_order == null) return true;
+    const context = buildSiblingParentContext(state.relationships);
+    const parents = new Set(context.parentsByChild.get(personId) || []);
+    (additionalParentIds || []).forEach(parentId => {
+      if (!parentId) return;
+      parents.add(parentId);
+      (context.spousesByPerson.get(parentId) || new Set()).forEach(spouseId => parents.add(spouseId));
+    });
+    const duplicate = findDuplicateSiblingBirthOrder(
+      personId, data.birth_order, parents, state.people, context.parentsByChild
+    );
+    if (!duplicate) return true;
+    toast("Sibling birth order " + data.birth_order + " is already used by " +
+      duplicate.full_name + " in this sibling set. Choose a different number.", true);
+    $("#person-birth-order").focus();
+    return false;
+  }
+
   async function savePerson(event) {
     event.preventDefault();
     if (!state.activeTree || (state.editingPersonId ? !canEditPerson(state.people.find(person => person.id === state.editingPersonId)) : !canCreatePerson())) return;
     const data = collectPersonFormData();
     if (!data) return;
+    if (!validateSiblingBirthOrder(state.editingPersonId, data)) return;
     const button = $("#save-person-button");
     setBusy(button, true, "Saving…");
     const wasEditing = Boolean(state.editingPersonId);
@@ -2678,6 +2786,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     }
     const data = collectPersonFormData();
     if (!data) return;
+    const prospectiveParents = relationshipType === "child_of" ? [connectedId] : [];
+    if (!validateSiblingBirthOrder(state.editingPersonId, data, prospectiveParents)) return;
 
     const button = $("#add-connection-button");
     setBusy(button, true, "Adding connection…");
