@@ -944,6 +944,7 @@ assert.doesNotMatch(html, /SHARED FAMILY TREE|id="workspace-role"/);
 assert.match(html, /id="workspace-title">Uravugal</);
 assert.match(html, /One shared family tree, across generations\./);
 assert.equal((html.match(/<h3>Family tree<\/h3>/g) || []).length, 1);
+assert.doesNotMatch(html, /<\/section\s*\n\s*>/, "Section closing tags should not be split across a standalone angle-bracket line");
 assert.match(html, /id="link-account-prompt"/);
 assert.match(html, /Do you want to know the relation terms for your relations\?/);
 assert.match(html, /id="link-form-desktop-target"/);
