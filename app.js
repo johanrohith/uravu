@@ -2870,6 +2870,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#connect-person").value = "";
     $("#connect-type").value = "";
     renderEditorConnections();
+    syncAppNavigation();
   }
 
   function validateSiblingBirthOrder(personId, data, additionalParentIds = []) {
