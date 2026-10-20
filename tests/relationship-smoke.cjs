@@ -342,10 +342,10 @@ assert.match(html, /id="link-existing-form"/);
 assert.match(app, /function displayTreeName/);
 assert.match(app, /const selected = state\.people\.slice\(\)/);
 assert.match(app, /function highlightSearchMatch/);
-assert.match(app, /const columnGap = 64/);
-assert.match(app, /const coupleGap = 32/);
-assert.match(app, /const familySiblingGap = 34/);
-assert.match(app, /const familyBlockGap = 68/);
+assert.match(app, /const columnGap = 40/);
+assert.match(app, /const coupleGap = 28/);
+assert.match(app, /const familySiblingGap = 24/);
+assert.match(app, /const familyBlockGap = 40/);
 assert.match(app, /is_self_record:!isManager\(\)/);
 assert.match(app, /நினைவில் வாழ்பவர்/);
 assert.match(app, /Living in Memory/);
@@ -361,8 +361,8 @@ assert.match(app, /Parents of one child share a generation row/);
 assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = new Map()"), "Child connectors should be grouped by their actual parent set");
-assert.ok(app.includes("Math.max(148, outgoingFamilies.size * 26 + 46)"), "Use a compact generation gap while reserving connector lanes");
-assert.ok(app.includes("parentRowBottom + 24 + laneIndex * 26"), "Use compact parallel connector lanes");
+assert.ok(app.includes("Math.max(128, outgoingFamilies.size * 24 + 40)"), "Use a compact generation gap while reserving connector lanes");
+assert.ok(app.includes("parentRowBottom + 22 + laneIndex * 24"), "Use compact parallel connector lanes");
 assert.ok(!app.includes("V ' + laneY + ' H ' + endX + ' V ' + endY"), "Parent-child links should not be drawn as separate H-shaped routes");
 assert.ok(styles.includes(".family-node-card .person-meta.record-meta"), "Card metadata must not be clamped to one line");
 assert.ok(!app.includes("coupleGap + 2"));
@@ -631,48 +631,37 @@ assert.doesNotMatch(app, /joined-family:/);
 assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
 
 {
-  const familyBusInterferingUnitIds = new Function(
-    app.slice(app.indexOf("function familyBusInterferingUnitIds("), app.indexOf("\n  function renderPeople()")) +
-      "\nreturn familyBusInterferingUnitIds;"
+  const computeFamilySubtreeLayout = new Function(
+    app.slice(app.indexOf("function computeFamilySubtreeLayout("), app.indexOf("\n  function renderPeople()")) +
+      "\nreturn computeFamilySubtreeLayout;"
   )();
-  const parentUnit = { id:"parents", left:100, right:260 };
-  const unrelatedLeft = { id:"unrelated-left", left:270, right:360 };
-  const unrelatedRight = { id:"unrelated-right", left:520, right:620 };
-  assert.deepEqual(
-    familyBusInterferingUnitIds([parentUnit, unrelatedLeft, unrelatedRight],
-      new Set(["parents"]), 200, 450),
-    ["unrelated-left"],
-    "Cards overlapping another family's parent-to-children bus must be identified for side placement"
+  const unit = (id, people, width, sortName=id) => ({id,people:people.map(personId=>({id:personId})),width,sortName});
+  const parents = unit("parents",["father","mother"],564,"parents");
+  const childA = unit("child-a",["child-a"],270,"child-a");
+  const childB = unit("child-b",["child-b"],270,"child-b");
+  const layout = computeFamilySubtreeLayout(
+    [parents],
+    new Map([[parents,new Set([childA,childB])]]),
+    new Map([[parents,new Set(["child-a","child-b"])]]),
+    270,28,40,
+    new Map([[parents,0],[childA,0],[childB,1]])
   );
-  assert.match(app, /const moveUnitOnly = \(unit, newLeft\) =>/);
-  assert.doesNotMatch(app, /const shiftUnitBranch = \(startUnit, delta\) =>/);
-}
-
-assert.match(app, /familyBusInterferingUnitIds\(/);
-
-{
-  const familyBusSafeTargetLeft = new Function(
-    app.slice(app.indexOf("function familyBusSafeTargetLeft("), app.indexOf("function renderPeople()")) +
-      "\nreturn familyBusSafeTargetLeft;"
-  )();
-  assert.equal(familyBusSafeTargetLeft(280,270,[
-    {left:300,right:500,childBlockRight:520,exempt:false}
-  ],32),552,"Move only far enough to clear the family bus and its children");
-  assert.equal(familyBusSafeTargetLeft(100,80,[
-    {left:300,right:500,childBlockRight:520,exempt:false}
-  ],32),100,"Keep records in place when no family bus overlaps");
-  assert.equal(familyBusSafeTargetLeft(280,270,[
-    {left:300,right:500,childBlockRight:520,exempt:true}
-  ],32),280,"A couple must be allowed at its own family bus");
-  assert.equal(familyBusSafeTargetLeft(280,270,[
-    {left:300,right:500,childBlockRight:520,exempt:false},
-    {left:560,right:700,childBlockRight:730,exempt:false}
-  ],32),762,"Also clear any second family bus reached after moving");
-  assert.match(app, /const moveUnitOnly = \(unit, newLeft\) =>/);
-  assert.doesNotMatch(app, /const shiftUnitBranch = \(startUnit, delta\) =>/);
-  assert.match(app, /const columnGap = 64/);
-  assert.match(app, /const familyBlockGap = 68/);
-  assert.match(app, /Math\.max\(148, outgoingFamilies\.size \* 26 \+ 46\)/);
+  assert.equal(
+    (layout.personCenters.get("child-a")+layout.personCenters.get("child-b"))/2,
+    layout.unitCenters.get(parents),
+    "Parents must be centered over the horizontal span of their children"
+  );
+  assert.ok(layout.personCenters.get("child-b")-layout.personCenters.get("child-a")>=310,
+    "Sibling child cards must not overlap");
+  const cards = [
+    {left:layout.personCenters.get("child-a")-135,right:layout.personCenters.get("child-a")+135},
+    {left:layout.personCenters.get("child-b")-135,right:layout.personCenters.get("child-b")+135}
+  ];
+  assert.ok(cards[0].right<=cards[1].left,"One record must never overlap or cover another");
+  assert.match(app, /const familyLayout = computeFamilySubtreeLayout\(/);
+  assert.doesNotMatch(app, /const moveUnitOnly/);
+  assert.doesNotMatch(app, /familyBusSafeTargetLeft/);
+  assert.doesNotMatch(app, /familyBusInterferingUnitIds/);
 }
 
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
