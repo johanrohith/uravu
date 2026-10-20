@@ -937,10 +937,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         state.members = error ? [] : (result?.data || []);
         $("#member-count").textContent = String(state.members.filter(member => member.person_id).length);
         renderMembers();
-        // Refresh person labels/layout after member links arrive, but never block the first tree render.
-        if (!state.loadingTree && state.people.length) {
-          try { renderPeople(); }
-          catch (renderError) { console.error("Uravu tree refresh after member load failed:", renderError); }
+        // Do not immediately run the expensive tree layout again; allow the first tree frame to paint.
+        if (!error && !state.loadingTree && state.people.length && state.members.length) {
+          const refreshTreeAfterMemberships = () => {
+            if (!isCurrentLoad() || state.loadingTree || !state.people.length) return;
+            state.treeInitialViewKey = null;
+            try { renderPeople(); }
+            catch (renderError) { console.error("Uravu tree refresh after member load failed:", renderError); }
+          };
+          if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(refreshTreeAfterMemberships, { timeout:1200 });
+          } else {
+            setTimeout(refreshTreeAfterMemberships, 250);
+          }
         }
       } else {
         state.loadingRequests = false;
