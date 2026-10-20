@@ -597,7 +597,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const divider = $("#self-record-divider");
     if (personForm) personForm.hidden = shouldPauseCreation;
     if (divider) divider.hidden = isManager() || shouldPauseCreation;
-    const ownRecordInstructionVisible = Boolean(state.activeTree && state.user && !isManager() && !ownRecord);
+    const ownRecordInstructionVisible = Boolean(state.activeTree && state.user && !isManager() && !ownRecord && !pending);
     $(".own-record-instruction").forEach(node => {
       node.hidden = !ownRecordInstructionVisible;
     });
