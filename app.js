@@ -1551,6 +1551,68 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return moved;
   }
 
+  function orderExpandedInLawRootsNearSpouses(
+    rootUnits, expandedPartnerFamiliesByPerson, rawParentsByChild, treeLineageIds,
+    personUnit, parentUnitForChildUnit, childUnitsByParentUnit
+  ) {
+    const orderedRoots = rootUnits.slice();
+
+    const findRoot = unit => {
+      if (!unit) return null;
+      let current = unit;
+      const seen = new Set();
+      while (parentUnitForChildUnit.has(current) && !seen.has(current)) {
+        seen.add(current);
+        current = parentUnitForChildUnit.get(current);
+      }
+      return current;
+    };
+
+    const subtreeContainsLineage = root => {
+      const queue = [root];
+      const visited = new Set();
+      while (queue.length) {
+        const unit = queue.shift();
+        if (!unit || visited.has(unit)) continue;
+        visited.add(unit);
+        if ((unit.people || []).some(person => treeLineageIds.has(person.id))) return true;
+        (childUnitsByParentUnit.get(unit) || new Set()).forEach(child => queue.push(child));
+      }
+      return false;
+    };
+
+    const targetRootsByInLawRoot = new Map();
+    expandedPartnerFamiliesByPerson.forEach((family, externalPartnerId) => {
+      const lineageUnit = personUnit.get(family?.spouseId);
+      const lineageRoot = findRoot(lineageUnit);
+      if (!lineageRoot || !orderedRoots.includes(lineageRoot)) return;
+
+      (rawParentsByChild.get(externalPartnerId) || new Set()).forEach(parentId => {
+        const parentUnit = personUnit.get(parentId);
+        const inLawRoot = findRoot(parentUnit);
+        if (!parentUnit || !inLawRoot || inLawRoot === lineageRoot ||
+            !orderedRoots.includes(inLawRoot) || subtreeContainsLineage(inLawRoot)) return;
+        if (!targetRootsByInLawRoot.has(inLawRoot)) targetRootsByInLawRoot.set(inLawRoot, new Set());
+        targetRootsByInLawRoot.get(inLawRoot).add(lineageRoot);
+      });
+    });
+
+    targetRootsByInLawRoot.forEach((lineageRoots, inLawRoot) => {
+      // A shared in-law ancestry connected to several separate lineage branches
+      // has no single best neighbour; keep its existing placement in that case.
+      if (lineageRoots.size !== 1) return;
+      const lineageRoot = lineageRoots.values().next().value;
+      const currentIndex = orderedRoots.indexOf(inLawRoot);
+      const targetIndex = orderedRoots.indexOf(lineageRoot);
+      if (currentIndex < 0 || targetIndex < 0 || currentIndex === targetIndex + 1) return;
+      orderedRoots.splice(currentIndex, 1);
+      const updatedTargetIndex = orderedRoots.indexOf(lineageRoot);
+      orderedRoots.splice(updatedTargetIndex + 1, 0, inLawRoot);
+    });
+
+    return orderedRoots;
+  }
+
   function computeFamilySubtreeLayout(rootUnits, childrenByUnit, childRecordIdsByUnit, nodeWidth, coupleGap, branchGap, initialCenters) {
   const cache = new Map();
 
@@ -2156,6 +2218,14 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const allUnits = Array.from(levelUnits.values()).flat();
     let rootUnits = allUnits.filter(unit => !parentUnitForChildUnit.has(unit));
     if (!rootUnits.length) rootUnits = allUnits.slice();
+
+    // Keep an in-law's complete ancestral branch next to the lineage branch it
+    // joins. Moving the root block preserves the internal parent/child layout,
+    // unlike shifting an anchored parent card on its own.
+    rootUnits = orderExpandedInLawRootsNearSpouses(
+      rootUnits, expandedPartnerFamiliesByPerson, rawParentsByChild, treeLineageIds,
+      personUnit, parentUnitForChildUnit, childUnitsByParentUnit
+    );
 
     // Calculate branch widths from the descendants upwards. Then place the
     // couple directly above the midpoint of its actual child records. Sibling
