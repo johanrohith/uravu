@@ -33,7 +33,6 @@ function extractFunction(source, startMarker, endMarker) {
   return source.slice(start, end);
 }
 
-
 const siblingAgeHelpersSource = extractFunction(
   app,
   "function birthDateParts(person) {",
@@ -157,8 +156,6 @@ const sortUnitPeopleByParentCenter = new Function(
 )();
 {
 
-
-
   const unit = {
     people:[
       { id:"maternal-grandmother", full_name:"A Grandma" },
@@ -204,7 +201,6 @@ const familyBlockTargetCenter = new Function(
     "Unaligned blocks should retain the average of their parent records as a fallback"
   );
 }
-
 
 const layoutAnchorSource = extractFunction(
   app,
@@ -667,7 +663,6 @@ assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial s
 assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"), "Child connectors should be grouped by their actual parent set, including single-parent links");
 {
 
-
  const source=extractFunction(app,"function familyParentStemStartY(parents, partnerLine) {","\n  function relationNames");
  const familyParentStemStartY=new Function(source+"\nreturn familyParentStemStartY;")();
  assert.equal(familyParentStemStartY([{y:24,height:92}],null),116);
@@ -762,7 +757,6 @@ assert.ok(schema.includes("role text not null default 'member' check (role in ('
 assert.match(schema, /Only the owner or a member linked to a family record can link accounts/);
 assert.match(schema, /uravu_one_pending_request_per_user_tree/);
 assert.match(schema, /would create a family-tree cycle/);
-
 
 function relationLabel(egoId,people,relationships,targetId,language="ta"){
  const state={user:{id:"current-user"},language,members:[{user_id:"current-user",person_id:egoId}],people,relationships};
@@ -864,7 +858,6 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(relationLabel("me",people,edges,"step-mom","ta"),"தாய்");
 }
 
-
 {
 
  const people=[
@@ -898,7 +891,6 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(relationLabel("me",people,relationships,"younger-sister","ta"),"சின்ன பாட்டி");
  assert.equal(relationLabel("me",people,relationships,"unknown-sister","ta"),"பாட்டி");
 }
-
 
 {
 
@@ -939,8 +931,6 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal((ta.match(/வயது உறுதி இல்லை/g)||[]).length,1);
 }
 
-
-
 assert.match(app, /const directAncestorIds = new Set\(\[layoutAnchorPersonId\]\)/);
 assert.match(app, /const descendantQueue = Array\.from\(directAncestorIds\)/);
 assert.match(app, /const legendPersonIds = new Set\(treeLineageIds\)/);
@@ -976,7 +966,6 @@ assert.doesNotMatch(app, /collapsedInLaw|collapsedFamilyKey|partnerFamilyToggleB
 assert.match(styles, /\.family-branch-legend/);
 assert.doesNotMatch(styles, /\.partner-family-toggle/);
 
-
 {
  const people=[person("great-grandfather","male","1920-01-01"),person("grandfather","male","1950-01-01"),
    person("grandmother-spouse","female","1952-01-01"),person("father","male","1980-01-01"),person("me","female","2005-01-01")];
@@ -1002,9 +991,7 @@ assert.doesNotMatch(styles, /\.partner-family-toggle/);
  assert.equal(relationLabel("me",people,relationships,"root-great-grandfather-spouse","ta"),"கொள்ளுத்தாத்தா");
 }
 
-
 {
-
 
  const people=[
   person("ancient","male"),person("great-great-grandparent","male"),
@@ -1067,7 +1054,6 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
   assert.doesNotMatch(app, /familyBusSafeTargetLeft/);
   assert.doesNotMatch(app, /familyBusInterferingUnitIds/);
 }
-
 
 {
 
