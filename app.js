@@ -829,10 +829,35 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     renderRequests();
   }
 
-  function generationMap() {
+  function chooseTreeLayoutAnchorPersonId(people, relationships, members) {
+    const personIds = new Set(people.map(person => person.id));
+    const ownerLinks = members.filter(member =>
+      member.role === "owner" && member.person_id && personIds.has(member.person_id)
+    ).sort((a, b) => String(a.user_id || "").localeCompare(String(b.user_id || "")));
+    if (ownerLinks.length) return ownerLinks[0].person_id;
+
+    // When the owner has not linked a family record yet, choose a stable root
+    // from the saved parent relationships. All accounts see the same records,
+    // so their tree layout stays anchored to the same person.
+    const childIds = new Set(relationships
+      .filter(edge => edge.relationship_type === "parent")
+      .map(edge => edge.related_person_id));
+    const stablePersonOrder = (a, b) =>
+      String(a.created_at || "").localeCompare(String(b.created_at || "")) ||
+      String(a.full_name || "").localeCompare(String(b.full_name || "")) ||
+      String(a.id || "").localeCompare(String(b.id || ""));
+    const roots = people.filter(person => !childIds.has(person.id)).slice().sort(stablePersonOrder);
+    return (roots[0] || people.slice().sort(stablePersonOrder)[0])?.id || null;
+  }
+
+  function treeLayoutAnchorPersonId() {
+    return chooseTreeLayoutAnchorPersonId(state.people, state.relationships, state.members);
+  }
+
+  function generationMap(anchorPersonId = treeLayoutAnchorPersonId()) {
     // Spouses and co-parents share a generation unit. Resolve these family groups
     // first, then walk parent links in both directions so every branch is positioned
-    // relative to the active person. This aligns expanded in-law families correctly.
+    // relative to one tree-wide anchor. This keeps every account's visual generations consistent.
     const parent = new Map(state.people.map(person => [person.id, person.id]));
     const find = id => {
       let root = id;
@@ -881,9 +906,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       adjacency.get(childGroup).push({ id:parentGroup, delta:-1 });
       groupsWithParents.add(childGroup);
     });
-    const activePersonId = state.activeMembership?.person_id ||
-      state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
-    const activeGroup = activePersonId && parent.has(activePersonId) ? find(activePersonId) : null;
+    const activeGroup = anchorPersonId && parent.has(anchorPersonId) ? find(anchorPersonId) : null;
     // Anchor the active record first. Any disconnected component starts at a root.
     const seeds = [
       ...(activeGroup ? [activeGroup] : []),
@@ -1001,7 +1024,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     // grandparent), every record in that same generation row gets that ancestor
     // generation's label, including cousins and relatives whose parent links do
     // not directly connect them to the ego's ancestor.
-    const generationRows = generationMap();
+    const generationRows = generationMap(egoId);
     const generationLevelByPerson = new Map();
     generationRows.forEach((people, level) => {
       people.forEach(person => generationLevelByPerson.set(person.id, level));
@@ -1728,17 +1751,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       }
     });
 
-    const activePersonIdForTree = state.activeMembership?.person_id ||
-      state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
+    const layoutAnchorPersonId = treeLayoutAnchorPersonId();
     const treeLineageIds = new Set();
-    if (activePersonIdForTree && allPeopleById.has(activePersonIdForTree)) {
-      // Define the central family tree as the active person's bloodline:
+    if (layoutAnchorPersonId && allPeopleById.has(layoutAnchorPersonId)) {
+      // Define the central family tree from its stable layout anchor:
       // walk upward through parents first, then downward through those ancestors'
       // descendants. Never walk sideways through a spouse link. That keeps an
       // aunt/uncle's in-law out of the birth-family branch unless their own
       // recorded parent-child path independently places them in the lineage.
-      const ancestorQueue = [activePersonIdForTree];
-      const directAncestorIds = new Set([activePersonIdForTree]);
+      const ancestorQueue = [layoutAnchorPersonId];
+      const directAncestorIds = new Set([layoutAnchorPersonId]);
       for (let index = 0; index < ancestorQueue.length; index++) {
         const currentId = ancestorQueue[index];
         (rawParentsByChild.get(currentId) || new Set()).forEach(parentId => {
@@ -2114,8 +2136,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     // Measure kinship through recorded parent-child relationships only.
     // Marriage and inferred co-parent display edges must not make a partner's
     // parents/siblings pull the other partner's couple unit into their branch.
-    const activePersonId = state.activeMembership?.person_id ||
-      state.members.find(member => member.user_id === state.user?.id && member.person_id)?.person_id || null;
+    const activePersonId = layoutAnchorPersonId;
     const relatednessAdjacency = new Map(state.people.map(person => [person.id, new Set()]));
     const addRelatednessEdge = (a, b) => {
       if (relatednessAdjacency.has(a) && relatednessAdjacency.has(b) && a !== b) {
