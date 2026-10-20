@@ -1214,7 +1214,7 @@ assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)
 assert.match(app, /treeInitialViewKey: null/);
 assert.match(app, /const shouldInitializeInitialView = state\.treeInitialViewKey !== initialViewKey/);
 assert.doesNotMatch(app, /if \(!mediaQuery\.matches && state\.treeInitialViewKey !== null\)/);
-assert.match(app, /Viewport changes may move panels, but must never reset the/);
+assert.match(app, /A viewport change must never reset the user.s tree zoom or scroll position/);
 assert.match(app, /state\.treeZoom = 1/);
 assert.match(app, /state\.treeZoom = appView \? 0\.4 : calculateTreeFitScale\(\)/);
 assert.match(app, /if \(search && !shouldInitializeInitialView\)/);
