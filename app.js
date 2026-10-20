@@ -188,6 +188,9 @@
 
 tamilToEnglish["உறவுகள்"] = "Uravugal";
   tamilToEnglish["நினைவில் வாழ்பவர்"] = "Living in Memory";
+  Object.entries(interfaceTranslations).forEach(([english, tamil]) => {
+    if (!(tamil in tamilToEnglish)) tamilToEnglish[tamil] = english;
+  });
 
   function translateUiValue(value) {
     const raw = String(value == null ? "" : value);
@@ -618,6 +621,14 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     mark("app-nav-add", state.openPanels.has("add-person-panel"));
     mark("app-nav-members", state.openPanels.has("member-management-panel"));
     mark("app-nav-requests", state.openPanels.has("linking-requests-panel"));
+    const navLabels = state.language === "ta"
+      ? { "app-nav-add":"சேர்", "app-nav-members":"உறுப்பினர்", "app-nav-requests":"கோரிக்கை", "app-nav-edit":"திருத்து", "app-nav-profile":"சுயவிவரம்" }
+      : { "app-nav-add":"Add", "app-nav-members":"Members", "app-nav-requests":"Requests", "app-nav-edit":"Edit", "app-nav-profile":"Profile" };
+    Object.entries(navLabels).forEach(([id, label]) => {
+      const button = $("#" + id);
+      const textNode = button && button.querySelector("span:last-child");
+      if (textNode) textNode.textContent = label;
+    });
     syncEditModeButton();
   }
 
@@ -1901,8 +1912,13 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       .filter(Boolean).join(" + ");
     const orderedRootFamilyKeys = Array.from(rootFamilyMembers.keys()).sort((a, b) =>
       rootFamilyLabel(a).localeCompare(rootFamilyLabel(b)) || a.localeCompare(b));
+    const familyLinePalette = [
+      "#e63946", "#0077b6", "#f4a261", "#6a4c93", "#2a9d8f", "#d00000",
+      "#80b918", "#f72585", "#4361ee", "#f77f00", "#00a6a6", "#9b5de5",
+      "#c1121f", "#2ec4b6", "#ff9f1c", "#3a86ff"
+    ];
     const rootFamilyColorByKey = new Map(orderedRootFamilyKeys.map((key, index) => [
-      key, "hsl(" + ((index * 137.508) % 360).toFixed(1) + " 48% 34%)"
+      key, familyLinePalette[index % familyLinePalette.length]
     ]));
     const branchColorForKey = key => {
       if (rootFamilyColorByKey.has(key)) return rootFamilyColorByKey.get(key);
@@ -1911,7 +1927,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         hash ^= key.charCodeAt(index);
         hash = Math.imul(hash, 16777619);
       }
-      return "hsl(" + ((hash >>> 0) % 360) + " 48% 34%)";
+      return familyLinePalette[(hash >>> 0) % familyLinePalette.length];
     };
 
     const legendPersonIds = new Set(treeLineageIds);
@@ -2400,7 +2416,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
     if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
-    const scale = Math.max(0.25, Math.min(2.5, state.treeZoom || 1));
+    const scale = Math.max(0.02, Math.min(2.5, state.treeZoom || 1));
     const oldWidth = Number(canvas.dataset.scaledWidth || state.treeBaseWidth * scale);
     const oldScale = oldWidth / state.treeBaseWidth;
     const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
@@ -2426,16 +2442,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function setTreeZoom(nextScale, anchorX, anchorY) {
-    state.treeZoom = Math.max(0.25, Math.min(2.5, Number(nextScale) || 1));
+    state.treeZoom = Math.max(0.02, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
   }
 
   function fitTreeToView() {
     const viewport = $("#family-tree-viewport");
     if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return;
-    const availableWidth = Math.max(100, viewport.clientWidth - 36);
-    const availableHeight = Math.max(100, viewport.clientHeight - 36);
-    const fitScale = Math.max(0.25, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
+    const availableWidth = Math.max(1, viewport.clientWidth - 24);
+    const availableHeight = Math.max(1, viewport.clientHeight - 24);
+    const fitScale = Math.max(0.02, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
     state.treeZoom = fitScale;
     applyTreeCanvasScale(false);
     viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
