@@ -515,3 +515,71 @@
   .family-tree-canvas{flex:none;min-width:0;min-height:0;max-width:none}
   .family-tree-lines,.family-tree-nodes{transform-origin:0 0}
 }
+
+#desktop-tree-controls-target{display:contents}
+.mobile-tree-toolbar{display:contents}
+.mobile-tree-toolbar-toggle{display:none}
+.mobile-tree-controls-target:empty{display:none}
+@media(max-width:760px){
+  .app-shell{display:flex;flex-direction:column;height:100dvh;max-height:100dvh;overflow:hidden;padding:0 9px 0}
+  .topbar{height:56px;min-height:56px;flex:0 0 56px;gap:6px}
+  .brand-mark{width:36px;height:36px}
+  .brand strong{font-size:16px}
+  .brand small{font-size:8px;letter-spacing:1.5px}
+  .top-actions{gap:5px}
+  .language-button{padding:8px 9px;font-size:10px}
+  .app-shell>main{display:flex;flex:1 1 0;flex-direction:column;min-height:0;overflow:hidden}
+  .dashboard.tree-open{display:flex;flex:1 1 0;flex-direction:column;height:calc(100% - 69px - env(safe-area-inset-bottom));min-height:0;box-sizing:border-box;overflow:hidden;padding-top:7px;padding-bottom:0}
+  .tree-workspace{display:flex;flex:1 1 0;flex-direction:column;gap:0;width:100%;height:100%;min-height:0;overflow:hidden;margin:0}
+  .mobile-tree-toolbar{display:flex;flex:0 0 auto;flex-direction:column;min-width:0;max-width:100%;margin:0 0 2px}
+  .mobile-tree-toolbar-content{display:flex;flex-direction:column;gap:0;min-width:0;max-width:100%;max-height:270px;overflow:hidden;opacity:1;transform:translateY(0);transition:max-height .32s cubic-bezier(.22,.75,.25,1),opacity .2s ease,transform .32s cubic-bezier(.22,.75,.25,1),margin .32s ease;will-change:max-height,opacity,transform}
+  .mobile-tree-toolbar.is-collapsed .mobile-tree-toolbar-content{max-height:0!important;opacity:0;transform:translateY(-10px);margin:0;pointer-events:none}
+  .mobile-tree-toolbar .workspace-stats{order:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;flex:0 0 auto;margin:0 0 7px}
+  .mobile-tree-toolbar .workspace-stats>div{min-width:0;min-height:56px;gap:2px;padding:5px 3px;border-radius:10px}
+  .mobile-tree-toolbar .workspace-stats strong{font-size:18px;line-height:1.15}
+  .mobile-tree-toolbar .workspace-stats span{min-height:19px;font-size:9px;line-height:1.14}
+  .mobile-tree-controls-target{display:block;min-width:0;width:100%;max-width:100%}
+  .mobile-tree-controls-target .tree-view-controls{display:flex;flex:none;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;width:100%;max-width:100%;margin:0}
+  .mobile-tree-controls-target .people-search{flex:none;width:100%;height:38px;max-width:100%;min-width:0;padding:9px 11px;font-size:13px}
+  .mobile-tree-controls-target .tree-control-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;width:100%;min-width:0;align-items:center}
+  .mobile-tree-controls-target .tree-zoom-controls{display:flex;flex:1 1 auto;justify-content:center;gap:5px;min-width:0}
+  .mobile-tree-controls-target .tree-zoom-controls #tree-zoom-out,.mobile-tree-controls-target .tree-zoom-controls #tree-zoom-in{flex:0 0 37px;width:37px;min-width:37px;height:36px;padding:0}
+  .mobile-tree-controls-target .tree-zoom-level{flex:0 0 44px;min-width:44px;font-size:11px}
+  .mobile-tree-controls-target .tree-control-button{min-height:36px;padding:6px 10px;font-size:11px}
+  .mobile-tree-controls-target #fit-tree-button{flex:0 0 auto;width:auto;min-width:76px;padding-left:10px;padding-right:10px}
+  .mobile-tree-toolbar-toggle{display:flex;align-items:center;justify-content:center;align-self:center;width:100%;height:24px;min-height:24px;flex:0 0 24px;margin:1px 0 0;padding:0;border:0;border-radius:9px;background:transparent;color:#789080;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .mobile-tree-toolbar-toggle svg{width:22px;height:22px;padding:2px;border-radius:50%;stroke-width:2.3}
+  .mobile-tree-toolbar-toggle:active{background:#edf5ed;color:#235d47}
+  .mobile-tree-toolbar-toggle .toolbar-arrow-down{display:none}
+  .mobile-tree-toolbar.is-collapsed .mobile-tree-toolbar-toggle .toolbar-arrow-up{display:none}
+  .mobile-tree-toolbar.is-collapsed .mobile-tree-toolbar-toggle .toolbar-arrow-down{display:block}
+  #desktop-tree-controls-target{display:none!important}
+  .people-panel{display:flex;flex:1 1 0;flex-direction:column;min-width:0;min-height:0;width:100%;max-width:100%;overflow:hidden;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;isolation:isolate}
+  .people-panel .tree-section-heading{display:none!important}
+  .family-tree-viewport{position:relative;display:block;flex:1 1 0;width:100%;height:100%;min-width:0;min-height:0;max-height:100%;max-width:100%;box-sizing:border-box;margin:0;overflow:auto;overscroll-behavior:contain;touch-action:none;contain:paint;isolation:isolate;border-radius:12px;background:#fff}
+  .family-tree-canvas{position:relative;display:block;flex:none;min-width:0;min-height:0;max-width:none}
+  .family-tree-lines,.family-tree-nodes{transform-origin:0 0;max-width:none}
+  .people-panel #people-empty{flex:1 1 0;min-height:0;display:grid;place-content:center;margin:0}
+  .link-account-prompt{flex:0 0 auto;max-height:104px;margin:0 0 6px;overflow:auto}
+  .link-account-prompt h3{font-size:12px}
+  .link-account-prompt p{font-size:9px}
+  .workspace-panel-actions{display:none!important}
+  .app-nav-item{min-height:55px}
+  .app-nav-item span:last-child{font-size:9px;line-height:1.1}
+}
+@media(max-width:400px){
+  .topbar{height:53px;min-height:53px;flex-basis:53px}
+  .brand{gap:5px}
+  .brand-mark{width:32px;height:32px}
+  .language-button{padding:7px 8px;font-size:9px}
+  .mobile-tree-toolbar .workspace-stats{gap:3px}
+  .mobile-tree-toolbar .workspace-stats strong{font-size:17px}
+  .mobile-tree-toolbar .workspace-stats span{font-size:8px}
+  .mobile-tree-controls-target .tree-control-actions{gap:4px}
+  .mobile-tree-controls-target .tree-zoom-controls #tree-zoom-out,.mobile-tree-controls-target .tree-zoom-controls #tree-zoom-in{flex-basis:35px;width:35px;min-width:35px}
+  .mobile-tree-controls-target .tree-zoom-level{flex-basis:39px;min-width:39px;font-size:10px}
+  .mobile-tree-controls-target #fit-tree-button{min-width:70px;padding-left:7px;padding-right:7px}
+}
+@media(prefers-reduced-motion:reduce){
+  .mobile-tree-toolbar-content{transition:none!important}
+}
