@@ -650,4 +650,30 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
 }
 
 assert.match(app, /familyBusInterferingUnitIds\(/);
+
+{
+  const familyBusSafeTargetLeft = new Function(
+    app.slice(app.indexOf("function familyBusSafeTargetLeft("), app.indexOf("function renderPeople()")) +
+      "\\nreturn familyBusSafeTargetLeft;"
+  )();
+  assert.equal(familyBusSafeTargetLeft(280,270,[
+    {left:300,right:500,childBlockRight:520,exempt:false}
+  ],32),552,"Move only far enough to clear the family bus and its children");
+  assert.equal(familyBusSafeTargetLeft(100,80,[
+    {left:300,right:500,childBlockRight:520,exempt:false}
+  ],32),100,"Keep records in place when no family bus overlaps");
+  assert.equal(familyBusSafeTargetLeft(280,270,[
+    {left:300,right:500,childBlockRight:520,exempt:true}
+  ],32),280,"A couple must be allowed at its own family bus");
+  assert.equal(familyBusSafeTargetLeft(280,270,[
+    {left:300,right:500,childBlockRight:520,exempt:false},
+    {left:560,right:700,childBlockRight:730,exempt:false}
+  ],32),762,"Also clear any second family bus reached after moving");
+  assert.match(app, /const moveUnitOnly = \(unit, newLeft\) =>/);
+  assert.doesNotMatch(app, /const shiftUnitBranch = \(startUnit, delta\) =>/);
+  assert.match(app, /const columnGap = 64/);
+  assert.match(app, /const familyBlockGap = 68/);
+  assert.match(app, /Math\.max\(148, outgoingFamilies\.size \* 26 \+ 46\)/);
+}
+
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
