@@ -25,6 +25,7 @@
     treeZoom: 1,
     treeBaseWidth: 0,
     treeBaseHeight: 0,
+    treeInitialViewKey: null,
     mobileTreeToolbarCollapsed: false,
     openPanels: new Set(),
     familyLegendExpanded: false
@@ -155,6 +156,26 @@
     "Choose date of death":"இறந்த தேதியைத் தேர்ந்தெடுக்கவும்",
     "Family record linked to the member's account.":"உறுப்பினரின் கணக்குடன் குடும்பப் பதிவு இணைக்கப்பட்டது.",
     "Access request approved.":"அணுகல் கோரிக்கை ஏற்கப்பட்டது."
+  });
+
+  Object.assign(interfaceTranslations, {
+    "TREE EDITING":"மரத் திருத்தம்",
+    "MEMBERSHIP":"உறுப்பினர் நிலை",
+    "FAMILY RECORDS":"குடும்பப் பதிவுகள்",
+    "Signed-in accounts linked to their matching family record.":"உள்நுழைந்த கணக்குகள் அவற்றுக்குரிய குடும்பப் பதிவுகளுடன் இணைக்கப்பட்டுள்ளன.",
+    "Confirm requests from people asking to link their account to a family record.":"தங்கள் கணக்கை குடும்பப் பதிவுடன் இணைக்கக் கோருபவர்களின் கோரிக்கைகளை உறுதிப்படுத்தவும்.",
+    "Add a family member":"குடும்ப உறுப்பினரைச் சேர்",
+    "Cancel edit":"திருத்தத்தை ரத்து செய்",
+    "Close section":"பகுதியை மூடு",
+    "FAMILY MEMBER":"குடும்ப உறுப்பினர்",
+    "FAMILY TREE REQUEST":"குடும்ப மரக் கோரிக்கை",
+    "Member details":"உறுப்பினர் விவரங்கள்",
+    "Already in the tree? Select your family record":"ஏற்கனவே மரத்தில் உள்ளதா? உங்கள் குடும்பப் பதிவைத் தேர்ந்தெடுக்கவும்",
+    "Choose gender":"பாலினத்தைத் தேர்ந்தெடுக்கவும்",
+    "Select gender":"பாலினத்தைத் தேர்ந்தெடுக்கவும்",
+    "Female":"பெண்",
+    "Male":"ஆண்",
+    "Other / prefer not to say":"மற்றவை / தெரிவிக்க விருப்பமில்லை"
   });
 
   const tamilToEnglish = {};
@@ -581,8 +602,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const shouldPauseCreation = !isManager() && !ownRecord && Boolean(pending);
     const personForm = $("#person-form");
     const divider = $("#self-record-divider");
+    const appView = window.matchMedia("(max-width: 760px)").matches;
     if (personForm) personForm.hidden = shouldPauseCreation;
-    if (divider) divider.hidden = shouldPauseCreation;
+    // Only change the app's divider visibility; retain the existing web behaviour.
+    if (divider) divider.hidden = shouldPauseCreation || (
+      appView && (isManager() || Boolean(ownRecord))
+    );
+    // The own-record instruction is an app hint; leave the web copy unchanged.
+    const showOwnRecordInstruction = appView && Boolean(
+      state.activeTree && state.user && !isManager() && !ownRecord && !pending
+    );
+    $(".own-record-instruction").forEach(node => {
+      node.hidden = appView ? !showOwnRecordInstruction : false;
+    });
   }
   function syncEditModeButton() {
     const enabled = Boolean(state.editMode);
@@ -753,6 +785,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       state.relationships = [];
       state.members = [];
       state.requests = [];
+      state.treeInitialViewKey = null;
       state.openPanels.clear();
       $("#tree-workspace").hidden = true;
       $("#dashboard").classList.remove("tree-open");
@@ -2429,9 +2462,48 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       person, positions.get(person.id), relationLabels.get(person.id)
     )).join("");
 
-    if (!hadPreviousTreeLayout) state.treeZoom = calculateTreeFitScale();
+    const appView = window.matchMedia("(max-width: 760px)").matches;
+    const linkedPersonId = state.activeMembership?.person_id ||
+      state.members.find(member => member.user_id === state.user?.id)?.person_id || null;
+    const focusPosition = linkedPersonId ? positions.get(linkedPersonId) : null;
+    const initialViewKey = String(state.user?.id || "") + ":" +
+      (focusPosition ? "linked:" + linkedPersonId : "unlinked");
+    const shouldFocusMobileInitialView = appView && state.treeInitialViewKey !== initialViewKey;
+
+    if (shouldFocusMobileInitialView) {
+      state.treeInitialViewKey = initialViewKey;
+      // Keep linked records readable; start unlinked accounts at a moderate zoom.
+      state.treeZoom = focusPosition ? 1 : 0.4;
+    } else if (!hadPreviousTreeLayout) {
+      // Preserve the existing web fit-to-tree behaviour.
+      state.treeZoom = calculateTreeFitScale();
+    }
     applyTreeCanvasScale(false);
-    if (search) {
+
+    if (shouldFocusMobileInitialView) {
+      requestAnimationFrame(() => {
+        if (!viewport.isConnected || viewport.hidden) return;
+        const currentLinkedPersonId = state.activeMembership?.person_id ||
+          state.members.find(member => member.user_id === state.user?.id)?.person_id || null;
+        // If the account changed before this frame, don't apply a stale focus.
+        if (currentLinkedPersonId !== linkedPersonId) return;
+        if (!focusPosition) {
+          viewport.scrollLeft = 0;
+          viewport.scrollTop = 0;
+          return;
+        }
+        const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+        const targetLeft = (focusPosition.x + focusPosition.width / 2) * state.treeZoom -
+          viewport.clientWidth / 2;
+        const targetTop = (focusPosition.y + focusPosition.height / 2) * state.treeZoom -
+          viewport.clientHeight / 2;
+        viewport.scrollLeft = Math.max(0, Math.min(maxLeft, targetLeft));
+        viewport.scrollTop = Math.max(0, Math.min(maxTop, targetTop));
+      });
+    }
+
+    if (search && !shouldFocusMobileInitialView) {
       const firstMatch = visibleSelected.find(person => [person.full_name, person.tamil_name]
         .some(value => String(value || "").toLocaleLowerCase().includes(search)));
       const matchPosition = firstMatch && positions.get(firstMatch.id);
@@ -3164,7 +3236,13 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     $("#app-nav-profile").addEventListener("click", () => {
       const button = $("#app-nav-profile");
       const signOut = $("#app-nav-signout");
-      signOut.hidden = !signOut.hidden;
+      const hasOpenPanel = state.openPanels.size > 0;
+      if (hasOpenPanel) {
+        state.openPanels.clear();
+        renderWorkspace();
+      }
+      // When closing another panel, Profile should open sign-out immediately.
+      signOut.hidden = hasOpenPanel ? false : !signOut.hidden;
       button.setAttribute("aria-expanded", String(!signOut.hidden));
     });
     $("#app-nav-signout").addEventListener("click", () => {
