@@ -321,7 +321,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return { valid:true, value:match[1], date:null, precision:"year" };
     }
 
-    // New preferred input format: DD-MM-YYYY.
+
     if (!stored && (match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/))) {
       const day = Number(match[1]), month = Number(match[2]), year = Number(match[3]);
       if (!datePartsValid(year, month, day)) return { valid:false };
@@ -329,14 +329,14 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return { valid:true, value:canonical, date:canonical, precision:"day" };
     }
 
-    // ISO full date is accepted for calendar inputs and compatibility with previously saved entries.
+
     if ((match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
       const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
       if (!datePartsValid(year, month, day)) return { valid:false };
       return { valid:true, value:match[1] + "-" + match[2] + "-" + match[3], date:match[1] + "-" + match[2] + "-" + match[3], precision:"day" };
     }
 
-    // Canonical month/year (YYYY-MM) and user-facing month/year (MM-YYYY).
+
     if ((match = raw.match(/^(\d{4})-(\d{2})$/))) {
       const month = Number(match[2]);
       return month >= 1 && month <= 12
@@ -354,15 +354,15 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const first = Number(match[1]), second = Number(match[2]);
       let month, day;
       if (stored) {
-        // Stored month/day values from earlier builds are canonical MM-DD.
+
         month = first; day = second;
       } else if (first > 12 && second >= 1 && second <= 12) {
         day = first; month = second;
       } else if (second > 12 && first >= 1 && first <= 12) {
-        // Continue accepting legacy MM-DD input when its order is unambiguous.
+
         month = first; day = second;
       } else {
-        // For ambiguous text, use the requested DD-MM convention.
+
         day = first; month = second;
       }
       if (month < 1 || month > 12 || day < 1 || !datePartsValid(2000, month, day)) return { valid:false };
@@ -643,7 +643,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     } else if (/row-level security|permission denied|not allowed/i.test(message)) {
       toast(translateUiValue("Database permission blocked this action. Check the Supabase policies in supabase/schema.sql."), true);
     } else {
-      // Arbitrary Supabase messages are useful in the console, but keep the visible UI in Tamil.
+
       toast(state.language === "ta" ? "Something went wrong. Please try again." : (message || "Something went wrong. Please try again."), true);
     }
   }
@@ -834,9 +834,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     ).sort((a, b) => String(a.user_id || "").localeCompare(String(b.user_id || "")));
     if (ownerLinks.length) return ownerLinks[0].person_id;
 
-    // When the owner has not linked a family record yet, choose a stable root
-    // from the saved parent relationships. All accounts see the same records,
-    // so their tree layout stays anchored to the same person.
+
+
+
     const childIds = new Set(relationships
       .filter(edge => edge.relationship_type === "parent")
       .map(edge => edge.related_person_id));
@@ -853,9 +853,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function generationMap(anchorPersonId = treeLayoutAnchorPersonId()) {
-    // Spouses and co-parents share a generation unit. Resolve these family groups
-    // first, then walk parent links in both directions so every branch is positioned
-    // relative to one tree-wide anchor. This keeps every account's visual generations consistent.
+
+
+
     const parent = new Map(state.people.map(person => [person.id, person.id]));
     const find = id => {
       let root = id;
@@ -877,7 +877,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     );
     state.relationships.filter(edge => edge.relationship_type === "spouse")
       .forEach(edge => unite(edge.person_id, edge.related_person_id));
-    // Parents of one child share a generation row without implying a spouse link.
+
     const parentsByChild = new Map();
     parentEdges.forEach(edge => {
       if (!parentsByChild.has(edge.related_person_id)) parentsByChild.set(edge.related_person_id, []);
@@ -892,8 +892,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if (!groups.has(root)) groups.set(root, []);
       groups.get(root).push(person.id);
     });
-    // A parent link is a one-generation step. Propagating its offset upward as well
-    // as downward prevents a spouse's parents from sticking to an unrelated root row.
+
+
     const groupIds = Array.from(groups.keys());
     const adjacency = new Map(groupIds.map(id => [id, []]));
     const groupsWithParents = new Set();
@@ -905,7 +905,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       groupsWithParents.add(childGroup);
     });
     const activeGroup = anchorPersonId && parent.has(anchorPersonId) ? find(anchorPersonId) : null;
-    // Anchor the active record first. Any disconnected component starts at a root.
+
     const seeds = [
       ...(activeGroup ? [activeGroup] : []),
       ...groupIds.filter(id => !groupsWithParents.has(id)),
@@ -949,10 +949,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function familyParentStemStartY(parents, partnerLine) {
-    // A partner line already joins the parents inside their cards. Without one,
-    // start at the bottom of the recorded parent card(s), not the bottom of the
-    // tallest unrelated card in the same generation row. The bus itself remains
-    // below the complete row to avoid crossing cards.
+
+
+
+
     if (partnerLine) return partnerLine.y;
     return Math.max(...parents.map(parent => parent.y + parent.height));
   }
@@ -976,8 +976,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if(edge.relationship_type==="parent"){add(parentsByChild,edge.related_person_id,edge.person_id);add(childrenByParent,edge.person_id,edge.related_person_id);}
       else if(edge.relationship_type==="spouse"){add(spousesByPerson,edge.person_id,edge.related_person_id);add(spousesByPerson,edge.related_person_id,edge.person_id);}
     });
-    // Treat an explicitly recorded parent's spouse as a co-parent for relationship
-    // labels and displayed lineage, without saving synthetic relationship rows.
+
+
     Array.from(childrenByParent.entries()).forEach(([parentId, childIds]) => {
       (spousesByPerson.get(parentId) || new Set()).forEach(spouseId => {
         Array.from(childIds).forEach(childId => {
@@ -990,9 +990,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const parentsOf=id=>parentsByChild.get(id)||new Set(),childrenOf=id=>childrenByParent.get(id)||new Set(),spousesOf=id=>spousesByPerson.get(id)||new Set(),array=v=>Array.from(v||[]);
     const distances=(startId,nextIds)=>{const map=new Map([[startId,0]]),pending=[startId];for(let i=0;i<pending.length;i++){const current=pending[i],nextDistance=map.get(current)+1;array(nextIds(current)).forEach(id=>{const old=map.get(id);if(old===undefined||nextDistance<old){map.set(id,nextDistance);pending.push(id);}});}return map;};
     const bloodAncestors=distances(egoId,parentsOf),descendants=distances(egoId,childrenOf);
-    // Generation labels depend on family level, not only a direct blood path.
-    // Siblings of an ancestor and their spouses share that generation too, so
-    // they should not fall back to the generic "Relative by marriage" label.
+
+
+
     const generationSiblingsOf = id => new Set(
       array(parentsOf(id)).flatMap(parentId=>array(childrenOf(parentId)))
         .filter(otherId=>otherId!==id)
@@ -1017,11 +1017,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if(!changed)break;
     }
 
-    // Kinship labels should match the visible generation row, not just a direct
-    // sibling/spouse path. If any direct ancestor is a grandparent (or great-
-    // grandparent), every record in that same generation row gets that ancestor
-    // generation's label, including cousins and relatives whose parent links do
-    // not directly connect them to the ego's ancestor.
+
+
+
+
+
     const generationRows = generationMap(egoId);
     const generationLevelByPerson = new Map();
     generationRows.forEach((people, level) => {
@@ -1065,7 +1065,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const parentSiblingConnections=[];
     array(new Set(egoParents.flatMap(pid=>array(siblingsOf(pid))))).forEach(sid=>egoParents.forEach(pid=>{if(siblingsOf(pid).has(sid))parentSiblingConnections.push({siblingId:sid,parentId:pid,details:parentSiblingDetails(sid,pid)});}));
     const parentSiblingFor=id=>parentSiblingConnections.find(x=>x.siblingId===id);
-    // A grandparent's siblings use age relative to that grandparent, not relative to you.
+
     const grandparentSiblingConnections=[];
     const directBiologicalGrandparents=array(bloodAncestors.entries()).filter(([,distance])=>distance===2);
     const grandparentSpouseIds = new Set(directBiologicalGrandparents.flatMap(([grandparentId]) => array(spousesOf(grandparentId))));
@@ -1158,7 +1158,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           }
         }
         if(!english){
-          // A wife's elder or younger sister's husband is the user's சகலை.
+
           if(gender(ego)==="male"&&gender(person)==="male"){
             const wifeId=egoSpouses.find(spouseId=>gender(byId.get(spouseId))==="female");
             if(wifeId){
@@ -1223,11 +1223,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       let match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (match) return { year:Number(match[1]), month:Number(match[2]), day:Number(match[3]), precision:3 };
 
-      // Full dates in the UI use DD-MM-YYYY.
+
       match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
       if (match) return { year:Number(match[3]), month:Number(match[2]), day:Number(match[1]), precision:3 };
 
-      // Partial dates are useful when their known precision allows comparison.
+
       match = value.match(/^(\d{1,2})-(\d{4})$/);
       if (match) return { year:Number(match[2]), month:Number(match[1]), day:null, precision:2 };
 
@@ -1245,7 +1245,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const second = birthDateParts(secondPerson);
     if (!first || !second) return 0;
     if (first.year !== second.year) return first.year - second.year;
-    // A year-only record can't be reliably ordered within its year.
+
     if (first.precision < 2 || second.precision < 2) return 0;
     if (first.month !== second.month) return first.month - second.month;
     if (first.precision < 3 || second.precision < 3) return 0;
@@ -1266,9 +1266,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return 0;
   }
 
-  // Build one consistent order for a sibling set instead of making pairwise
-  // decisions that can contradict each other. Dated siblings are sorted by age;
-  // manual slots are reserved only for siblings whose birthdate is unknown.
+
+
+
   function buildSiblingOrderPositions(siblings) {
     const people = Array.from(new Map((siblings || []).filter(Boolean)
       .map(person => [person.id, person])).values());
@@ -1282,8 +1282,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       .filter(person => !birthDateParts(person) && manualBirthOrder(person) != null)
       .sort((a, b) => manualBirthOrder(a) - manualBirthOrder(b) || nameOrder(a, b));
 
-    // Reserve explicit positions. If legacy data already has duplicate numbers,
-    // place the conflicting records deterministically until the user corrects them.
+
+
     manuallyOrderedUnknown.forEach(person => {
       let slot = manualBirthOrder(person);
       while (occupied.has(slot)) slot += 1;
@@ -1302,8 +1302,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       nextSlot += 1;
     });
 
-    // Records with neither usable date nor manual order follow the ordered
-    // records in a predictable way rather than jumping ahead of known ages.
+
+
     const unorderedUnknown = people
       .filter(person => !birthDateParts(person) && manualBirthOrder(person) == null)
       .sort(nameOrder);
@@ -1370,8 +1370,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    // A unit can contain a married pair from two different birth families. Prefer
-    // the member pair with the most shared parents when deciding sibling order.
+
+
     candidates.sort((a, b) =>
       b.sharedParentCount - a.sharedParentCount ||
       a.sharedParentKey.localeCompare(b.sharedParentKey)
@@ -1408,10 +1408,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function familyBlockTargetCenter(units, parentPositions) {
-    // A sibling block belongs to its recorded parent set, not to the average
-    // ancestry of every spouse attached to those children. Using spouse-side
-    // parent centres here pulls children away from their own parents and makes
-    // great-grandparent buses travel across unrelated family branches.
+
+
+
+
     if (parentPositions.length) {
       return parentPositions.reduce(
         (sum, position) => sum + position.x + position.width / 2, 0
@@ -1429,10 +1429,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const candidates = Array.from(new Set(candidateKeys.filter(Boolean)));
     if (!candidates.length) return null;
 
-    // If the currently linked person is one of the partners, keep the couple
-    // with that person's own parent/sibling family. Otherwise, do not let a
-    // spouse-side family claim the whole couple just because it matches a
-    // broad family anchor.
+
+
+
+
     if (activePersonId && unit.people.some(person => person.id === activePersonId)) {
       const activeKey = parentFamilyByPerson.get(activePersonId);
       if (activeKey && candidates.includes(activeKey)) return activeKey;
@@ -1477,8 +1477,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function shouldUseExpandedInLawFamilyBlock(unit, expandedFamilyKey, candidates, treeLineageIds, parentFamilyByPerson) {
     if (!expandedFamilyKey || !candidates.includes(expandedFamilyKey)) return false;
-    // An in-law with recorded parents should bring their parent branch into the
-    // tree, but must not pull a sibling/couple away from its own bloodline block.
+
+
     const hasLineageFamilyAnchor = (unit.people || []).some(person =>
       treeLineageIds.has(person.id) && parentFamilyByPerson.has(person.id)
     );
@@ -1557,9 +1557,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       parentUnit.people.forEach(parent => {
         (rawChildrenByParent.get(parent.id) || new Set()).forEach(childId => unitChildIds.add(childId));
       });
-      // Only relocate a standalone in-law parent branch when all of its recorded
-      // children are the spouse records it is being placed near. This avoids
-      // disturbing the layout of that parent's other family branches.
+
+
+
       if (!unitChildIds.size || Array.from(unitChildIds).some(id => !targetIds.has(id))) return;
       const centers = Array.from(targetIds).map(id => {
         const position = positions.get(id);
@@ -1619,8 +1619,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
 
     targetRootsByInLawRoot.forEach((lineageRoots, inLawRoot) => {
-      // A shared in-law ancestry connected to several separate lineage branches
-      // has no single best neighbour; keep its existing placement in that case.
+
+
       if (lineageRoots.size !== 1) return;
       const lineageRoot = lineageRoots.values().next().value;
       const currentIndex = orderedRoots.indexOf(inLawRoot);
@@ -1682,8 +1682,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const fallbackAnchors = children.map(childUnit => unitCenters.get(childUnit)).filter(Number.isFinite);
     const anchors = childAnchors.length ? childAnchors : fallbackAnchors;
     if (anchors.length) {
-      // The parent/couple sits above the midpoint of the children's actual
-      // record centers, not the midpoint of the generation row or subtree width.
+
+
       const shift = (Math.min(...anchors) + Math.max(...anchors)) / 2;
       unitCenters.forEach((center,descendant) => {
         if (descendant !== unit) unitCenters.set(descendant,center-shift);
@@ -1732,7 +1732,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
     const selected = state.people.slice();
 
-    // Build temporary relationship indexes. These are display-only; saved rows are unchanged.
+
     const allPeopleById = new Map(selected.map(person => [person.id, person]));
     const rawParentsByChild = new Map(selected.map(person => [person.id, new Set()]));
     const rawChildrenByParent = new Map(selected.map(person => [person.id, new Set()]));
@@ -1752,11 +1752,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const layoutAnchorPersonId = treeLayoutAnchorPersonId();
     const treeLineageIds = new Set();
     if (layoutAnchorPersonId && allPeopleById.has(layoutAnchorPersonId)) {
-      // Define the central family tree from its stable layout anchor:
-      // walk upward through parents first, then downward through those ancestors'
-      // descendants. Never walk sideways through a spouse link. That keeps an
-      // aunt/uncle's in-law out of the birth-family branch unless their own
-      // recorded parent-child path independently places them in the lineage.
+
+
+
+
+
       const ancestorQueue = [layoutAnchorPersonId];
       const directAncestorIds = new Set([layoutAnchorPersonId]);
       for (let index = 0; index < ancestorQueue.length; index++) {
@@ -1779,8 +1779,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       }
     }
 
-    // Display each connected spouse's own recorded family by default. Metadata
-    // below organises the layout; there is no expand/collapse control.
+
+
     const expandedPartnerFamiliesByPerson = new Map();
     state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
       const firstIsLineage = treeLineageIds.has(edge.person_id);
@@ -1806,8 +1806,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     viewport.hidden = false;
     empty.hidden = true;
 
-    // Lay out all visible entries into generation rows, treating married/partner
-    // people as a single unit before ordering each row.
+
+
     const selectedIds = new Set(visibleSelected.map(person => person.id));
     const levels = generationMap();
     const grouped = new Map();
@@ -1848,8 +1848,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const cardHeights = new Map(visibleSelected.map(person => [person.id, cardHeightFor(person)]));
     const levelByPerson = new Map();
     grouped.forEach((people, level) => people.forEach(person => levelByPerson.set(person.id, level)));
-    // A recorded parent's spouse is also treated as a co-parent in the displayed tree.
-    // These are virtual layout/display edges only; nothing is written to the database.
+
+
     const spousesForLayout = new Map(state.people.map(person => [person.id, new Set()]));
     state.relationships.filter(edge => edge.relationship_type === "spouse").forEach(edge => {
       if (!spousesForLayout.has(edge.person_id) || !spousesForLayout.has(edge.related_person_id)) return;
@@ -1881,9 +1881,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       parentsByChild.get(edge.related_person_id).add(edge.person_id);
     });
 
-    // Stable colors belong to the highest available ancestor couple/family.
-    // Every descendant branch inherits one root-family key; a marriage between
-    // two branches does not create a third, arbitrarily mixed connector color.
+
+
+
     const rootFamilyMembers = new Map();
     const rootFamiliesCache = new Map();
     const topRootFamilyKeyForPerson = personId => {
@@ -1913,8 +1913,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       return roots;
     };
 
-    // Include all recorded root families when assigning hues so collapsing or
-    // expanding an in-law branch never changes the colors of the main tree.
+
+
     selected.forEach(person => rootFamiliesForPerson(person.id));
     const rootFamilyLabel = key => (rootFamilyMembers.get(key) || [])
       .map(id => allPeopleById.get(id)?.full_name)
@@ -1943,9 +1943,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       rootFamiliesForPerson(personId).forEach(key => visibleRootFamilyKeys.add(key));
     });
 
-    // These layout indexes are built below before any connector is drawn.
-    // Following the chosen family block makes children inherit their displayed
-    // top-level branch, even when their parents come from different family roots.
+
+
+
     const rootFamilyKeyForPerson = personId => {
       const unit = personUnit.get(personId);
       const ownerFamilyKey = unit && primaryFamilyByUnit.get(unit);
@@ -2009,7 +2009,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       ).forEach(edge => {
         outgoingFamilies.add(Array.from(parentsByChild.get(edge.related_person_id) || new Set()).sort().join("|"));
       });
-      // Keep connector lanes inside a compact, predictable generation gap.
+
       nextRowY += tallest + Math.max(128, outgoingFamilies.size * 24 + 40);
     });
 
@@ -2030,8 +2030,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const used = new Set();
       const units = [];
 
-      // Only people connected by an explicit spouse edge share an adjacent block.
-      // Parent-child links are drawn independently, without grouping unrelated records.
+
+
       people.forEach(person => {
         if (used.has(person.id)) return;
         const groupIds = [];
@@ -2053,9 +2053,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         units.push({ people:group, width, sortName:group[0]?.full_name || person.full_name });
       });
 
-      // Use the centre of the parents' couple where possible. This keeps each
-      // sibling branch underneath its family instead of scattering all cousins
-      // in alphabetical order across the generation.
+
+
+
       const parentCenter = unit => {
         const centers = [];
         const seenParentIds = new Set();
@@ -2084,18 +2084,18 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         return centers.length ? centers.reduce((sum, center) => sum + center, 0) / centers.length : null;
       };
 
-      // Keep the couple together, but order the partners to match their own
-      // ancestral branches. This prevents a distant mother's branch from
-      // sweeping across the father's connector lines just to reach her card.
+
+
+
       units.forEach(unit => {
         sortUnitPeopleByParentCenter(unit, parentCenter);
         unit.parentCenter = parentCenter(unit);
       });
 
       units.sort((a, b) => {
-        // Siblings must read oldest-to-youngest left-to-right, even when names
-        // are alphabetical in the opposite direction. Only order by age when
-        // the units share at least one recorded/effective parent.
+
+
+
         const siblingAgeOrder = compareSiblingUnitsByAge(a, b, parentsByChild, grouped.get(level) || []);
         if (siblingAgeOrder) return siblingAgeOrder;
 
@@ -2121,8 +2121,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    // Keep every spouse-connected unit intact when arranging each generation.
-    // Sibling families become wide blocks containing whole person+partner units.
+
+
     const personUnit = new Map();
     levelUnits.forEach(units => units.forEach(unit => {
       unit.people.forEach(person => personUnit.set(person.id, unit));
@@ -2148,9 +2148,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       familyBucketsByLevel.set(level, buckets);
     });
 
-    // Measure kinship through recorded parent-child relationships only.
-    // Marriage and inferred co-parent display edges must not make a partner's
-    // parents/siblings pull the other partner's couple unit into their branch.
+
+
+
     const activePersonId = layoutAnchorPersonId;
     const relatednessAdjacency = new Map(state.people.map(person => [person.id, new Set()]));
     const addRelatednessEdge = (a, b) => {
@@ -2189,8 +2189,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         if (shouldUseExpandedInLawFamilyBlock(
           unit, expandedFamilyKey, candidates, treeLineageIds, parentFamilyByPerson
         )) {
-          // Show the in-law's parent branch when it does not displace a unit
-          // already anchored to a recorded family in the active bloodline.
+
+
           primaryFamilyByUnit.set(unit, expandedFamilyKey);
           return;
         }
@@ -2205,8 +2205,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const familySiblingGap = 24;
     const familyBlockGap = 40;
 
-    // Build a tree of person/couple units from the selected parent-family block.
-    // Each couple unit has one display owner, so no family member is duplicated.
+
+
     const unitsByFamilyKey = new Map();
     primaryFamilyByUnit.forEach((familyKey,unit) => {
       if (!unitsByFamilyKey.has(familyKey)) unitsByFamilyKey.set(familyKey,[]);
@@ -2255,18 +2255,18 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     let rootUnits = allUnits.filter(unit => !parentUnitForChildUnit.has(unit));
     if (!rootUnits.length) rootUnits = allUnits.slice();
 
-    // Keep an in-law's complete ancestral branch next to the lineage branch it
-    // joins. Moving the root block preserves the internal parent/child layout,
-    // unlike shifting an anchored parent card on its own.
+
+
+
     rootUnits = orderExpandedInLawRootsNearSpouses(
       rootUnits, expandedPartnerFamiliesByPerson, rawParentsByChild, treeLineageIds,
       personUnit, parentUnitForChildUnit, childUnitsByParentUnit
     );
 
-    // Calculate branch widths from the descendants upwards. Then place the
-    // couple directly above the midpoint of its actual child records. Sibling
-    // branches reserve space for all their descendants, preventing card overlap
-    // without large post-layout shifts or generation-wide centering.
+
+
+
+
     const familyLayout = computeFamilySubtreeLayout(
       rootUnits,
       childUnitsByParentUnit,
@@ -2289,17 +2289,17 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       });
     });
 
-    // Bring standalone parents of an expanded in-law near the spouse they connect
-    // to. The row is checked for collisions, and sibling/family branches with their
-    // own ancestry or other children are left untouched.
+
+
+
     placeExpandedPartnerParentsNearSpouses(
       expandedPartnerFamiliesByPerson, rawParentsByChild, rawChildrenByParent,
       treeLineageIds, personUnit, parentUnitForChildUnit, childUnitsByParentUnit,
       positions, columnGap / 2
     );
 
-    // Shift the whole graph only enough to give its leftmost record a margin.
-    // This preserves every parent-to-children alignment without centring a row.
+
+
     const leftmostCard = Math.min(0, ...Array.from(positions.values()).map(position => position.x));
     const treeShiftX = 26 - leftmostCard;
     if (treeShiftX) positions.forEach((position, id) =>
@@ -2312,8 +2312,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     state.treeBaseWidth = baseWidth;
     state.treeBaseHeight = baseHeight;
 
-    // The canvas is a scrollable spacer; its two layers scale together so
-    // scrollbars, card hit targets, and relationship lines stay aligned.
+
+
     canvas.style.minWidth = "0";
     canvas.style.minHeight = "0";
     nodesRoot.style.left = "0";
@@ -2336,8 +2336,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const partnerLineByPair = new Map();
     const partnerEdges = state.relationships.filter(edge => edge.relationship_type === "spouse");
 
-    // Draw only explicit partner links. Keep the midpoint and line height so
-    // the parent-to-children stem can descend from the partner line itself.
+
+
     partnerEdges.forEach(edge => {
       const first = positions.get(edge.person_id);
       const second = positions.get(edge.related_person_id);
@@ -2358,8 +2358,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         lineLeft + ' ' + lineY + ' H ' + lineRight + '"/>');
     });
 
-    // Group each child under the exact set of recorded parents. The horizontal
-    // bus is a family connector only: never draw separate lines between siblings.
+
+
     const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions);
 
     const orderedFamilyGroups = Array.from(familyChildGroups.values()).sort((a, b) => {
@@ -2387,8 +2387,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const childTop = Math.min(...children.map(child => child.y));
       if (childTop <= parentRowBottom + 8) return;
 
-      // Prefer the centre of a recorded partner link. If no partner relationship
-      // exists, use the centre of the recorded parent group without inventing a link.
+
+
       let partnerLine = null;
       for (let i = 0; i < group.parentIds.length && !partnerLine; i++) {
         for (let j = i + 1; j < group.parentIds.length; j++) {
@@ -2413,8 +2413,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
       const busY = Math.min(childTop - 18, parentRowBottom + 22 + laneIndex * 24);
 
-      // One vertical trunk flows down from the partner link (or parent group),
-      // meets a single horizontal child bus, then drops vertically to each child.
+
+
       paths.push('<path class="family-line family-parent-stem" style="stroke:' + familyColor + '" d="M ' +
         trunkStartX + ' ' + trunkStartY + ' V ' + busY + '"/>');
       if (busRight - busLeft > 1) {
@@ -3010,7 +3010,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     let personId = state.editingPersonId;
     let error = null;
 
-    // For a new entry, save it first so the relationship has a real record ID.
+
     if (personId) {
       const result = await db.from("uravu_people").update(data)
         .eq("id", personId).eq("tree_id", treeId).select("id").single();
