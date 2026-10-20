@@ -2428,7 +2428,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
     if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
-    const scale = Math.max(0.02, Math.min(2.5, state.treeZoom || 1));
+    const scale = Math.max(0.01, Math.min(2.5, state.treeZoom || 1));
     const oldWidth = Number(canvas.dataset.scaledWidth || state.treeBaseWidth * scale);
     const oldScale = oldWidth / state.treeBaseWidth;
     const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
@@ -2454,7 +2454,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function setTreeZoom(nextScale, anchorX, anchorY) {
-    state.treeZoom = Math.max(0.02, Math.min(2.5, Number(nextScale) || 1));
+    state.treeZoom = Math.max(0.01, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
   }
 
@@ -2463,7 +2463,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return;
     const availableWidth = Math.max(1, viewport.clientWidth - 24);
     const availableHeight = Math.max(1, viewport.clientHeight - 24);
-    const fitScale = Math.max(0.02, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
+    const fitScale = Math.max(0.01, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
     state.treeZoom = fitScale;
     applyTreeCanvasScale(false);
     viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
