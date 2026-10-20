@@ -1,7 +1,3 @@
--- Uravu: partial birth/death dates and deceased-with-unknown-date support.
--- Run this once in Supabase Dashboard -> SQL Editor for an existing Uravu database.
--- Safe to run more than once.
-
 begin;
 
 alter table public.uravu_people
