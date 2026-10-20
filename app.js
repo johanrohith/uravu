@@ -2454,10 +2454,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function applyTreeCanvasScale(preservePosition = true, anchorX, anchorY) {
     const viewport = $("#family-tree-viewport");
+    const sizer = $("#family-tree-sizer");
     const canvas = $("#family-tree-canvas");
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
-    if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
+    if (!viewport || !sizer || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
     const appView = window.matchMedia("(max-width: 760px)").matches;
     const minimumScale = appView ? calculateTreeFitScale() : 0.25;
     const scale = Math.max(minimumScale, Math.min(2.5, Number(state.treeZoom) || 1));
@@ -2468,20 +2469,28 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const worldY = (viewport.scrollTop + ay) / oldScale;
 
     state.treeZoom = scale;
-    nodesRoot.style.transformOrigin = "0 0";
-    nodesRoot.style.transform = "translateZ(0) scale(" + scale + ")";
-    linesRoot.style.transformOrigin = "0 0";
-    linesRoot.style.transform = "translateZ(0) scale(" + scale + ")";
-    canvas.style.width = Math.ceil(state.treeBaseWidth * scale) + "px";
-    canvas.style.height = Math.ceil(state.treeBaseHeight * scale) + "px";
+    sizer.style.width = Math.ceil(state.treeBaseWidth * scale) + "px";
+    sizer.style.height = Math.ceil(state.treeBaseHeight * scale) + "px";
+    sizer.dataset.scaledWidth = String(state.treeBaseWidth * scale);
+    canvas.style.position = "absolute";
+    canvas.style.left = "0";
+    canvas.style.top = "0";
+    canvas.style.width = state.treeBaseWidth + "px";
+    canvas.style.height = state.treeBaseHeight + "px";
+    canvas.style.minWidth = "0";
+    canvas.style.minHeight = "0";
+    canvas.style.transformOrigin = "0 0";
+    canvas.style.transform = "scale(" + scale + ")";
     canvas.dataset.appliedScale = String(scale);
     canvas.dataset.scaledWidth = String(state.treeBaseWidth * scale);
+    nodesRoot.style.transform = "none";
+    linesRoot.style.transform = "none";
     const level = $("#tree-zoom-level");
     if (level) level.textContent = Math.round(scale * 100) + "%";
 
     if (preservePosition) {
-      const maxLeft = Math.max(0, canvas.offsetWidth - viewport.clientWidth);
-      const maxTop = Math.max(0, canvas.offsetHeight - viewport.clientHeight);
+      const maxLeft = Math.max(0, sizer.offsetWidth - viewport.clientWidth);
+      const maxTop = Math.max(0, sizer.offsetHeight - viewport.clientHeight);
       viewport.scrollLeft = Math.max(0, Math.min(maxLeft, worldX * scale - ax));
       viewport.scrollTop = Math.max(0, Math.min(maxTop, worldY * scale - ay));
     }
