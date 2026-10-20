@@ -1,8 +1,3 @@
--- Uravu clean database schema (v2).
--- Run once in Supabase Dashboard -> SQL Editor -> New query.
--- This uses uravu_* tables so it does not destructively alter existing tables.
--- All family-tree data is database-backed; no browser cache is used for tree data.
-
 create table if not exists public.uravu_family_trees (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(btrim(name)) between 2 and 100),
@@ -32,9 +27,6 @@ create table if not exists public.uravu_people (
   check (death_date is null or birth_date is null or death_date >= birth_date)
 );
 
--- Additive migration for existing databases: preserve exact dates and support
--- year-only, month/year, or month/day dates without inventing a day or year.
--- Backfill existing incomplete profiles before enforcing required fields.
 update public.uravu_people set tamil_name = full_name
 where tamil_name is null or length(trim(tamil_name)) = 0;
 update public.uravu_people set gender = 'other' where gender is null;
@@ -321,7 +313,6 @@ begin
     raise exception 'Only the tree owner or a member linked to a family record can review requests.';
   end if;
 
-
   if p_decision='reject' then
     update public.uravu_access_requests set status='rejected', reviewed_by=v_user, reviewed_at=now()
     where id=p_request_id;
@@ -477,7 +468,6 @@ begin
     v_a := p_related_person_id; v_b := p_person_id;
   end if;
 
-  -- Prevent a parent-child edge from introducing a cycle into the ancestry graph.
   if p_relationship_type <> 'spouse_of' then
     if exists (
       with recursive descendants(person_id) as (
@@ -612,4 +602,3 @@ grant execute on function public.uravu_is_tree_member(uuid) to authenticated;
 grant execute on function public.uravu_has_tree_role(uuid,text[]) to authenticated;
 grant execute on function public.uravu_can_edit_tree(uuid) to authenticated;
 
--- The app has no cache table. RLS and these grants control all persisted family data.
