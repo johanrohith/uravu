@@ -507,3 +507,11 @@
   .app-nav-item{min-height:55px}
   .app-nav-item span:last-child{font-size:9px;line-height:1.1;min-height:22px;letter-spacing:0}
 }
+
+@media(max-width:760px){
+  .people-panel{isolation:isolate}
+  .people-panel .tree-section-heading{position:relative;z-index:1;flex-shrink:0}
+  .family-tree-viewport{position:relative;z-index:0;isolation:isolate;contain:paint;overflow:auto;overscroll-behavior:contain;max-width:100%;max-height:100%}
+  .family-tree-canvas{flex:none;min-width:0;min-height:0;max-width:none}
+  .family-tree-lines,.family-tree-nodes{transform-origin:0 0}
+}
