@@ -1152,7 +1152,8 @@ assert.match(styles, /\.family-branch-legend\{display:none!important\}/);
 assert.match(styles, /\.app-nav-avatar\.has-photo svg\{display:none\}/);
 assert.match(styles, /\.family-tree-viewport\{flex:1 1 0;width:100%;height:auto;min-height:0;max-height:none/);
 assert.match(app, /const familyLinePalette = \[/);
-assert.match(app, /Math\.max\(0\.01, Math\.min\(1, availableWidth \/ state\.treeBaseWidth, availableHeight \/ state\.treeBaseHeight\)\)/);
+assert.match(app, /const minimumFitScale = window\.matchMedia\("\(max-width: 760px\)"\)\.matches \? 0\.01 : 0\.25/);
+assert.match(app, /const isAppTreeView = window\.matchMedia\("\(max-width: 760px\)"\)\.matches/);
 assert.ok(
   app.indexOf('Object.entries(interfaceTranslations).forEach', app.indexOf('tamilToEnglish["நினைவில் வாழ்பவர்"]')) >
     app.indexOf("Object.assign(interfaceTranslations"),
