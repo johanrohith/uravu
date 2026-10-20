@@ -363,6 +363,20 @@ assert.match(app, /Parents of one child share a generation row/);
 assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide enough for personal details");
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"), "Child connectors should be grouped by their actual parent set, including single-parent links");
+{
+ // For a lone recorded parent, the stem must begin at that parent's card bottom,
+ // not at the bottom of the tallest unrelated card on the same generation row.
+ const source=extractFunction(app,"function familyParentStemStartY(parents, partnerLine) {","\n  function relationNames");
+ const familyParentStemStartY=new Function(source+"\nreturn familyParentStemStartY;")();
+ assert.equal(familyParentStemStartY([{y:24,height:92}],null),116);
+ assert.equal(
+   familyParentStemStartY([{y:24,height:92},{y:24,height:160}],null),
+   184,
+   "For multiple recorded parents, start at the lowest actual parent-card edge"
+ );
+ assert.equal(familyParentStemStartY([{y:24,height:92}],{y:60}),60,
+   "When a partner connector exists, start the stem at that connector");
+}
 assert.ok(app.includes("Math.max(128, outgoingFamilies.size * 24 + 40)"), "Use a compact generation gap while reserving connector lanes");
 assert.ok(app.includes("parentRowBottom + 22 + laneIndex * 24"), "Use compact parallel connector lanes");
 assert.ok(!app.includes("V ' + laneY + ' H ' + endX + ' V ' + endY"), "Parent-child links should not be drawn as separate H-shaped routes");
