@@ -224,7 +224,7 @@ const familyLevels = createGenerationMap(familyState)();
 const levelOf = id => Array.from(familyLevels.entries()).find(([, people]) => people.some(person => person.id === id))?.[0];
 assert.equal(levelOf("grandfather"), levelOf("grandmother"), "Co-parents should share a generation");
 
-const createRelationshipLabeler = new Function("state", relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
+const createRelationshipLabeler = new Function("state", generationMapSource + "\n" + relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
 const labels = createRelationshipLabeler(familyState)();
 assert.equal(labels.get("grandfather"), "Grandfather");
 assert.equal(labels.get("grandmother"), "Grandmother");
