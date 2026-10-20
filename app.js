@@ -741,7 +741,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     state.activeMembership = state.memberships[0] || null;
     $("#tree-workspace").hidden = false;
     $("#dashboard").classList.add("tree-open");
-    $("#workspace-title").textContent = displayTreeName(tree);
+    $("#workspace-title").textContent = state.language === "ta" ? "உறவுகள்" : "Uravugal";
     $("#workspace-description").textContent = state.language === "ta"
       ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
       : "One shared family tree, across generations.";
@@ -750,7 +750,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function renderTreeLists() {
     if (!state.activeTree) return;
-    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-title").textContent = state.language === "ta" ? "உறவுகள்" : "Uravugal";
     $("#workspace-description").textContent = state.language === "ta"
       ? "தலைமுறைகள் கடந்த ஒரே குடும்ப மரம்."
       : "One shared family tree, across generations.";
