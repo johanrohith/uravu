@@ -1203,7 +1203,7 @@ assert.match(styles, /\.family-tree-viewport\{position:relative;z-index:0;isolat
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
 
 assert.match(app, /const hadPreviousTreeLayout = state\.treeBaseWidth > 0 && state\.treeBaseHeight > 0/);
-assert.match(app, /if \(!hadPreviousTreeLayout\) state\.treeZoom = calculateTreeFitScale\(\)/);
+assert.match(app, /else if \(!hadPreviousTreeLayout\) \{\s*\/\/ Preserve the existing web fit-to-tree behaviour\.\s*state\.treeZoom = calculateTreeFitScale\(\)/);
 assert.match(styles, /height: 100svh !important/);
 assert.match(styles, /touch-action: none !important/);
 assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)/);
