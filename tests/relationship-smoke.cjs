@@ -1164,7 +1164,7 @@ assert.ok(
 assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
 assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
 assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
-assert.match(html, /uravu-tree-startup-fix-20261021-2/);
+assert.match(html, /uravu-tree-view-session-20261021-3/);
 assert.match(html, /id="family-tree-sizer"/);
 assert.match(html, /id="mobile-tree-toolbar"/);
 assert.match(html, /id="mobile-tree-toolbar-content"/);
@@ -1203,20 +1203,20 @@ assert.match(styles, /\.family-tree-viewport\{position:relative;z-index:0;isolat
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
 
 assert.match(app, /const hadPreviousTreeLayout = state\.treeBaseWidth > 0 && state\.treeBaseHeight > 0/);
-assert.match(app, /else if \(!hadPreviousTreeLayout\) \{\s*\/\/ Preserve the existing web fit-to-tree behaviour\.\s*state\.treeZoom = calculateTreeFitScale\(\)/);
+assert.match(app, /else if \(!hadPreviousTreeLayout\) \{\s*state\.treeZoom = calculateTreeFitScale\(\)/);
 assert.match(styles, /height: 100svh !important/);
 assert.match(styles, /touch-action: none !important/);
 assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)/);
 
 
 
-// Mobile-app-only account focus and panel behavior; keep the web fit-to-tree path.
+// One-time initial focus for app and web; preserve the view throughout the tab session.
 assert.match(app, /treeInitialViewKey: null/);
-assert.match(app, /const shouldFocusMobileInitialView = appView && state\.treeInitialViewKey !== initialViewKey/);
-assert.match(app, /if \(!mediaQuery\.matches && state\.treeInitialViewKey !== null\)/);
-assert.match(app, /state\.treeZoom = calculateTreeFitScale\(\);\s*applyTreeCanvasScale\(false\);/);
-assert.match(app, /state\.treeZoom = focusPosition \? 1 : 0\.4/);
-assert.match(app, /if \(search && !shouldFocusMobileInitialView\)/);
+assert.match(app, /const shouldInitializeInitialView = state\.treeInitialViewKey !== initialViewKey/);
+assert.doesNotMatch(app, /if \(!mediaQuery\.matches && state\.treeInitialViewKey !== null\)/);
+assert.match(app, /Viewport changes may move panels, but must never reset the/);
+assert.match(app, /state\.treeZoom = 1/);\nassert.match(app, /state\.treeZoom = appView \? 0\.4 : calculateTreeFitScale\(\)/);
+assert.match(app, /if \(search && !shouldInitializeInitialView\)/);
 assert.match(app, /const showOwnRecordInstruction = appView && Boolean\(/);
 assert.match(app, /divider\.hidden = shouldPauseCreation \|\| \(/);
 assert.match(app, /signOut\.hidden = hasOpenPanel \? false : !signOut\.hidden/);
@@ -1224,7 +1224,7 @@ assert.match(app, /"MEMBERSHIP":"உறுப்பினர் நிலை"/);
 assert.match(app, /"FAMILY RECORDS":"குடும்பப் பதிவுகள்"/);
 assert.match(app, /"Confirm requests from people asking to link their account to a family record\."/);
 assert.match(html, /class="own-record-instruction"/);
-assert.match(html, /uravu-tree-startup-fix-20261021-2/);
+assert.match(html, /uravu-tree-view-session-20261021-3/);
 assert.match(styles, /\/\* App-only panel alignment, neutral edit state, and active edit indicator\. \*\//);
 assert.match(styles, /\.requests-panel \.section-heading \{\s*display: grid !important;\s*grid-template-columns: minmax\(0, 1fr\) 34px !important;/);
 assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-off \{\s*background: transparent !important;\s*border-color: transparent !important;\s*color: #789080 !important;/);
@@ -1239,6 +1239,14 @@ assert.match(app, /if \(state\.loadingRequests\)/);
 assert.match(app, /Loading the family tree timed out/);
 assert.match(app, /data-retry-workspace/);
 assert.match(app, /const queryTimeoutMs = 15000/);
+assert.match(app, /function treeViewSessionStorageKey\(\)/);
+assert.match(app, /function readTreeViewSession\(\)/);
+assert.match(app, /function saveTreeViewSessionNow\(\)/);
+assert.match(app, /document.addEventListener\("visibilitychange"/);
+assert.match(app, /window.addEventListener\("pagehide"/);
+assert.doesNotMatch(app, /state\.treeInitialViewKey = null;\s*try \{ renderPeople\(\); \}/);
+assert.match(app, /savedTreeView = shouldInitializeInitialView \? readTreeViewSession\(\) : null/);
+assert.match(app, /state\.treeViewSessionInitialized = true;\s*saveTreeViewSessionNow\(\)/);
 assert.match(app, /\$\$\("\.own-record-instruction"\)\.forEach\(/);
 assert.doesNotMatch(app, /(^|[^$])\$\("\.own-record-instruction"\)\.forEach\(/);
 assert.match(app, /recoverWorkspaceRender = \(firstError\) =>/);
