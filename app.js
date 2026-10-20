@@ -917,9 +917,22 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
     const parentsOf=id=>parentsByChild.get(id)||new Set(),childrenOf=id=>childrenByParent.get(id)||new Set(),spousesOf=id=>spousesByPerson.get(id)||new Set(),array=v=>Array.from(v||[]);
     const distances=(startId,nextIds)=>{const map=new Map([[startId,0]]),pending=[startId];for(let i=0;i<pending.length;i++){const current=pending[i],nextDistance=map.get(current)+1;array(nextIds(current)).forEach(id=>{const old=map.get(id);if(old===undefined||nextDistance<old){map.set(id,nextDistance);pending.push(id);}});}return map;};
-    const ancestors=distances(egoId,parentsOf);
-    for(let round=0;round<state.people.length;round++){let changed=false;array(ancestors.entries()).forEach(([id,d])=>{if(d<2)return;array(spousesOf(id)).forEach(spouseId=>{const old=ancestors.get(spouseId);if(old===undefined||d<old){ancestors.set(spouseId,d);changed=true;}});});if(!changed)break;}
     const bloodAncestors=distances(egoId,parentsOf),descendants=distances(egoId,childrenOf);
+    // An ancestor's spouse belongs to the same generation even when no
+    // parent-child edge is recorded for that spouse. Propagate this role
+    // through spouse links so the label does not fall back to "Relative by marriage".
+    const ancestorGenerationForLabel = new Map(bloodAncestors);
+    for(let round=0;round<state.people.length;round++){
+      let changed=false;
+      array(ancestorGenerationForLabel.entries()).forEach(([id,d])=>{
+        if(d<2)return;
+        array(spousesOf(id)).forEach(spouseId=>{
+          const old=ancestorGenerationForLabel.get(spouseId);
+          if(old===undefined||d<old){ancestorGenerationForLabel.set(spouseId,d);changed=true;}
+        });
+      });
+      if(!changed)break;
+    }
     const siblingsOf=id=>new Set(array(parentsOf(id)).flatMap(pid=>array(childrenOf(pid))).filter(otherId=>otherId!==id));
     const gender=p=>p?.gender||"",fullBirthDate=p=>typeof p?.birth_date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(p.birth_date);
     const age=(p,anchor)=>!fullBirthDate(p)||!fullBirthDate(anchor)||p.birth_date===anchor.birth_date?"unknown":p.birth_date<anchor.birth_date?"older":"younger";
@@ -1005,8 +1018,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       else if(egoParents.includes(id)){english=gendered(person,"Father","Mother","Parent");tamil=gender(person)==="male"?"தந்தை":gender(person)==="female"?"தாய்":"பெற்றோர்";}
       else if(egoChildren.includes(id)){english=gendered(person,"Son","Daughter","Child");tamil=gender(person)==="male"?"மகன்":gender(person)==="female"?"மகள்":"பிள்ளை";}
       else if(egoSiblings.has(id)){english=siblingEnglish(person);tamil=siblingTamil(person,ego);}
-      else if((ancestors.has(id)&&ancestors.get(id)===2)||grandparentSpouseIds.has(id)){english=gendered(person,"Grandfather","Grandmother","Grandparent");tamil=gender(person)==="male"?"தாத்தா":gender(person)==="female"?"பாட்டி":"தாத்தா / பாட்டி";}
-      else if(ancestors.has(id)&&ancestors.get(id)>=3){const d=ancestors.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandfather",cap+"grandmother",cap+"grandparent");tamil=d===3?gendered(person,"கொள்ளுத்தாத்தா","கொள்ளுப்பாட்டி","கொள்ளு முன்னோர்"):gendered(person,"தாத்தா ("+d+" தலைமுறைகள் மேலே)","பாட்டி ("+d+" தலைமுறைகள் மேலே)","முன்னோர் ("+d+" தலைமுறைகள் மேலே)");}
+      else if((ancestorGenerationForLabel.has(id)&&ancestorGenerationForLabel.get(id)===2)||grandparentSpouseIds.has(id)){english=gendered(person,"Grandfather","Grandmother","Grandparent");tamil=gender(person)==="male"?"தாத்தா":gender(person)==="female"?"பாட்டி":"தாத்தா / பாட்டி";}
+      else if(ancestorGenerationForLabel.has(id)&&ancestorGenerationForLabel.get(id)>=3){const d=ancestorGenerationForLabel.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandfather",cap+"grandmother",cap+"grandparent");tamil=d===3?gendered(person,"கொள்ளுத்தாத்தா","கொள்ளுப்பாட்டி","கொள்ளு முன்னோர்"):gendered(person,"தாத்தா ("+d+" தலைமுறைகள் மேலே)","பாட்டி ("+d+" தலைமுறைகள் மேலே)","முன்னோர் ("+d+" தலைமுறைகள் மேலே)");}
       else if(descendants.has(id)&&descendants.get(id)===2){english=gendered(person,"Grandson","Granddaughter","Grandchild");tamil=gender(person)==="male"?"பேரன்":gender(person)==="female"?"பேத்தி":"பேரக்குழந்தை";}
       else if(descendants.has(id)&&descendants.get(id)>=3){const d=descendants.get(id),prefix="great-".repeat(d-2),cap=prefix.charAt(0).toUpperCase()+prefix.slice(1);english=gendered(person,cap+"grandson",cap+"granddaughter",cap+"grandchild");tamil=d===3?gendered(person,"கொள்ளுப்பேரன்","கொள்ளுப்பேத்தி","கொள்ளுப் பேரக்குழந்தை"):gendered(person,"பேரன் ("+d+" தலைமுறைகள் கீழே)","பேத்தி ("+d+" தலைமுறைகள் கீழே)","பேரக்குழந்தை ("+d+" தலைமுறைகள் கீழே)");}
       else{
@@ -1372,8 +1385,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       parentsByChild.get(edge.related_person_id).add(edge.person_id);
     });
 
-    // Stable root-family colors make parent/child branches visually distinct.
-    // The key is the topmost recorded ancestor couple, not a person's screen row.
+    // Stable colors belong to the highest available ancestor couple/family.
+    // Every descendant branch inherits one root-family key; a marriage between
+    // two branches does not create a third, arbitrarily mixed connector color.
     const rootFamilyMembers = new Map();
     const rootFamiliesCache = new Map();
     const topRootFamilyKeyForPerson = personId => {
@@ -1402,11 +1416,10 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       rootFamiliesCache.set(personId, roots);
       return roots;
     };
-    const legendPersonIds = new Set(treeLineageIds);
-    partnerFamilyToggleByPerson.forEach((toggle, personId) => {
-      if (toggle.expanded) legendPersonIds.add(personId);
-    });
-    legendPersonIds.forEach(personId => rootFamiliesForPerson(personId));
+
+    // Include all recorded root families when assigning hues so collapsing or
+    // expanding an in-law branch never changes the colors of the main tree.
+    selected.forEach(person => rootFamiliesForPerson(person.id));
     const rootFamilyLabel = key => (rootFamilyMembers.get(key) || [])
       .map(id => allPeopleById.get(id)?.full_name)
       .filter(Boolean).join(" + ");
@@ -1424,22 +1437,52 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       }
       return "hsl(" + ((hash >>> 0) % 360) + " 48% 34%)";
     };
+
+    const legendPersonIds = new Set(treeLineageIds);
+    partnerFamilyToggleByPerson.forEach((toggle, personId) => {
+      if (toggle.expanded) legendPersonIds.add(personId);
+    });
+    const visibleRootFamilyKeys = new Set();
+    legendPersonIds.forEach(personId => {
+      rootFamiliesForPerson(personId).forEach(key => visibleRootFamilyKeys.add(key));
+    });
+
+    // These layout indexes are built below before any connector is drawn.
+    // Following the chosen family block makes children inherit their displayed
+    // top-level branch, even when their parents come from different family roots.
+    const rootFamilyKeyForPerson = personId => {
+      const unit = personUnit.get(personId);
+      const ownerFamilyKey = unit && primaryFamilyByUnit.get(unit);
+      if (ownerFamilyKey) {
+        for (const buckets of familyBucketsByLevel.values()) {
+          const ownerBucket = buckets.get(ownerFamilyKey);
+          if (!ownerBucket) continue;
+          const rootKeys = Array.from(new Set(ownerBucket.parentIds.flatMap(id =>
+            rootFamiliesForPerson(id)))).sort();
+          if (rootKeys.length) return rootKeys[0];
+        }
+      }
+      return Array.from(rootFamiliesForPerson(personId)).sort()[0] || ("root:" + personId);
+    };
     const familyColorForParentIds = parentIds => {
-      const inTreeParents = parentIds.filter(id => treeLineageIds.has(id));
-      const colorParents = inTreeParents.length ? inTreeParents : parentIds;
-      const rootKeys = Array.from(new Set(colorParents.flatMap(id => rootFamiliesForPerson(id)))).sort();
-      if (!rootKeys.length) return branchColorForKey("family:" + parentIds.slice().sort().join("|"));
-      if (rootKeys.length === 1) return branchColorForKey(rootKeys[0]);
-      return branchColorForKey("joined-family:" + rootKeys.join("|"));
+      const candidates = parentIds.slice().sort((a, b) => {
+        const inTreeDifference = Number(treeLineageIds.has(b)) - Number(treeLineageIds.has(a));
+        if (inTreeDifference) return inTreeDifference;
+        const left = positions.get(a), right = positions.get(b);
+        return (left?.x ?? Infinity) - (right?.x ?? Infinity) || a.localeCompare(b);
+      });
+      const chosenParentId = candidates[0];
+      return branchColorForKey(chosenParentId ? rootFamilyKeyForPerson(chosenParentId) : "family:unknown");
     };
     const branchLegend = $("#family-branch-legend");
     if (branchLegend) {
-      branchLegend.innerHTML = orderedRootFamilyKeys.map(key =>
+      const legendKeys = orderedRootFamilyKeys.filter(key => visibleRootFamilyKeys.has(key));
+      branchLegend.innerHTML = legendKeys.map(key =>
         '<span class="family-branch-legend-item" title="' + escapeHtml(rootFamilyLabel(key)) + '">' +
         '<span class="family-branch-legend-swatch" style="background-color:' + branchColorForKey(key) + '"></span>' +
         '<span>' + escapeHtml(rootFamilyLabel(key) || (state.language === "ta" ? "குடும்பக் கிளை" : "Family branch")) + '</span></span>'
       ).join("");
-      branchLegend.hidden = orderedRootFamilyKeys.length < 2;
+      branchLegend.hidden = legendKeys.length < 2;
     }
     const rowYByLevel = new Map();
     let nextRowY = 24;

@@ -599,4 +599,34 @@ assert.match(app, /primaryFamilyByUnit\.set\(unit, collapsedFamilyKey\)/);
 assert.match(styles, /\.family-branch-legend/);
 assert.match(styles, /\.partner-family-toggle/);
 
+
+{
+ const people=[person("great-grandfather","male","1920-01-01"),person("grandfather","male","1950-01-01"),
+   person("grandmother-spouse","female","1952-01-01"),person("father","male","1980-01-01"),person("me","female","2005-01-01")];
+ const relationships=[parentLink("great-grandfather","grandfather"),spouseLink("grandfather","grandmother-spouse"),
+   parentLink("grandfather","father"),parentLink("father","me")];
+ assert.equal(relationLabel("me",people,relationships,"grandmother-spouse","en"),"Grandmother");
+ assert.equal(relationLabel("me",people,relationships,"grandmother-spouse","ta"),"பாட்டி");
+}
+{
+ const people=[person("great-grandmother","female","1920-01-01"),person("grandmother","female","1950-01-01"),
+   person("grandfather-spouse","male","1952-01-01"),person("mother","female","1980-01-01"),person("me","female","2005-01-01")];
+ const relationships=[parentLink("great-grandmother","grandmother"),spouseLink("grandmother","grandfather-spouse"),
+   parentLink("grandmother","mother"),parentLink("mother","me")];
+ assert.equal(relationLabel("me",people,relationships,"grandfather-spouse","en"),"Grandfather");
+ assert.equal(relationLabel("me",people,relationships,"grandfather-spouse","ta"),"தாத்தா");
+}
+{
+ const people=[person("root-great-grandmother","female","1910-01-01"),person("root-great-grandfather-spouse","male","1911-01-01"),
+   person("grandparent","female","1940-01-01"),person("parent","female","1970-01-01"),person("me","male","2000-01-01")];
+ const relationships=[spouseLink("root-great-grandmother","root-great-grandfather-spouse"),
+   parentLink("root-great-grandmother","grandparent"),parentLink("grandparent","parent"),parentLink("parent","me")];
+ assert.equal(relationLabel("me",people,relationships,"root-great-grandfather-spouse","en"),"Great-grandfather");
+ assert.equal(relationLabel("me",people,relationships,"root-great-grandfather-spouse","ta"),"கொள்ளுத்தாத்தா");
+}
+
+assert.match(app, /const ancestorGenerationForLabel = new Map\(bloodAncestors\)/);
+assert.match(app, /const rootFamilyKeyForPerson = personId =>/);
+assert.doesNotMatch(app, /joined-family:/);
+assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
