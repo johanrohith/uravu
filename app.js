@@ -592,7 +592,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const appView = window.matchMedia("(max-width: 760px)").matches;
     const target = appView ? mobileTarget : desktopTarget;
     if (form.parentElement !== target) target.appendChild(form);
-    prompt.hidden = !(appView && state.activeTree && state.user && !isManager() && !requestPendingForUser());
+    prompt.hidden = !(appView && state.activeTree && state.user && !isManager());
   }
 
   function syncAppNavigation() {
