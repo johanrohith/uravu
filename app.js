@@ -3260,6 +3260,20 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     });
     const mediaQuery = window.matchMedia("(max-width: 760px)");
     const handleViewportChange = () => {
+      // If the app viewport grows into the web layout, restore the normal web fit.
+      // This branch runs only after the mobile-only focus behavior has been used.
+      if (!mediaQuery.matches && state.treeInitialViewKey !== null) {
+        state.treeInitialViewKey = null;
+        if (state.treeBaseWidth && state.treeBaseHeight) {
+          state.treeZoom = calculateTreeFitScale();
+          applyTreeCanvasScale(false);
+          const viewport = $("#family-tree-viewport");
+          if (viewport) {
+            viewport.scrollLeft = 0;
+            viewport.scrollTop = 0;
+          }
+        }
+      }
       syncLinkFormPlacement();
       syncMobileTreeToolbar();
       if (state.activeTree) renderWorkspace();
