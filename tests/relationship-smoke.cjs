@@ -1218,6 +1218,6 @@ assert.match(app, /if \(state\.openPanels\.size\) \{\s*state\.openPanels\.clear\
 assert.match(app, /"MEMBERSHIP":"உறுப்பினர் நிலை"/);
 assert.match(app, /"FAMILY RECORDS":"குடும்பப் பதிவுகள்"/);
 assert.match(html, /class="own-record-instruction"/);
-assert.match(css, /\.requests-panel \.section-heading \{\s*display: grid !important;\s*grid-template-columns: minmax\(0, 1fr\) 34px !important;/);
-assert.match(css, /\.app-nav-item\.edit-mode-button\.is-off \{\s*background: transparent !important;/);
-assert.match(css, /\.app-nav-item\.edit-mode-button\.is-on \{\s*background: #218447 !important;/);
+assert.match(styles, /\.requests-panel \.section-heading \{\s*display: grid !important;\s*grid-template-columns: minmax\(0, 1fr\) 34px !important;/);
+assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-off \{\s*background: transparent !important;/);
+assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-on \{\s*background: #218447 !important;/);
