@@ -288,7 +288,3 @@
 .family-branch-legend-item{display:inline-flex;align-items:center;gap:6px;max-width:100%;color:#536255;font-size:11px;line-height:1.35}
 .family-branch-legend-item>span:last-child{overflow-wrap:anywhere}
 .family-branch-legend-swatch{display:inline-block;flex:0 0 13px;width:13px;height:13px;border-radius:4px;box-shadow:0 0 0 1px rgba(20,40,25,.14)}
-.partner-family-toggle-wrap{display:flex;justify-content:flex-start;margin-top:3px}
-.family-node-card .partner-family-toggle{max-width:100%;border:1px solid #b9cbb8;border-radius:9px;background:#f4f8f1;color:#375c3c;padding:6px 8px;font:600 10px/1.35 system-ui,sans-serif;cursor:pointer;white-space:normal;text-align:left}
-.family-node-card .partner-family-toggle:hover{background:#eaf3e7;border-color:#8da98e}
-.family-node-card .partner-family-toggle:focus-visible{outline:2px solid #527d56;outline-offset:2px}
