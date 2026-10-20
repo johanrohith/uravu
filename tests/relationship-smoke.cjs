@@ -664,4 +664,67 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
   assert.doesNotMatch(app, /familyBusInterferingUnitIds/);
 }
 
+
+{
+  // A grandparent's sibling and their spouse inherit the same generation.
+  const people = [
+    person("great-grandfather", "male", "1920-01-01"),
+    person("grandfather", "male", "1950-01-01"),
+    person("grandfather-brother", "male"),
+    person("grandfather-brothers-wife", "female"),
+    person("father", "male", "1980-01-01"),
+    person("me", "male", "2004-01-01")
+  ];
+  const relationships = [
+    parentLink("great-grandfather", "grandfather"),
+    parentLink("great-grandfather", "grandfather-brother"),
+    spouseLink("grandfather-brother", "grandfather-brothers-wife"),
+    parentLink("grandfather", "father"),
+    parentLink("father", "me")
+  ];
+  assert.equal(relationLabel("me", people, relationships, "grandfather-brother", "en"), "Grandfather");
+  assert.equal(relationLabel("me", people, relationships, "grandfather-brothers-wife", "en"), "Grandmother");
+  assert.equal(relationLabel("me", people, relationships, "grandfather-brothers-wife", "ta"), "பாட்டி");
+}
+{
+  // The same generation-inheritance rule applies to great-grandparents.
+  const people = [
+    person("great-great-grandparent", "male", "1880-01-01"),
+    person("great-grandfather", "male", "1910-01-01"),
+    person("great-grandfather-brother", "male"),
+    person("great-grandfather-brothers-wife", "female"),
+    person("grandfather", "male", "1940-01-01"),
+    person("father", "male", "1970-01-01"),
+    person("me", "female", "2000-01-01")
+  ];
+  const relationships = [
+    parentLink("great-great-grandparent", "great-grandfather"),
+    parentLink("great-great-grandparent", "great-grandfather-brother"),
+    spouseLink("great-grandfather-brother", "great-grandfather-brothers-wife"),
+    parentLink("great-grandfather", "grandfather"),
+    parentLink("grandfather", "father"),
+    parentLink("father", "me")
+  ];
+  assert.equal(relationLabel("me", people, relationships, "great-grandfather-brothers-wife", "en"), "Great-grandmother");
+  assert.equal(relationLabel("me", people, relationships, "great-grandfather-brothers-wife", "ta"), "கொள்ளுப்பாட்டி");
+}
+{
+  // A male's sister's husband is Aththan, not Sagala.
+  const people = [
+    person("grandfather", "male", "1950-01-01"),
+    person("father", "male", "1975-01-01"),
+    person("me", "male", "2000-01-01"),
+    person("sister", "female", "2002-01-01"),
+    person("sisters-husband", "male", "2001-01-01")
+  ];
+  const relationships = [
+    parentLink("grandfather", "father"),
+    parentLink("father", "me"),
+    parentLink("father", "sister"),
+    spouseLink("sister", "sisters-husband")
+  ];
+  assert.equal(relationLabel("me", people, relationships, "sisters-husband", "en"), "Sister's husband");
+  assert.equal(relationLabel("me", people, relationships, "sisters-husband", "ta"), "அத்தான்");
+}
+
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
