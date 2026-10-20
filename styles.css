@@ -422,7 +422,7 @@
   .app-nav-item svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
   .app-nav-item span{font-size:10px;line-height:1.2;white-space:nowrap}
   .app-nav-item.is-active{background:#edf5ed;color:#235d47}
-  .app-nav-item.edit-mode-button.is-off{background:transparent;color:#789080}
+  .app-nav-item.edit-mode-button.is-off{background:#edf5ed;color:#63806c}
   .app-nav-item.edit-mode-button.is-on{background:#235d47;color:#fff}
   .app-nav-item:focus-visible,.app-nav-signout:focus-visible{outline:2px solid #6fa17a;outline-offset:2px}
   .app-nav-profile{align-items:stretch}
