@@ -1231,11 +1231,20 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return first.day - second.day;
   }
 
+  function manualBirthOrder(person) {
+    const value = Number(person?.birth_order);
+    return Number.isInteger(value) && value >= 1 && value <= 999 ? value : null;
+  }
+
   function compareBirthOrderOlderFirst(firstPerson, secondPerson) {
-    const first = Number(firstPerson?.birth_order);
-    const second = Number(secondPerson?.birth_order);
-    if (!Number.isInteger(first) || !Number.isInteger(second) || first < 1 || second < 1 || first > 999 || second > 999) return 0;
-    return first - second;
+    const first = manualBirthOrder(firstPerson);
+    const second = manualBirthOrder(secondPerson);
+    // A manually ranked sibling takes precedence over siblings with no manual
+    // rank, even when those other records have known birthdates.
+    if (first != null && second != null) return first - second;
+    if (first != null) return -1;
+    if (second != null) return 1;
+    return 0;
   }
 
   function compareSiblingUnitsByAge(firstUnit, secondUnit, parentsByChild) {
@@ -1262,9 +1271,14 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       b.sharedParentCount - a.sharedParentCount ||
       a.sharedParentKey.localeCompare(b.sharedParentKey)
     );
+    // Check manual ranks for all relevant sibling pairs before considering
+    // any birthdates, so a dated spouse-pair candidate cannot override a
+    // manual rank on the actual shared-parent sibling pair.
     for (const candidate of candidates) {
       const manualOrder = compareBirthOrderOlderFirst(candidate.firstPerson, candidate.secondPerson);
       if (manualOrder) return manualOrder;
+    }
+    for (const candidate of candidates) {
       const order = compareBirthDatesOlderFirst(candidate.firstPerson, candidate.secondPerson);
       if (order) return order;
     }
