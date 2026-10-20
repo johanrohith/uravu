@@ -206,6 +206,46 @@ const familyBlockTargetCenter = new Function(
 }
 
 
+const expandedPartnerGuardSource = extractFunction(
+  app,
+  "function shouldUseExpandedInLawFamilyBlock(",
+  "\n  function computeFamilySubtreeLayout"
+);
+const shouldUseExpandedInLawFamilyBlock = new Function(
+  expandedPartnerGuardSource + "\nreturn shouldUseExpandedInLawFamilyBlock;"
+)();
+{
+  const siblingWithSpouseParent = {
+    people:[{ id:"sibling-in-bloodline" }, { id:"spouse-with-parent" }]
+  };
+  const lineageIds = new Set(["sibling-in-bloodline"]);
+  const familyByPerson = new Map([
+    ["sibling-in-bloodline", "shared-sibling-family"],
+    ["spouse-with-parent", "spouse-parent-family"]
+  ]);
+  assert.equal(
+    shouldUseExpandedInLawFamilyBlock(
+      siblingWithSpouseParent, "spouse-parent-family",
+      ["shared-sibling-family", "spouse-parent-family"], lineageIds, familyByPerson
+    ),
+    false,
+    "A spouse's recorded parent must not pull a sibling couple out of its bloodline sibling-order block"
+  );
+
+  const lineageRootWithInLawParents = {
+    people:[{ id:"lineage-root" }, { id:"spouse-with-family" }]
+  };
+  assert.equal(
+    shouldUseExpandedInLawFamilyBlock(
+      lineageRootWithInLawParents, "spouse-family",
+      ["spouse-family"], new Set(["lineage-root"]),
+      new Map([["spouse-with-family", "spouse-family"]])
+    ),
+    true,
+    "An in-law's family branch should remain displayed when the lineage partner has no own parent-family anchor"
+  );
+}
+
 const primaryFamilyChooserSource = extractFunction(
   app,
   "function choosePrimaryFamilyKey(unit, candidateKeys, activePersonId,",
