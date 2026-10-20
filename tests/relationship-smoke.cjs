@@ -1141,4 +1141,26 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
   assert.equal(relationLabel("me", people, relationships, "sisters-husband", "ta"), "அத்தான்");
 }
 
+
+assert.match(html, /id="app-nav-avatar"/);
+assert.match(auth, /getElementById\("app-nav-avatar"\)/);
+assert.match(auth, /appAvatarNode\.classList\.toggle\("has-photo", Boolean\(avatar\)\)/);
+assert.match(styles, /\.workspace-header\{display:none!important\}/);
+assert.match(styles, /\.workspace-stats\{order:-100;display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+assert.match(styles, /#tree-fullscreen-button\{display:none!important\}/);
+assert.match(styles, /\.family-branch-legend\{display:none!important\}/);
+assert.match(styles, /\.app-nav-avatar\.has-photo svg\{display:none\}/);
+assert.match(styles, /\.family-tree-viewport\{flex:1 1 0;width:100%;height:auto;min-height:0;max-height:none/);
+assert.match(app, /const familyLinePalette = \[/);
+assert.match(app, /Math\.max\(0\.01, Math\.min\(1, availableWidth \/ state\.treeBaseWidth, availableHeight \/ state\.treeBaseHeight\)\)/);
+assert.ok(
+  app.indexOf('Object.entries(interfaceTranslations).forEach', app.indexOf('tamilToEnglish["நினைவில் வாழ்பவர்"]')) >
+    app.indexOf("Object.assign(interfaceTranslations"),
+  "Reverse translations must include every translation added to interfaceTranslations"
+);
+assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
+assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
+assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
+assert.match(html, /uravu-mobile-canvas-20261020-1/);
+
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
