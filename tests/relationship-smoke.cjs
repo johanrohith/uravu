@@ -33,6 +33,51 @@ function extractFunction(source, startMarker, endMarker) {
 }
 
 
+const siblingAgeHelpersSource = extractFunction(
+  app,
+  "function birthDateParts(person) {",
+  "\n  function sortUnitPeopleByParentCenter"
+);
+const { compareBirthDatesOlderFirst, compareSiblingUnitsByAge } = new Function(
+  siblingAgeHelpersSource + "\nreturn { birthDateParts, compareBirthDatesOlderFirst, compareSiblingUnitsByAge };"
+)();
+{
+  assert.ok(compareBirthDatesOlderFirst(
+    { birth_date:"1985-06-24" }, { birth_date:"2001-02-03" }
+  ) < 0, "Older full birth date must sort first");
+  assert.ok(compareBirthDatesOlderFirst(
+    { birth_date_text:"24-06-1985" }, { birth_date_text:"03-02-2001" }
+  ) < 0, "DD-MM-YYYY text dates must sort oldest first");
+  assert.ok(compareBirthDatesOlderFirst(
+    { birth_date_text:"06-1985" }, { birth_date_text:"02-2001" }
+  ) < 0, "Month-year partial dates must sort oldest first");
+  assert.equal(compareBirthDatesOlderFirst(
+    { birth_date_text:"1985" }, { birth_date:"1985-06-24" }
+  ), 0, "A year-only date must not invent a month/day order within that year");
+
+  const oldSibling = { people:[{ id:"old", full_name:"Z Older", birth_date:"1980-01-01" }] };
+  const youngSibling = { people:[{ id:"young", full_name:"A Younger", birth_date:"2000-01-01" }] };
+  const parentsByChild = new Map([
+    ["old",new Set(["mother","father"])],
+    ["young",new Set(["mother","father"])]
+  ]);
+  assert.ok(compareSiblingUnitsByAge(oldSibling,youngSibling,parentsByChild) < 0,
+    "Older sibling must sort before younger sibling despite reverse alphabetical names");
+
+  const halfOlder = { people:[{ id:"half-old", full_name:"Z Half Older", birth_date:"1990-01-01" }] };
+  const halfYounger = { people:[{ id:"half-young", full_name:"A Half Younger", birth_date:"2002-01-01" }] };
+  const halfSiblingParents = new Map([
+    ["half-old",new Set(["mother","other-father"])],
+    ["half-young",new Set(["mother","father"])]
+  ]);
+  assert.ok(compareSiblingUnitsByAge(halfOlder,halfYounger,halfSiblingParents) < 0,
+    "Half-siblings who share one parent must still follow age order");
+
+  const unknownSibling = { people:[{ id:"unknown", full_name:"Unknown Age" }] };
+  assert.equal(compareSiblingUnitsByAge(unknownSibling,youngSibling,parentsByChild), 0,
+    "Unknown birth dates must fall back to existing stable layout ordering");
+}
+
 const spouseUnitSortSource = extractFunction(
   app,
   "function sortUnitPeopleByParentCenter(unit, parentCenter) {",
