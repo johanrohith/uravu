@@ -607,3 +607,14 @@
   .people-panel #people-empty{position:absolute;inset:0;z-index:1;overflow:auto}
   .mobile-tree-toolbar-toggle{position:relative;z-index:2;touch-action:manipulation}
 }
+
+@media(max-width:760px){
+  .mobile-tree-controls-target .tree-control-actions{display:flex!important;flex-wrap:nowrap;align-items:center;justify-content:flex-start!important;gap:8px;min-width:0;width:100%}
+  .mobile-tree-controls-target .tree-zoom-controls{display:flex!important;flex:0 1 auto!important;align-items:center;justify-content:flex-start!important;gap:6px;min-width:0;width:auto;margin:0!important}
+  .mobile-tree-controls-target .tree-zoom-controls #tree-zoom-out,.mobile-tree-controls-target .tree-zoom-controls #tree-zoom-in{flex:0 0 38px;width:38px;min-width:38px;height:38px}
+  .mobile-tree-controls-target .tree-zoom-level{flex:0 0 44px;min-width:44px;text-align:center}
+  .mobile-tree-controls-target #fit-tree-button{flex:0 0 auto;margin-left:auto}
+  .family-tree-viewport{contain:layout paint!important;will-change:scroll-position;overflow-anchor:none}
+  .family-tree-canvas{overflow:visible;backface-visibility:hidden}
+  .family-tree-lines,.family-tree-nodes{backface-visibility:hidden;will-change:transform}
+}
