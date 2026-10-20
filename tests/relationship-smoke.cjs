@@ -521,13 +521,13 @@ const familyState = {
     { person_id:"grandchild", related_person_id:"great-grandchild", relationship_type:"parent" }
   ]
 };
-const createGenerationMap = new Function("state", generationMapSource + "\nreturn generationMap;");
-const familyLevels = createGenerationMap(familyState)();
+const createGenerationMap = new Function("state", "treeLayoutAnchorPersonId", generationMapSource + "\nreturn generationMap;");
+const familyLevels = createGenerationMap(familyState, () => "me")();
 const levelOf = id => Array.from(familyLevels.entries()).find(([, people]) => people.some(person => person.id === id))?.[0];
 assert.equal(levelOf("grandfather"), levelOf("grandmother"), "Co-parents should share a generation");
 
-const createRelationshipLabeler = new Function("state", generationMapSource + "\n" + relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
-const labels = createRelationshipLabeler(familyState)();
+const createRelationshipLabeler = new Function("state", "treeLayoutAnchorPersonId", generationMapSource + "\n" + relationshipLabelsSource + "\nreturn relationshipLabelsForCurrentUser;");
+const labels = createRelationshipLabeler(familyState, () => "me")();
 assert.equal(labels.get("grandfather"), "Grandfather");
 assert.equal(labels.get("grandmother"), "Grandmother");
 assert.equal(labels.get("grandfather-spouse"), "Grandmother", "A grandfather spouse must be labelled as a grandmother by gender");
@@ -558,7 +558,7 @@ assert.equal(labels.get("great-grandmother"), "Great-grandmother");
 assert.equal(labels.get("great-grandchild"), "Great-grandchild");
 
 familyState.language = "ta";
-const tamilLabels = createRelationshipLabeler(familyState)();
+const tamilLabels = createRelationshipLabeler(familyState, () => "me")();
 assert.equal(tamilLabels.get("great-grandfather"), "கொள்ளுத்தாத்தா");
 assert.equal(tamilLabels.get("great-grandmother"), "கொள்ளுப்பாட்டி");
 assert.equal(tamilLabels.get("grandfather-spouse"), "பாட்டி");
@@ -788,7 +788,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
   people,relationships
  };
  const source=extractFunction(app,"function generationMap(","\n  function groupChildrenByParentIds");
- const generationMap=new Function("state",source+"\nreturn generationMap;")(layoutState);
+ const generationMap=new Function("state","treeLayoutAnchorPersonId",source+"\nreturn generationMap;")(layoutState,()=>"me");
  const generationOf=id=>{
   for(const [level,records] of generationMap())if(records.some(record=>record.id===id))return level;
   return undefined;
