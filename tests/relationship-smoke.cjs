@@ -1162,8 +1162,19 @@ assert.ok(
 assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
 assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
 assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
-assert.match(html, /uravu-zoom-guard-20261020-1/);
-assert.match(app, /const minimumScale = appView \? Math\.min\(0\.25, state\.treeZoom \|\| 1\) : 0\.25/);
+assert.match(html, /uravu-mobile-toolbar-20261020-1/);
+assert.match(html, /id="mobile-tree-toolbar"/);
+assert.match(html, /id="mobile-tree-toolbar-content"/);
+assert.match(html, /id="mobile-tree-toolbar-toggle"/);
+assert.match(html, /id="mobile-tree-controls-target"/);
+assert.match(html, /id="desktop-tree-controls-target"/);
+assert.match(app, /function calculateTreeFitScale\(\)/);
+assert.match(app, /calculateTreeFitScale\(\) \* 0\.75/);
+assert.match(app, /function syncMobileTreeToolbar\(\)/);
+assert.match(app, /state\.mobileTreeToolbarCollapsed = !state\.mobileTreeToolbarCollapsed/);
+assert.match(styles, /\.mobile-tree-toolbar-content\{display:flex;flex-direction:column;gap:0;min-width:0;max-width:100%;max-height:270px;overflow:hidden;opacity:1;transform:translateY\(0\);transition:max-height \.32s/);
+assert.match(styles, /\.mobile-tree-toolbar\.is-collapsed \.mobile-tree-toolbar-content\{max-height:0!important;opacity:0;transform:translateY\(-10px\)/);
+assert.match(styles, /\.mobile-tree-toolbar\.is-collapsed \.mobile-tree-toolbar-toggle \.toolbar-arrow-down\{display:block\}/);
 assert.match(styles, /\.family-tree-viewport\{position:relative;z-index:0;isolation:isolate;contain:paint;overflow:auto;overscroll-behavior:contain;max-width:100%;max-height:100%\}/);
 
 console.log("Uravu clean-app and Tamil relationship smoke checks passed.");
