@@ -6,9 +6,9 @@ Uravu stores family trees, records, relationships and membership assignments in 
 
 For a **new Supabase project**, open the [Supabase SQL Editor](https://supabase.com/dashboard/project/rtecswdjrwgsiwaonekf/sql/new), open [supabase/schema.sql](./supabase/schema.sql), paste the entire file and run it.
 
-For an **existing Uravu database**, apply any outstanding legacy migrations first, then run the [Single-tree and linking migration](./supabase/single-tree-linking-migration.sql). This designates the existing family tree as the one main tree, renames it to **Uravugal**, and updates the record-linking and edit permissions. The migration preserves existing people and relationships; it does not delete extra historical tree rows. Do not rerun the full schema on an existing database.
+For an **existing Uravu database**, apply any outstanding legacy migrations first, then run the [Sibling birth-order migration](./supabase/sibling-birth-order-migration.sql) and the [Single-tree and linking migration](./supabase/single-tree-linking-migration.sql). This designates the existing family tree as the one main tree, renames it to **Uravugal**, and updates the record-linking and edit permissions. The migration preserves existing people and relationships; it does not delete extra historical tree rows. Do not rerun the full schema on an existing database.
 
-For a fresh database, run [supabase/schema.sql](./supabase/schema.sql) first, then run [supabase/single-tree-linking-migration.sql](./supabase/single-tree-linking-migration.sql). If needed, apply the partial-dates migration before using partial dates.
+For a fresh database, run [supabase/schema.sql](./supabase/schema.sql) first, then run [supabase/single-tree-linking-migration.sql](./supabase/single-tree-linking-migration.sql). The schema includes an optional manual sibling birth-order field; set the rank on siblings whose dates are unknown (1 = oldest). If needed, apply the partial-dates migration before using partial dates.
 
 ## 2. Google sign-in
 
