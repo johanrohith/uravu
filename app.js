@@ -2462,7 +2462,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const linesRoot = $("#family-tree-lines");
     if (!viewport || !sizer || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
     const appView = window.matchMedia("(max-width: 760px)").matches;
-    const minimumScale = appView ? 0.01 : 0.25;
+    const minimumScale = appView ? 0.05 : 0.25;
     const scale = Math.max(minimumScale, Math.min(2.5, Number(state.treeZoom) || 1));
     const oldScale = Math.max(0.0001, Number(canvas.dataset.appliedScale) || scale);
     const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
@@ -2510,7 +2510,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function setTreeZoom(nextScale, anchorX, anchorY) {
     const appView = window.matchMedia("(max-width: 760px)").matches;
-    const minimumScale = appView ? 0.01 : 0.25;
+    const minimumScale = appView ? 0.05 : 0.25;
     state.treeZoom = Math.max(minimumScale, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
   }
