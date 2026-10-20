@@ -583,3 +583,10 @@
 @media(prefers-reduced-motion:reduce){
   .mobile-tree-toolbar-content{transition:none!important}
 }
+
+@media(max-width:760px){
+  .app-shell>main{display:flex;flex:1 1 0;flex-direction:column;min-height:0;overflow:hidden;padding-bottom:0}
+  body:has(#dashboard.tree-open) .app-shell>main{padding-bottom:calc(69px + env(safe-area-inset-bottom));box-sizing:border-box}
+  .dashboard.tree-open{flex:1 1 0;height:auto;min-height:0}
+  .tree-workspace{flex:1 1 0;height:100%;min-height:0}
+}
