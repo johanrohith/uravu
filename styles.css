@@ -288,3 +288,54 @@
 .family-branch-legend-item{display:inline-flex;align-items:center;gap:6px;max-width:100%;color:#536255;font-size:11px;line-height:1.35}
 .family-branch-legend-item>span:last-child{overflow-wrap:anywhere}
 .family-branch-legend-swatch{display:inline-block;flex:0 0 13px;width:13px;height:13px;border-radius:4px;box-shadow:0 0 0 1px rgba(20,40,25,.14)}
+
+/* Record cards: never crop dates, status, relationship labels, or notes. */
+.family-node-card {
+  height: auto !important;
+  min-height: 104px;
+  overflow: visible !important;
+  padding: 13px;
+  gap: 7px;
+}
+.family-node-card .person-card-top { align-items: flex-start; }
+.family-node-card .person-avatar { flex: 0 0 auto; }
+.family-node-card .graph-person-names h4 {
+  font-size: 13px;
+  line-height: 1.4;
+  overflow: visible;
+  display: block;
+  white-space: normal;
+}
+.family-node-card .graph-person-names .tamil-name {
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.family-node-card .graph-relationship-label {
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+.family-node-card .person-meta,
+.family-node-card .person-meta.record-meta,
+.family-node-card .person-meta.graph-notes {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: initial;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.family-node-card .person-card-actions {
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.family-node-card .person-card-actions button {
+  flex: 1 1 90px;
+  font-size: 11px;
+  padding: 7px 9px;
+}
