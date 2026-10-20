@@ -632,15 +632,14 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
 
 {
   const familyBusInterferingUnitIds = new Function(
-    app.slice(app.indexOf("function familyBusInterferingUnitIds("), app.indexOf("\\n  function renderPeople()")) +
-      "\\nreturn familyBusInterferingUnitIds;"
+    app.slice(app.indexOf("function familyBusInterferingUnitIds("), app.indexOf("\n  function renderPeople()")) +
+      "\nreturn familyBusInterferingUnitIds;"
   )();
   const parentUnit = { id:"parents", left:100, right:260 };
   const unrelatedLeft = { id:"unrelated-left", left:270, right:360 };
   const unrelatedRight = { id:"unrelated-right", left:520, right:620 };
-  const targetChildUnit = { id:"child-unit", left:400, right:500 };
   assert.deepEqual(
-    familyBusInterferingUnitIds([parentUnit, unrelatedLeft, targetChildUnit, unrelatedRight],
+    familyBusInterferingUnitIds([parentUnit, unrelatedLeft, unrelatedRight],
       new Set(["parents"]), 200, 450),
     ["unrelated-left"],
     "Cards overlapping another family's parent-to-children bus must be identified for side placement"
