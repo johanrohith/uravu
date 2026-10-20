@@ -1192,7 +1192,7 @@ assert.match(app, /canvas\.style\.transform = "scale\(" \+ scale \+ "\)"/);
 assert.match(app, /sizer\.style\.width = Math\.ceil\(state\.treeBaseWidth \* scale\) \+ "px"/);
 assert.doesNotMatch(app, /nodesRoot\.style\.transform = "translateZ\(0\) scale\("/);
 assert.match(app, /requestAnimationFrame\(\(\) => \{/);
-assert.match(app, /const maxLeft = Math\.max\(0, canvas\.offsetWidth - viewport\.clientWidth\)/);
+assert.match(app, /const maxLeft = Math\.max\(0, sizer\.offsetWidth - viewport\.clientWidth\)/);
 assert.match(styles, /\.mobile-tree-controls-target \.tree-control-actions\{display:flex!important;flex-wrap:nowrap;align-items:center;justify-content:flex-start!important/);
 assert.match(styles, /\.family-tree-viewport\{position:relative!important;inset:auto!important;display:block!important;flex:1 1 0!important/);
 assert.match(styles, /\.family-tree-canvas\{position:absolute!important;left:0!important;top:0!important/);
