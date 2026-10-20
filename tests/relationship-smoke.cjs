@@ -1236,6 +1236,6 @@ assert.match(app, /const waitForCoreQuery = async query =>/);
 assert.match(app, /const isCurrentLoad = \(\) =>/);
 assert.match(app, /if \(state\.loadingMembers\)/);
 assert.match(app, /if \(state\.loadingRequests\)/);
-assert.match(app, /Timed out while loading the family tree/);
+assert.match(app, /Loading the family tree timed out/);
 assert.match(app, /data-retry-workspace/);
 assert.match(app, /const queryTimeoutMs = 15000/);
