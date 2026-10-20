@@ -949,6 +949,14 @@ assert.match(html, /id="link-account-prompt"/);
 assert.match(html, /Do you want to know the relation terms for your relations\?/);
 assert.match(html, /id="link-form-desktop-target"/);
 assert.match(html, /id="link-form-mobile-target"/);
+assert.match(html, /id="link-account-desktop-prompt"/);
+assert.ok(
+  html.indexOf('id="link-form-desktop-target"') > html.indexOf('id="linking-requests-panel"') &&
+  html.indexOf('id="link-form-desktop-target"') < html.indexOf('id="link-account-prompt"'),
+  "The desktop account-link form should be outside the Add panel and above the family tree"
+);
+assert.match(app, /desktopPrompt\.hidden = !\(showPrompt && !appView\)/);
+assert.match(app, /mobilePrompt\.hidden = !\(showPrompt && appView\)/);
 assert.match(html, /id="app-bottom-nav"/);
 for (const id of ["app-nav-add", "app-nav-members", "app-nav-requests", "app-nav-edit", "app-nav-profile", "app-nav-signout"]) {
   assert.match(html, new RegExp('id="' + id + '"'));
