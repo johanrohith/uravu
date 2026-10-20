@@ -39,8 +39,9 @@ const siblingAgeHelpersSource = extractFunction(
   "function birthDateParts(person) {",
   "\n  function sortUnitPeopleByParentCenter"
 );
-const { compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSiblingUnitsByAge } = new Function(
-  siblingAgeHelpersSource + "\nreturn { birthDateParts, compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSiblingUnitsByAge };"
+const { compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSiblingUnitsByAge,
+  buildSiblingOrderPositions, buildSiblingParentContext, findDuplicateSiblingBirthOrder } = new Function(
+  siblingAgeHelpersSource + "\nreturn { birthDateParts, compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSiblingUnitsByAge, buildSiblingOrderPositions, buildSiblingParentContext, findDuplicateSiblingBirthOrder };"
 )();
 {
   assert.ok(compareBirthDatesOlderFirst(
@@ -88,16 +89,55 @@ const { compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSibling
   assert.ok(compareSiblingUnitsByAge(manuallyOlder,manuallyYounger,unknownDateParents) < 0,
     "Manual birth order must sort siblings left-to-right even when birth dates are unknown and names sort in the opposite direction");
 
-  const manuallyOldWithoutDate = { people:[{ id:"manual-first", full_name:"Z Manual First", birth_order:1 }] };
-  const datedSiblingWithoutRank = { people:[{ id:"dated-no-rank", full_name:"A Dated Sibling", birth_date:"1950-01-01" }] };
+  const datedOldest = { id:"dated-oldest", full_name:"Oldest by date", birth_date:"1940-01-01" };
+  const manuallySecond = { id:"manual-second", full_name:"Unknown date second", birth_order:2 };
+  const datedYoungest = { id:"dated-youngest", full_name:"Youngest by date", birth_date:"1970-01-01" };
   const mixedBirthDataParents = new Map([
-    ["manual-first",new Set(["shared-parent"])],
-    ["dated-no-rank",new Set(["shared-parent"])]
+    [datedOldest.id,new Set(["shared-parent"])],
+    [manuallySecond.id,new Set(["shared-parent"])],
+    [datedYoungest.id,new Set(["shared-parent"])]
   ]);
-  assert.ok(compareSiblingUnitsByAge(manuallyOldWithoutDate,datedSiblingWithoutRank,mixedBirthDataParents) < 0,
-    "A manually ordered sibling must come before an unranked sibling even if the unranked sibling has a known earlier birthdate");
-  assert.ok(compareSiblingUnitsByAge(datedSiblingWithoutRank,manuallyOldWithoutDate,mixedBirthDataParents) > 0,
-    "The unranked dated sibling must follow a manually ranked sibling when comparison order is reversed");
+  const mixedSiblingPeople = [datedOldest, manuallySecond, datedYoungest];
+  const mixedPositions = buildSiblingOrderPositions(mixedSiblingPeople);
+  assert.deepEqual(
+    [mixedPositions.get(datedOldest.id), mixedPositions.get(manuallySecond.id), mixedPositions.get(datedYoungest.id)],
+    [1,2,3],
+    "An undated sibling assigned order 2 must be placed after the oldest dated sibling and before the next dated sibling"
+  );
+  const manualSecondUnit = { people:[manuallySecond] };
+  const oldDateUnit = { people:[datedOldest] };
+  const youngDateUnit = { people:[datedYoungest] };
+  assert.ok(compareSiblingUnitsByAge(oldDateUnit,manualSecondUnit,mixedBirthDataParents,mixedSiblingPeople) < 0);
+  assert.ok(compareSiblingUnitsByAge(manualSecondUnit,youngDateUnit,mixedBirthDataParents,mixedSiblingPeople) < 0);
+
+  const dateAlwaysWins = buildSiblingOrderPositions([
+    { id:"old-date", full_name:"Older dated", birth_date:"1940-01-01" },
+    { id:"young-date", full_name:"Younger dated", birth_date:"1970-01-01", birth_order:1 }
+  ]);
+  assert.ok(dateAlwaysWins.get("old-date") < dateAlwaysWins.get("young-date"),
+    "Known birthdates should sort dated siblings by age even if a dated record also has a manual order value");
+
+  const siblingContext = buildSiblingParentContext([
+    { person_id:"parent", related_person_id:"existing", relationship_type:"parent" },
+    { person_id:"parent", related_person_id:"candidate", relationship_type:"parent" },
+    { person_id:"unrelated-parent", related_person_id:"unrelated", relationship_type:"parent" }
+  ]);
+  const duplicatePeople = [
+    { id:"existing", full_name:"Existing", birth_order:3 },
+    { id:"candidate", full_name:"Candidate" },
+    { id:"unrelated", full_name:"Unrelated", birth_order:3 }
+  ];
+  assert.equal(
+    findDuplicateSiblingBirthOrder("candidate",3,["parent"],duplicatePeople,siblingContext.parentsByChild)?.id,
+    "existing",
+    "A duplicate manual order within a shared sibling set must be found"
+  );
+  assert.equal(
+    findDuplicateSiblingBirthOrder("candidate",3,["parent"],duplicatePeople,
+      new Map([["unrelated",new Set(["unrelated-parent"])],["existing",new Set(["other-parent"])]])),
+    null,
+    "The same order number in an unrelated sibling set must not block saving"
+  );
 
   assert.match(html, /id="person-birth-order" type="number" min="1" max="999" step="1"/);
   assert.match(app, /data\.birth_order = birthOrder/);
