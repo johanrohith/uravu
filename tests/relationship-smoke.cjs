@@ -206,6 +206,63 @@ const familyBlockTargetCenter = new Function(
 }
 
 
+const inLawRootOrderingSource = extractFunction(
+  app,
+  "function orderExpandedInLawRootsNearSpouses(",
+  "\n  function computeFamilySubtreeLayout"
+);
+const orderExpandedInLawRootsNearSpouses = new Function(
+  inLawRootOrderingSource + "\nreturn orderExpandedInLawRootsNearSpouses;"
+)();
+{
+  const lineagePerson = { id:"lineage-person" };
+  const lineageRoot = { people:[lineagePerson] };
+  const unrelatedRoot = { people:[{ id:"unrelated-root-person" }] };
+  const inLawRoot = { people:[{ id:"in-law-grandparent" }] };
+  const inLawParent = { people:[{ id:"in-law-parent" }] };
+  const inLawSpouse = { people:[{ id:"in-law-spouse" }] };
+  const roots = [lineageRoot, unrelatedRoot, inLawRoot];
+  const ordered = orderExpandedInLawRootsNearSpouses(
+    roots,
+    new Map([[ "in-law-spouse", { spouseId:"lineage-person" } ]]),
+    new Map([[ "in-law-spouse", new Set(["in-law-parent"]) ]]),
+    new Set(["lineage-person"]),
+    new Map([
+      ["lineage-person", lineageRoot],
+      ["in-law-spouse", inLawSpouse],
+      ["in-law-parent", inLawParent],
+      ["in-law-grandparent", inLawRoot]
+    ]),
+    new Map([[inLawParent, inLawRoot]]),
+    new Map([[inLawRoot, new Set([inLawParent])]])
+  );
+  assert.deepEqual(
+    ordered,
+    [lineageRoot, inLawRoot, unrelatedRoot],
+    "A spouse's full ancestral branch should be placed next to the related lineage branch, not left at the far edge"
+  );
+
+  const sharedRoot = { people:[{ id:"shared-grandparent" }] };
+  const protectedOrder = orderExpandedInLawRootsNearSpouses(
+    [lineageRoot, sharedRoot],
+    new Map([[ "in-law-spouse", { spouseId:"lineage-person" } ]]),
+    new Map([[ "in-law-spouse", new Set(["in-law-parent"]) ]]),
+    new Set(["lineage-person"]),
+    new Map([
+      ["lineage-person", lineageRoot],
+      ["in-law-spouse", inLawSpouse],
+      ["in-law-parent", sharedRoot]
+    ]),
+    new Map(),
+    new Map([[sharedRoot, new Set([lineageRoot])]])
+  );
+  assert.deepEqual(
+    protectedOrder,
+    [lineageRoot, sharedRoot],
+    "An ancestral branch containing lineage members must not be moved as a separate in-law block"
+  );
+}
+
 const nearestPlacementSource = extractFunction(
   app,
   "function placeUnitNearestTarget(",
