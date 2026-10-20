@@ -25,6 +25,7 @@
     treeZoom: 1,
     treeBaseWidth: 0,
     treeBaseHeight: 0,
+    mobileTreeToolbarCollapsed: false,
     openPanels: new Set(),
     familyLegendExpanded: false
   };
@@ -613,6 +614,28 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     mobilePrompt.hidden = !(showPrompt && appView);
   }
 
+  function syncMobileTreeToolbar() {
+    const toolbar = $("#mobile-tree-toolbar");
+    const toggle = $("#mobile-tree-toolbar-toggle");
+    const content = $("#mobile-tree-toolbar-content");
+    const controls = $(".tree-view-controls");
+    const mobileTarget = $("#mobile-tree-controls-target");
+    const desktopTarget = $("#desktop-tree-controls-target");
+    if (!toolbar || !toggle || !content || !controls || !mobileTarget || !desktopTarget) return;
+    const appView = window.matchMedia("(max-width: 760px)").matches;
+    const target = appView ? mobileTarget : desktopTarget;
+    if (controls.parentElement !== target) target.appendChild(controls);
+    toolbar.classList.toggle("is-collapsed", appView && state.mobileTreeToolbarCollapsed);
+    toggle.hidden = !appView || !state.activeTree || $("#tree-workspace").hidden;
+    const expanded = !(appView && state.mobileTreeToolbarCollapsed);
+    toggle.setAttribute("aria-expanded", String(expanded));
+    const label = state.language === "ta"
+      ? (expanded ? "மரக் கட்டுப்பாடுகளை மறை" : "மரக் கட்டுப்பாடுகளைக் காட்டு")
+      : (expanded ? "Hide tree controls" : "Show tree controls");
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
+  }
+
   function syncAppNavigation() {
     const nav = $("#app-bottom-nav");
     if (!nav) return;
@@ -642,6 +665,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if (textNode) textNode.textContent = label;
     });
     syncEditModeButton();
+    syncMobileTreeToolbar();
   }
 
   function togglePanel(panelId) {
@@ -880,6 +904,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     renderEditorConnections();
     renderExistingLinkOptions();
     syncLinkFormPlacement();
+    syncMobileTreeToolbar();
     renderPeople();
     renderMembers();
     renderRequests();
@@ -2459,9 +2484,21 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     }
   }
 
+  function calculateTreeFitScale() {
+    const viewport = $("#family-tree-viewport");
+    if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return 1;
+    const availableWidth = Math.max(1, viewport.clientWidth - 24);
+    const availableHeight = Math.max(1, viewport.clientHeight - 24);
+    const isAppView = window.matchMedia("(max-width: 760px)").matches;
+    const minimumFitScale = isAppView ? 0.01 : 0.25;
+    return Math.max(minimumFitScale, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
+  }
+
   function setTreeZoom(nextScale, anchorX, anchorY) {
     const appView = window.matchMedia("(max-width: 760px)").matches;
-    const minimumScale = appView ? Math.min(0.25, state.treeZoom || 1) : 0.25;
+    const minimumScale = appView
+      ? Math.max(0.01, calculateTreeFitScale() * 0.75)
+      : 0.25;
     state.treeZoom = Math.max(minimumScale, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
   }
@@ -2469,11 +2506,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   function fitTreeToView() {
     const viewport = $("#family-tree-viewport");
     if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return;
-    const availableWidth = Math.max(1, viewport.clientWidth - 24);
-    const availableHeight = Math.max(1, viewport.clientHeight - 24);
-    const minimumFitScale = window.matchMedia("(max-width: 760px)").matches ? 0.01 : 0.25;
-    const fitScale = Math.max(minimumFitScale, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
-    state.treeZoom = fitScale;
+    state.treeZoom = calculateTreeFitScale();
     applyTreeCanvasScale(false);
     viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
   }
@@ -3084,7 +3117,16 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function bindEvents() {
     syncLinkFormPlacement();
+    syncMobileTreeToolbar();
     syncAppNavigation();
+    $("#mobile-tree-toolbar-toggle").addEventListener("click", () => {
+      state.mobileTreeToolbarCollapsed = !state.mobileTreeToolbarCollapsed;
+      syncMobileTreeToolbar();
+    });
+    $("#mobile-tree-toolbar-content").addEventListener("transitionend", event => {
+      if (event.target !== $("#mobile-tree-toolbar-content") || event.propertyName !== "max-height") return;
+      if (state.treeBaseWidth) applyTreeCanvasScale(true);
+    });
     $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
     const toggleEditMode = () => {
       state.editMode = !state.editMode;
@@ -3118,6 +3160,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const mediaQuery = window.matchMedia("(max-width: 760px)");
     const handleViewportChange = () => {
       syncLinkFormPlacement();
+      syncMobileTreeToolbar();
       if (state.activeTree) renderWorkspace();
       else syncAppNavigation();
     };
