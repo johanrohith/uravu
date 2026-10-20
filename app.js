@@ -1771,6 +1771,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const canvas = $("#family-tree-canvas");
     const empty = $("#people-empty");
     if (!nodesRoot || !linesRoot || !viewport || !canvas || !empty) return;
+    const hadPreviousTreeLayout = state.treeBaseWidth > 0 && state.treeBaseHeight > 0;
 
     const search = ($("#people-search").value || "").trim().toLocaleLowerCase();
     const selected = state.people.slice();
@@ -2427,6 +2428,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     nodesRoot.innerHTML = visibleSelected.map(person => renderPersonCard(
       person, positions.get(person.id), relationLabels.get(person.id)
     )).join("");
+    if (!hadPreviousTreeLayout) state.treeZoom = calculateTreeFitScale();
     applyTreeCanvasScale(false);
     if (search) {
       const firstMatch = visibleSelected.find(person => [person.full_name, person.tamil_name]
@@ -2460,7 +2462,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const linesRoot = $("#family-tree-lines");
     if (!viewport || !sizer || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
     const appView = window.matchMedia("(max-width: 760px)").matches;
-    const minimumScale = appView ? calculateTreeFitScale() : 0.25;
+    const minimumScale = appView ? 0.01 : 0.25;
     const scale = Math.max(minimumScale, Math.min(2.5, Number(state.treeZoom) || 1));
     const oldScale = Math.max(0.0001, Number(canvas.dataset.appliedScale) || scale);
     const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
@@ -2508,9 +2510,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   function setTreeZoom(nextScale, anchorX, anchorY) {
     const appView = window.matchMedia("(max-width: 760px)").matches;
-    const minimumScale = appView
-      ? calculateTreeFitScale()
-      : 0.25;
+    const minimumScale = appView ? 0.01 : 0.25;
     state.treeZoom = Math.max(minimumScale, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
   }
@@ -3147,10 +3147,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       state.mobileTreeToolbarCollapsed = !state.mobileTreeToolbarCollapsed;
       syncMobileTreeToolbar();
     });
-    $("#mobile-tree-toolbar-content").addEventListener("transitionend", event => {
-      if (event.target !== $("#mobile-tree-toolbar-content") || event.propertyName !== "max-height") return;
-      if (state.treeBaseWidth) applyTreeCanvasScale(true);
-    });
+    // Toolbar resizing must never re-apply the tree transform or alter its zoom.
+    // The browser clamps scroll offsets naturally when the viewport changes size.
     $("#toggle-add-person-panel").addEventListener("click", () => togglePanel("add-person-panel"));
     const toggleEditMode = () => {
       state.editMode = !state.editMode;
