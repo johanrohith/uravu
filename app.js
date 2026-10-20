@@ -918,17 +918,28 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const parentsOf=id=>parentsByChild.get(id)||new Set(),childrenOf=id=>childrenByParent.get(id)||new Set(),spousesOf=id=>spousesByPerson.get(id)||new Set(),array=v=>Array.from(v||[]);
     const distances=(startId,nextIds)=>{const map=new Map([[startId,0]]),pending=[startId];for(let i=0;i<pending.length;i++){const current=pending[i],nextDistance=map.get(current)+1;array(nextIds(current)).forEach(id=>{const old=map.get(id);if(old===undefined||nextDistance<old){map.set(id,nextDistance);pending.push(id);}});}return map;};
     const bloodAncestors=distances(egoId,parentsOf),descendants=distances(egoId,childrenOf);
-    // An ancestor's spouse belongs to the same generation even when no
-    // parent-child edge is recorded for that spouse. Propagate this role
-    // through spouse links so the label does not fall back to "Relative by marriage".
+    // Generation labels depend on family level, not only a direct blood path.
+    // Siblings of an ancestor and their spouses share that generation too, so
+    // they should not fall back to the generic "Relative by marriage" label.
+    const generationSiblingsOf = id => new Set(
+      array(parentsOf(id)).flatMap(parentId=>array(childrenOf(parentId)))
+        .filter(otherId=>otherId!==id)
+    );
     const ancestorGenerationForLabel = new Map(bloodAncestors);
-    for(let round=0;round<state.people.length;round++){
+    for(let round=0;round<state.people.length*2;round++){
       let changed=false;
       array(ancestorGenerationForLabel.entries()).forEach(([id,d])=>{
         if(d<2)return;
-        array(spousesOf(id)).forEach(spouseId=>{
-          const old=ancestorGenerationForLabel.get(spouseId);
-          if(old===undefined||d<old){ancestorGenerationForLabel.set(spouseId,d);changed=true;}
+        const sameGenerationIds = new Set([
+          ...array(spousesOf(id)),
+          ...array(generationSiblingsOf(id))
+        ]);
+        sameGenerationIds.forEach(otherId=>{
+          const old=ancestorGenerationForLabel.get(otherId);
+          if(old===undefined||d<old){
+            ancestorGenerationForLabel.set(otherId,d);
+            changed=true;
+          }
         });
       });
       if(!changed)break;
@@ -1039,7 +1050,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           const sibSpouse=array(egoSiblings).find(sid=>spousesOf(sid).has(id));
           if(sibSpouse){
             const s=byId.get(sibSpouse),order=age(s,ego);
-            if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil="சகலை";}
+            if(gender(s)==="female"&&gender(person)==="male"){english="Sister's husband";tamil="அத்தான்";}
             else if(gender(s)==="male"&&gender(person)==="female"){
               english=order==="older"?"Older brother's wife":order==="younger"?"Younger brother's wife":"Brother's wife"+(order==="unknown"?" "+englishAgeNotSure:"");
               tamil=order==="older"?"அண்ணி":order==="younger"?"கொழுந்தியாள்":"சகோதரரின் மனைவி "+ageNotSure;
