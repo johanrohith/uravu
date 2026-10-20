@@ -2497,7 +2497,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   function setTreeZoom(nextScale, anchorX, anchorY) {
     const appView = window.matchMedia("(max-width: 760px)").matches;
     const minimumScale = appView
-      ? Math.max(0.01, calculateTreeFitScale() * 0.75)
+      ? calculateTreeFitScale()
       : 0.25;
     state.treeZoom = Math.max(minimumScale, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
