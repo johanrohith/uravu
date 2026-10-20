@@ -617,7 +617,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const showOwnRecordInstruction = appView && Boolean(
       state.activeTree && state.user && !isManager() && !ownRecord && !pending
     );
-    $(".own-record-instruction").forEach(node => {
+    $$(".own-record-instruction").forEach(node => {
       node.hidden = appView ? !showOwnRecordInstruction : false;
     });
   }
