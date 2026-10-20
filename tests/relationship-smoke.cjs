@@ -1211,7 +1211,7 @@ assert.doesNotMatch(app, /transitionend[\s\S]{0,250}applyTreeCanvasScale\(true\)
 assert.match(app, /treeInitialViewKey: null/);
 assert.match(app, /state\.treeZoom = linkedPersonId && focusPosition \? 1 : 0\.4/);
 assert.match(app, /const desiredLeft = \(focusPosition\.x \+ focusPosition\.width \/ 2\) \* scale - viewport\.clientWidth \/ 2/);
-assert.match(app, /const ownRecordInstructionVisible = Boolean\(state\.activeTree && state\.user && !isManager\(\) && !ownRecord\)/);
+assert.match(app, /const ownRecordInstructionVisible = Boolean\(state\.activeTree && state\.user && !isManager\(\) && !ownRecord && !pending\)/);
 assert.match(app, /divider\.hidden = isManager\(\) \|\| shouldPauseCreation/);
 assert.match(app, /const wasSignOutOpen = !signOut\.hidden/);
 assert.match(app, /if \(state\.openPanels\.size\) \{\s*state\.openPanels\.clear\(\);\s*renderWorkspace\(\);/);
