@@ -913,7 +913,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     // tallest unrelated card in the same generation row. The bus itself remains
     // below the complete row to avoid crossing cards.
     if (partnerLine) return partnerLine.y;
-    return Math.max(...parents.map(parent => parent.y + parent.height));
+    return Math.max(...parents.map(parent => parent.y + parent.height)) + 12;
   }
 
   function relationNames(person, type) {
@@ -1510,9 +1510,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
     const minLevel = levelKeys[0];
     const maxLevel = levelKeys[levelKeys.length - 1];
-    const nodeWidth = 270;
-    const columnGap = 40;
-    const coupleGap = 28;
+    const nodeWidth = 310;
+    const columnGap = 64;
+    const coupleGap = 36;
     const levelUnits = new Map();
     const positions = new Map();
     const byId = new Map(state.people.map(person => [person.id, person]));
@@ -1521,19 +1521,21 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / charsPerLine)), 0);
     const cardHeightFor = person => {
       const label = relationLabels.get(person.id) || "";
-      const nameHeight = Math.max(34,
-        countLines(person.full_name, 27) * 19 +
-        (person.tamil_name ? 3 + countLines(person.tamil_name, 24) * 15 : 0));
-      const labelHeight = label ? 12 + countLines(label, 31) * 15 : 0;
-      const detailHeight = familyRecordDetailLines(person).reduce((total, line) =>
-        total + countLines(line, 40) * 13 + 2, 0);
+      const details = familyRecordDetailLines(person);
+      // Match the actual content width and allow every field to wrap naturally.
+      const nameHeight = Math.max(36,
+        countLines(person.full_name, 31) * 18 +
+        (person.tamil_name ? 3 + countLines(person.tamil_name, 30) * 15 : 0));
+      const labelHeight = label ? 4 + countLines(label, 39) * 14 : 0;
+      const detailHeight = details.reduce((total, line) =>
+        total + countLines(line, 43) * 14, 0);
       const notesHeight = person.notes && canEditPerson(person)
-        ? countLines(person.notes, 40) * 14 + 2 : 0;
-      const actionsHeight = state.editMode && canEditPerson(person) ? 32 : 0;
-      const blocks = 1 + (label ? 1 : 0) + familyRecordDetailLines(person).length +
+        ? countLines(person.notes, 43) * 14 : 0;
+      const actionsHeight = state.editMode && canEditPerson(person) ? 34 : 0;
+      const blocks = 1 + (label ? 1 : 0) + details.length +
         (notesHeight ? 1 : 0) + (actionsHeight ? 1 : 0);
-      return Math.max(82, 24 + nameHeight + labelHeight + detailHeight +
-        notesHeight + actionsHeight + Math.max(0, blocks - 1) * 5 + 8);
+      return Math.max(104, 24 + nameHeight + labelHeight + detailHeight +
+        notesHeight + actionsHeight + Math.max(0, blocks - 1) * 5 + 12);
     };
     const cardHeights = new Map(visibleSelected.map(person => [person.id, cardHeightFor(person)]));
     const levelByPerson = new Map();
@@ -1998,7 +2000,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       if (!first || !second || first.y !== second.y) return;
       const left = first.x <= second.x ? first : second;
       const right = first.x <= second.x ? second : first;
-      const lineY = left.y + 36;
+      const lineY = Math.max(left.y + left.height, right.y + right.height) + 12;
       const lineLeft = left.x + left.width;
       const lineRight = right.x;
       if (lineRight <= lineLeft) return;
@@ -2065,7 +2067,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const rowPairKey = parentRowY + "|" + childTop;
       const laneIndex = nextLaneByRowPair.get(rowPairKey) || 0;
       nextLaneByRowPair.set(rowPairKey, laneIndex + 1);
-      const busY = Math.min(childTop - 18, parentRowBottom + 22 + laneIndex * 24);
+      const busY = Math.min(childTop - 20, parentRowBottom + 30 + laneIndex * 28);
 
       // One vertical trunk flows down from the partner link (or parent group),
       // meets a single horizontal child bus, then drops vertically to each child.
