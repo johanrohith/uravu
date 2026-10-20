@@ -1164,7 +1164,8 @@ assert.ok(
 assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
 assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
 assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
-assert.match(html, /uravu-zoom-stability-20261020-1/);
+assert.match(html, /uravu-mobile-isolated-tree-20261020-1/);
+assert.match(html, /id="family-tree-sizer"/);
 assert.match(html, /id="mobile-tree-toolbar"/);
 assert.match(html, /id="mobile-tree-toolbar-content"/);
 assert.match(html, /id="mobile-tree-toolbar-toggle"/);
@@ -1178,18 +1179,24 @@ assert.match(styles, /\.mobile-tree-toolbar-content\{display:flex;flex-direction
 assert.match(styles, /\.mobile-tree-toolbar\.is-collapsed \.mobile-tree-toolbar-content\{max-height:0!important;opacity:0;transform:translateY\(-10px\)/);
 assert.match(styles, /\.mobile-tree-toolbar\.is-collapsed \.mobile-tree-toolbar-toggle \.toolbar-arrow-down\{display:block\}/);
 assert.match(styles, /body:has\(#dashboard\.tree-open\) \.app-shell>main\{padding-bottom:calc\(69px \+ env\(safe-area-inset-bottom\)\)/);
-assert.match(styles, /body:has\(#dashboard\.tree-open\)\{position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;overscroll-behavior:none\}/);
+assert.match(styles, /body:has\(#dashboard\.tree-open\)\{position:relative!important;inset:auto!important;width:100%!important;height:100dvh!important;overflow:hidden!important/);
 assert.match(styles, /\.mobile-tree-controls-target \.tree-zoom-controls\{justify-content:flex-start!important;margin-left:0!important\}/);
-assert.match(styles, /\.people-panel\{position:relative;z-index:0;isolation:isolate;contain:layout paint;overflow:hidden;flex:1 1 0;height:0;min-height:0\}/);
-assert.match(styles, /\.family-tree-viewport\{position:absolute!important;inset:0!important;z-index:0;width:auto!important;height:auto!important/);
+assert.match(styles, /\.people-panel\{position:relative!important;display:flex!important;flex:1 1 0!important;flex-direction:column!important/);
+assert.match(styles, /\.family-tree-viewport\{position:relative!important;inset:auto!important;display:block!important;flex:1 1 0!important/);
 assert.match(styles, /\.dashboard\.tree-open\{flex:1 1 0;height:auto;min-height:0\}/);
 assert.match(app, /function calculateTreeFitScale\(\)/);
 assert.match(app, /state\.treeZoom = Math\.max\(minimumScale, Math\.min\(2\.5, Number\(nextScale\) \|\| 1\)\)/);
 assert.match(app, /dataset\.appliedScale/);
+assert.match(app, /const sizer = \$\("#family-tree-sizer"\)/);
+assert.match(app, /canvas\.style\.transform = "scale\(" \+ scale \+ "\)"/);
+assert.match(app, /sizer\.style\.width = Math\.ceil\(state\.treeBaseWidth \* scale\) \+ "px"/);
+assert.doesNotMatch(app, /nodesRoot\.style\.transform = "translateZ\(0\) scale\("/);
 assert.match(app, /requestAnimationFrame\(\(\) => \{/);
 assert.match(app, /const maxLeft = Math\.max\(0, canvas\.offsetWidth - viewport\.clientWidth\)/);
 assert.match(styles, /\.mobile-tree-controls-target \.tree-control-actions\{display:flex!important;flex-wrap:nowrap;align-items:center;justify-content:flex-start!important/);
-assert.match(styles, /\.family-tree-viewport\{contain:layout paint!important;will-change:scroll-position;overflow-anchor:none\}/);
+assert.match(styles, /\.family-tree-viewport\{position:relative!important;inset:auto!important;display:block!important;flex:1 1 0!important/);
+assert.match(styles, /\.family-tree-canvas\{position:absolute!important;left:0!important;top:0!important/);
+assert.match(styles, /\.topbar\{position:relative!important;inset:auto!important;display:flex!important;flex:0 0 56px!important/);
 
 assert.match(styles, /\.family-tree-viewport\{position:relative;z-index:0;isolation:isolate;contain:paint;overflow:auto;overscroll-behavior:contain;max-width:100%;max-height:100%\}/);
 
