@@ -781,7 +781,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!state.activeTree) return;
     $("#tree-workspace").hidden = false;
     $("#dashboard").classList.add("tree-open");
-    $("#workspace-title").textContent = displayTreeName(state.activeTree);
+    $("#workspace-title").textContent = state.language === "ta" ? "உறவுகள்" : "Uravugal";
     await loadWorkspace(state.activeTree.id, true);
   }
 
