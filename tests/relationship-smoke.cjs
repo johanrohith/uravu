@@ -156,9 +156,9 @@ const sortUnitPeopleByParentCenter = new Function(
   spouseUnitSortSource + "\nreturn sortUnitPeopleByParentCenter;"
 )();
 {
-  // The alphabetic order is intentionally the opposite of the ancestry order.
-  // The spouse whose own parents are to the left should occupy the left card,
-  // keeping each great-grandparent connector local to its own branch.
+
+
+
   const unit = {
     people:[
       { id:"maternal-grandmother", full_name:"A Grandma" },
@@ -666,8 +666,8 @@ assert.ok(app.includes("const nodeWidth = 270"), "Family cards should be wide en
 assert.ok(app.includes('class="person-meta record-meta"'), "Dates and memorial status should use separate readable rows");
 assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(parentsByChild, positions)"), "Child connectors should be grouped by their actual parent set, including single-parent links");
 {
- // For a lone recorded parent, the stem must begin at that parent's card bottom,
- // not at the bottom of the tallest unrelated card on the same generation row.
+
+
  const source=extractFunction(app,"function familyParentStemStartY(parents, partnerLine) {","\n  function relationNames");
  const familyParentStemStartY=new Function(source+"\nreturn familyParentStemStartY;")();
  assert.equal(familyParentStemStartY([{y:24,height:92}],null),116);
@@ -754,7 +754,7 @@ assert.match(styles, /\.person-card/);
 
 assert.doesNotMatch(app, /Johan Rohith|S\. Priya|ggf-p|cousin-p1|demo family data/i);
 assert.doesNotMatch(app, /localStorage\.(setItem|getItem).*tree/i);
-assert.match(worker, /Deliberately no fetch handler/);
+assert.doesNotMatch(worker, /addEventListener\s*\(\s*['"]fetch['"]/i);
 assert.doesNotMatch(worker, /caches\.match\(event\.request\)/i);
 
 assert.match(schema, /enable row level security/ig);
@@ -772,7 +772,7 @@ function person(id,gender,birth_date){const p={id,full_name:id,gender};if(birth_
 function parentLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"parent"};}
 function spouseLink(person_id,related_person_id){return {person_id,related_person_id,relationship_type:"spouse"};}
 {
- // Parents of an expanded spouse must align with the active person's generation.
+
  const people=[
   person("grandpa","male"),person("father","male"),person("me","male"),person("partner","female"),
   person("partner-parent","male"),person("partner-grandparent","male")
@@ -801,7 +801,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
  assert.equal(generationOf("partner-grandparent"),-2);
 }
 {
- // A child with only one recorded parent still gets a family connector group.
+
  const source=extractFunction(app,"function groupChildrenByParentIds(parentsByChild, positions)","\n  function relationNames");
  const groupChildrenByParentIds=new Function(source+"\nreturn groupChildrenByParentIds;")();
  const positions=new Map([
@@ -866,7 +866,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
 
 
 {
- // Siblings of the paternal grandfather: age is compared with the grandfather.
+
  const people=[
   person("great-grandpa","male","1920-01-01"),
   person("grandpa","male","1950-01-01"),
@@ -901,7 +901,7 @@ function spouseLink(person_id,related_person_id){return {person_id,related_perso
 
 
 {
- // A brother's wife uses அண்ணி / கொழுந்தியாள்; a wife's sister's husband is சகலை.
+
  const people=[
   person("grandpa","male","1950-01-01"),person("dad","male","1975-01-01"),
   person("me","female","2000-01-01"),person("older-brother","male","1997-01-01"),
@@ -1004,8 +1004,8 @@ assert.doesNotMatch(styles, /\.partner-family-toggle/);
 
 
 {
- // A grandparent's cousin shares the same visual generation row but does not
- // share a direct parent with the ego's grandparent. The row label still applies.
+
+
  const people=[
   person("ancient","male"),person("great-great-grandparent","male"),
   person("great-great-grandparent-sibling","male"),person("great-grandparent","male"),
@@ -1070,7 +1070,7 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
 
 
 {
-  // A grandparent's sibling and their spouse inherit the same generation.
+
   const people = [
     person("great-grandfather", "male", "1920-01-01"),
     person("grandfather", "male", "1950-01-01"),
@@ -1091,7 +1091,7 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
   assert.equal(relationLabel("me", people, relationships, "grandfather-brothers-wife", "ta"), "பாட்டி");
 }
 {
-  // The same generation-inheritance rule applies to great-grandparents.
+
   const people = [
     person("great-great-grandparent", "male", "1880-01-01"),
     person("great-grandfather", "male", "1910-01-01"),
@@ -1113,7 +1113,7 @@ assert.match(app, /const visibleRootFamilyKeys = new Set\(\)/);
   assert.equal(relationLabel("me", people, relationships, "great-grandfather-brothers-wife", "ta"), "கொள்ளுப்பாட்டி");
 }
 {
-  // A male's sister's husband is Aththan, not Sagala.
+
   const people = [
     person("grandfather", "male", "1950-01-01"),
     person("father", "male", "1975-01-01"),
