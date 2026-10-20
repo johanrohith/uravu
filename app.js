@@ -1929,8 +1929,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       "#80b918", "#f72585", "#4361ee", "#f77f00", "#00a6a6", "#9b5de5",
       "#c1121f", "#2ec4b6", "#ff9f1c", "#3a86ff"
     ];
+    const isAppTreeView = window.matchMedia("(max-width: 760px)").matches;
     const rootFamilyColorByKey = new Map(orderedRootFamilyKeys.map((key, index) => [
-      key, familyLinePalette[index % familyLinePalette.length]
+      key, isAppTreeView
+        ? familyLinePalette[index % familyLinePalette.length]
+        : "hsl(" + ((index * 137.508) % 360).toFixed(1) + " 48% 34%)"
     ]));
     const branchColorForKey = key => {
       if (rootFamilyColorByKey.has(key)) return rootFamilyColorByKey.get(key);
@@ -1939,7 +1942,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
         hash ^= key.charCodeAt(index);
         hash = Math.imul(hash, 16777619);
       }
-      return familyLinePalette[(hash >>> 0) % familyLinePalette.length];
+      return isAppTreeView
+        ? familyLinePalette[(hash >>> 0) % familyLinePalette.length]
+        : "hsl(" + ((hash >>> 0) % 360) + " 48% 34%)";
     };
 
     const legendPersonIds = new Set(treeLineageIds);
@@ -2428,7 +2433,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
     if (!viewport || !canvas || !nodesRoot || !linesRoot || !state.treeBaseWidth || !state.treeBaseHeight) return;
-    const scale = Math.max(0.01, Math.min(2.5, state.treeZoom || 1));
+    const minimumScale = window.matchMedia("(max-width: 760px)").matches ? 0.01 : 0.25;
+    const scale = Math.max(minimumScale, Math.min(2.5, state.treeZoom || 1));
     const oldWidth = Number(canvas.dataset.scaledWidth || state.treeBaseWidth * scale);
     const oldScale = oldWidth / state.treeBaseWidth;
     const ax = Number.isFinite(anchorX) ? anchorX : viewport.clientWidth / 2;
@@ -2454,7 +2460,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   }
 
   function setTreeZoom(nextScale, anchorX, anchorY) {
-    state.treeZoom = Math.max(0.01, Math.min(2.5, Number(nextScale) || 1));
+    const minimumScale = window.matchMedia("(max-width: 760px)").matches ? 0.01 : 0.25;
+    state.treeZoom = Math.max(minimumScale, Math.min(2.5, Number(nextScale) || 1));
     applyTreeCanvasScale(true, anchorX, anchorY);
   }
 
@@ -2463,7 +2470,8 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     if (!viewport || !state.treeBaseWidth || !state.treeBaseHeight) return;
     const availableWidth = Math.max(1, viewport.clientWidth - 24);
     const availableHeight = Math.max(1, viewport.clientHeight - 24);
-    const fitScale = Math.max(0.01, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
+    const minimumFitScale = window.matchMedia("(max-width: 760px)").matches ? 0.01 : 0.25;
+    const fitScale = Math.max(minimumFitScale, Math.min(1, availableWidth / state.treeBaseWidth, availableHeight / state.treeBaseHeight));
     state.treeZoom = fitScale;
     applyTreeCanvasScale(false);
     viewport.scrollTo({ left: 0, top: 0, behavior: "smooth" });
