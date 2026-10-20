@@ -1206,7 +1206,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   return target;
 }
 
-function renderPeople() {
+  function renderPeople() {
     const nodesRoot = $("#family-tree-nodes");
     const linesRoot = $("#family-tree-lines");
     const viewport = $("#family-tree-viewport");
