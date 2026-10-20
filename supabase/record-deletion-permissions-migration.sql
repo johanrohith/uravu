@@ -1,7 +1,3 @@
--- Uravu: restrict deleting family-member records to the tree owner.
--- Run in Supabase Dashboard -> SQL Editor for an existing Uravu database.
--- Members can still add records and update existing records; this does not change saved data.
-
 begin;
 
 drop policy if exists uravu_people_delete_admin on public.uravu_people;
