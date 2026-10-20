@@ -366,8 +366,8 @@ assert.ok(app.includes("const familyChildGroups = groupChildrenByParentIds(paren
 {
  // For a lone recorded parent, the stem must begin at that parent's card bottom,
  // not at the bottom of the tallest unrelated card on the same generation row.
- const source=extractFunction(app,"function familyParentStemStartY(parents, partnerLine) {","\\n  function relationNames");
- const familyParentStemStartY=new Function(source+"\\nreturn familyParentStemStartY;")();
+ const source=extractFunction(app,"function familyParentStemStartY(parents, partnerLine) {","\n  function relationNames");
+ const familyParentStemStartY=new Function(source+"\nreturn familyParentStemStartY;")();
  assert.equal(familyParentStemStartY([{y:24,height:92}],null),116);
  assert.equal(
    familyParentStemStartY([{y:24,height:92},{y:24,height:160}],null),
