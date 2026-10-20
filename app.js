@@ -20,6 +20,11 @@
     language: (() => { try { return localStorage.getItem("uravu-language") === "ta" ? "ta" : "en"; } catch (_) { return "en"; } })(),
     toastTimer: null,
     loadingTree: false,
+    loadingMembers: false,
+    loadingRequests: false,
+    memberLoadError: null,
+    requestLoadError: null,
+    workspaceLoadId: 0,
     partialDatesSupported: null,
     birthOrderSupported: null,
     treeZoom: 1,
@@ -870,48 +875,182 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
 
   async function loadWorkspace(treeId, showLoading) {
     if (!state.user || !state.activeTree || state.activeTree.id !== treeId) return;
+
+    const loadId = (state.workspaceLoadId || 0) + 1;
+    state.workspaceLoadId = loadId;
+    const isCurrentLoad = () =>
+      state.workspaceLoadId === loadId && state.activeTree?.id === treeId;
+    const queryTimeoutMs = 15000;
+
     if (showLoading) {
       $("#family-tree-viewport").hidden = true;
       $("#people-empty").hidden = false;
       $("#people-empty").textContent = "Loading family members…";
       $("#tree-members-list").innerHTML = '<div class="loading-line">Loading members…</div>';
+      $("#linking-requests-list").innerHTML = '<div class="loading-line">Loading requests…</div>';
     }
+
     state.loadingTree = true;
-    const results = await Promise.all([
-      db.from("uravu_people").select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,birth_order,death_date,death_date_text,is_deceased,is_self_record,notes,created_by,created_at,updated_at").eq("tree_id", treeId).order("full_name"),
-      db.from("uravu_relationships").select("id,tree_id,person_id,related_person_id,relationship_type,created_at").eq("tree_id", treeId),
-      db.from("uravu_tree_members").select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at").eq("tree_id", treeId),
-      db.from("uravu_access_requests").select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at").eq("tree_id", treeId).eq("request_type","link").eq("status","pending").order("created_at")
-    ]);
-    state.loadingTree = false;
+    state.loadingMembers = true;
+    state.loadingRequests = true;
+    state.memberLoadError = null;
+    state.requestLoadError = null;
+    state.members = [];
+    state.requests = [];
+    state.activeMembership = state.memberships.find(member => member.tree_id === treeId) || null;
+
+    // Member and request queries run independently. Neither can hold up the tree.
+    const watchSideQuery = (kind, makeQuery) => {
+      let query;
+      try {
+        query = makeQuery();
+      } catch (error) {
+        applySideResult(kind, { data:null, error });
+        return;
+      }
+
+      let completed = false;
+      const timer = setTimeout(() => {
+        if (completed || !isCurrentLoad()) return;
+        applySideResult(kind, {
+          data:null,
+          error:{ message:"This request is taking too long. Check your connection and retry." }
+        });
+      }, queryTimeoutMs);
+
+      Promise.resolve(query).then(result => {
+        completed = true;
+        clearTimeout(timer);
+        if (isCurrentLoad()) applySideResult(kind, result);
+      }, error => {
+        completed = true;
+        clearTimeout(timer);
+        if (isCurrentLoad()) applySideResult(kind, { data:null, error });
+      });
+    };
+
+    const applySideResult = (kind, result) => {
+      const error = result?.error || null;
+      if (kind === "members") {
+        state.loadingMembers = false;
+        state.memberLoadError = error ? String(error.message || error) : null;
+        state.members = error ? [] : (result?.data || []);
+        $("#member-count").textContent = String(state.members.filter(member => member.person_id).length);
+        renderMembers();
+        // Refresh person labels/layout after member links arrive, but never block the first tree render.
+        if (!state.loadingTree && state.people.length) {
+          try { renderPeople(); }
+          catch (renderError) { console.error("Uravu tree refresh after member load failed:", renderError); }
+        }
+      } else {
+        state.loadingRequests = false;
+        state.requestLoadError = error ? String(error.message || error) : null;
+        state.requests = error ? [] : (result?.data || []);
+        $("#pending-count").textContent = String(state.requests.length);
+        renderRequests();
+      }
+      if (error) console.error("Uravu " + kind + " query failed:", error);
+    };
+
+    watchSideQuery("members", () =>
+      db.from("uravu_tree_members")
+        .select("tree_id,user_id,role,person_id,display_name,avatar_url,joined_at")
+        .eq("tree_id", treeId)
+    );
+    watchSideQuery("requests", () =>
+      db.from("uravu_access_requests")
+        .select("id,tree_id,user_id,request_type,requested_role,requested_person_id,message,status,display_name,avatar_url,created_at")
+        .eq("tree_id", treeId).eq("request_type", "link").eq("status", "pending").order("created_at")
+    );
+
+    const waitForCoreQuery = async query => {
+      let timer;
+      try {
+        return await Promise.race([
+          Promise.resolve(query),
+          new Promise((_, reject) => {
+            timer = setTimeout(() => reject(new Error(
+              "Loading the family tree timed out. Check your connection and try reopening the tree."
+            )), queryTimeoutMs);
+          })
+        ]);
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+
+    let results;
+    try {
+      results = await waitForCoreQuery(Promise.all([
+        db.from("uravu_people")
+          .select("id,tree_id,full_name,tamil_name,gender,birth_date,birth_date_text,birth_order,death_date,death_date_text,is_deceased,notes,created_by,is_self_record,created_at,updated_at")
+          .eq("tree_id", treeId).order("full_name"),
+        db.from("uravu_relationships")
+          .select("id,tree_id,person_id,related_person_id,relationship_type,created_at")
+          .eq("tree_id", treeId)
+      ]));
+    } catch (error) {
+      if (!isCurrentLoad()) return;
+      state.loadingTree = false;
+      showDbError(error, "load family tree");
+      $("#family-tree-viewport").hidden = true;
+      $("#people-empty").hidden = false;
+      $("#people-empty").textContent = t("treeLoadError");
+      return;
+    }
+
+    if (!isCurrentLoad()) return;
     if (results[0].error && /(birth_date_text|birth_order|death_date_text|is_deceased|schema cache)/i.test(String(results[0].error.message || results[0].error))) {
-      const legacyPeople = await db.from("uravu_people")
-        .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,is_self_record,notes,created_by,created_at,updated_at")
-        .eq("tree_id", treeId).order("full_name");
-      results[0] = legacyPeople;
-      state.partialDatesSupported = false;
-      state.birthOrderSupported = false;
+      try {
+        results[0] = await waitForCoreQuery(
+          db.from("uravu_people")
+            .select("id,tree_id,full_name,tamil_name,gender,birth_date,death_date,is_self_record,notes,created_by,created_at,updated_at")
+            .eq("tree_id", treeId).order("full_name")
+        );
+        state.partialDatesSupported = false;
+        state.birthOrderSupported = false;
+      } catch (error) {
+        state.loadingTree = false;
+        showDbError(error, "load family records");
+        $("#family-tree-viewport").hidden = true;
+        $("#people-empty").hidden = false;
+        $("#people-empty").textContent = t("treeLoadError");
+        return;
+      }
     } else if (!results[0].error) {
       state.partialDatesSupported = true;
       state.birthOrderSupported = true;
     }
+
     syncBirthOrderField();
     const error = results.find(result => result.error)?.error;
     if (error) {
+      state.loadingTree = false;
       showDbError(error, "tree workspace");
       $("#family-tree-viewport").hidden = true;
       $("#people-empty").hidden = false;
       $("#people-empty").textContent = t("treeLoadError");
       return;
     }
-    if (!state.activeTree || state.activeTree.id !== treeId) return;
+
+    if (!isCurrentLoad()) return;
+    state.loadingTree = false;
     state.people = results[0].data || [];
     state.relationships = results[1].data || [];
-    state.members = results[2].data || [];
-    state.requests = results[3].data || [];
-    state.activeMembership = state.memberships.find(m => m.tree_id === treeId) || null;
+    state.activeMembership = state.memberships.find(member => member.tree_id === treeId) || null;
 
-    renderWorkspace();
+    // A render failure should not leave side panels stuck on their initial loading text.
+    try {
+      renderWorkspace();
+    } catch (error) {
+      console.error("Uravu workspace rendering failed:", error);
+      $("#family-tree-viewport").hidden = true;
+      $("#people-empty").hidden = false;
+      $("#people-empty").textContent = t("treeLoadError");
+      try { renderMembers(); } catch (memberError) { console.error("Uravu member panel render failed:", memberError); }
+      try { renderRequests(); } catch (requestError) { console.error("Uravu request panel render failed:", requestError); }
+      syncAppNavigation();
+    }
   }
 
   function renderWorkspace() {
@@ -2753,6 +2892,21 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
   function renderMembers() {
     const root = $("#tree-members-list");
     if (!root) return;
+    if (state.loadingMembers) {
+      root.innerHTML = '<div class="loading-line">' +
+        (state.language === "ta" ? "உறுப்பினர்கள் ஏற்றப்படுகின்றனர்…" : "Loading members…") +
+        '</div>';
+      return;
+    }
+    if (state.memberLoadError) {
+      root.innerHTML = '<div class="empty-state"><p>' +
+        escapeHtml(state.language === "ta" ? "உறுப்பினர் விவரங்களை ஏற்ற முடியவில்லை." : "Could not load members: " + state.memberLoadError) +
+        '</p><button class="secondary-button" type="button" data-retry-workspace>Retry</button></div>';
+      root.querySelector("[data-retry-workspace]")?.addEventListener("click", () => {
+        if (state.activeTree) loadWorkspace(state.activeTree.id, false);
+      });
+      return;
+    }
     const linkedMembers = state.members.filter(member => member.person_id);
     if (!linkedMembers.length) {
       root.innerHTML = '<div class="empty-state">' +
@@ -2781,6 +2935,21 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           ? "இணைப்பு கோரிக்கைகளைப் பரிசீலிக்க, உங்கள் கணக்கு முதலில் குடும்பப் பதிவுடன் இணைக்கப்பட வேண்டும்."
           : "Your account must be linked to a family record before you can review linking requests.") +
         '</div>';
+      return;
+    }
+    if (state.loadingRequests) {
+      root.innerHTML = '<div class="loading-line">' +
+        (state.language === "ta" ? "கோரிக்கைகள் ஏற்றப்படுகின்றன…" : "Loading requests…") +
+        '</div>';
+      return;
+    }
+    if (state.requestLoadError) {
+      root.innerHTML = '<div class="empty-state"><p>' +
+        escapeHtml(state.language === "ta" ? "கோரிக்கைகளை ஏற்ற முடியவில்லை." : "Could not load requests: " + state.requestLoadError) +
+        '</p><button class="secondary-button" type="button" data-retry-workspace>Retry</button></div>';
+      root.querySelector("[data-retry-workspace]")?.addEventListener("click", () => {
+        if (state.activeTree) loadWorkspace(state.activeTree.id, false);
+      });
       return;
     }
     renderRequestGroup(root, state.requests.filter(request => request.request_type === "link"), "linking");
