@@ -13,6 +13,7 @@ const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
 const recordDeletionMigration = fs.readFileSync(path.join(root, "supabase", "record-deletion-permissions-migration.sql"), "utf8");
 const singleTreeMigration = fs.readFileSync(path.join(root, "supabase", "single-tree-linking-migration.sql"), "utf8");
+const birthOrderMigration = fs.readFileSync(path.join(root, "supabase", "sibling-birth-order-migration.sql"), "utf8");
 
 const dateHelperStart = app.indexOf("function datePartsValid");
 const dateHelperEnd = app.indexOf("function formatDateEntry", dateHelperStart);
@@ -38,8 +39,8 @@ const siblingAgeHelpersSource = extractFunction(
   "function birthDateParts(person) {",
   "\n  function sortUnitPeopleByParentCenter"
 );
-const { compareBirthDatesOlderFirst, compareSiblingUnitsByAge } = new Function(
-  siblingAgeHelpersSource + "\nreturn { birthDateParts, compareBirthDatesOlderFirst, compareSiblingUnitsByAge };"
+const { compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSiblingUnitsByAge } = new Function(
+  siblingAgeHelpersSource + "\nreturn { birthDateParts, compareBirthDatesOlderFirst, compareBirthOrderOlderFirst, compareSiblingUnitsByAge };"
 )();
 {
   assert.ok(compareBirthDatesOlderFirst(
@@ -76,6 +77,23 @@ const { compareBirthDatesOlderFirst, compareSiblingUnitsByAge } = new Function(
   const unknownSibling = { people:[{ id:"unknown", full_name:"Unknown Age" }] };
   assert.equal(compareSiblingUnitsByAge(unknownSibling,youngSibling,parentsByChild), 0,
     "Unknown birth dates must fall back to existing stable layout ordering");
+
+  const manuallyOlder = { people:[{ id:"manual-old", full_name:"Z Older by Order", birth_order:1 }] };
+  const manuallyYounger = { people:[{ id:"manual-young", full_name:"A Younger by Order", birth_order:2 }] };
+  const unknownDateParents = new Map([
+    ["manual-old",new Set(["mother"])], ["manual-young",new Set(["mother"])]
+  ]);
+  assert.ok(compareBirthOrderOlderFirst(manuallyOlder.people[0], manuallyYounger.people[0]) < 0,
+    "Lower manual birth-order ranks must come first");
+  assert.ok(compareSiblingUnitsByAge(manuallyOlder,manuallyYounger,unknownDateParents) < 0,
+    "Manual birth order must sort siblings left-to-right even when birth dates are unknown and names sort in the opposite direction");
+
+  assert.match(html, /id="person-birth-order" type="number" min="1" max="999" step="1"/);
+  assert.match(app, /data\.birth_order = birthOrder/);
+  assert.match(app, /person\.birth_order == null \? "" : String\(person\.birth_order\)/);
+  assert.match(schema, /birth_order integer/);
+  assert.ok(birthOrderMigration.includes("add column if not exists birth_order integer"));
+  assert.ok(birthOrderMigration.includes("uravu_people_birth_order_check"));
 }
 
 const spouseUnitSortSource = extractFunction(
