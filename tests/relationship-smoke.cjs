@@ -1164,7 +1164,7 @@ assert.ok(
 assert.match(app, /"Family members":"குடும்ப உறுப்பினர்கள்"/);
 assert.match(app, /"Don't have your record\? Add a record for you using the \\"Add Family Member\\" button above!"/);
 assert.match(app, /"app-nav-members":"உறுப்பினர்"/);
-assert.match(html, /uravu-mobile-account-focus-20261020-1/);
+assert.match(html, /uravu-loading-decouple-20261020-1/);
 assert.match(html, /id="family-tree-sizer"/);
 assert.match(html, /id="mobile-tree-toolbar"/);
 assert.match(html, /id="mobile-tree-toolbar-content"/);
@@ -1224,9 +1224,18 @@ assert.match(app, /"MEMBERSHIP":"உறுப்பினர் நிலை"/);
 assert.match(app, /"FAMILY RECORDS":"குடும்பப் பதிவுகள்"/);
 assert.match(app, /"Confirm requests from people asking to link their account to a family record\."/);
 assert.match(html, /class="own-record-instruction"/);
-assert.match(html, /uravu-mobile-account-focus-20261020-1/);
+assert.match(html, /uravu-loading-decouple-20261020-1/);
 assert.match(styles, /\/\* App-only panel alignment, neutral edit state, and active edit indicator\. \*\//);
 assert.match(styles, /\.requests-panel \.section-heading \{\s*display: grid !important;\s*grid-template-columns: minmax\(0, 1fr\) 34px !important;/);
 assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-off \{\s*background: transparent !important;\s*border-color: transparent !important;\s*color: #789080 !important;/);
 assert.match(styles, /\.app-nav-item\.edit-mode-button\.is-on \{\s*background: #218447 !important;\s*border-color: #218447 !important;\s*color: #fff !important;/);
 assert.match(styles, /@media \(max-width: 760px\)/);
+
+assert.match(app, /const watchSideQuery = \(kind, makeQuery\) =>/);
+assert.match(app, /const waitForCoreQuery = async query =>/);
+assert.match(app, /const isCurrentLoad = \(\) =>/);
+assert.match(app, /if \(state\.loadingMembers\)/);
+assert.match(app, /if \(state\.loadingRequests\)/);
+assert.match(app, /Timed out while loading the family tree/);
+assert.match(app, /data-retry-workspace/);
+assert.match(app, /const queryTimeoutMs = 15000/);
