@@ -58,14 +58,14 @@
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-tree-view-session-20261021-3');
         try {
-          const rulesResponse = await fetch('./relationship-rules.json?v=uravu-path-rules-20261021-2', { cache: 'no-store' });
+          const rulesResponse = await fetch('./relationship-rules.json?v=uravu-path-rules-20261021-3', { cache: 'no-store' });
           if (!rulesResponse.ok) throw new Error('Could not load relationship-rules.json');
           window.URAVU_RELATIONSHIP_RULES = await rulesResponse.json();
         } catch (rulesError) {
           console.warn('Uravu relationship rules unavailable; using built-in fallback:', rulesError);
           window.URAVU_RELATIONSHIP_RULES = { rules: [] };
         }
-        await loadScript('./app.js?v=uravu-path-rules-20261021-2');
+        await loadScript('./app.js?v=uravu-path-rules-20261021-3');
 
         try {
           if ('caches' in window) {
