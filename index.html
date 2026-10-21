@@ -102,18 +102,18 @@
           console.warn('Uravu relationship rules unavailable; using built-in fallback:', rulesError);
           window.URAVU_RELATIONSHIP_RULES = { rules: [] };
         }
+        // Wait for app.js to finish its initial auth + dashboard/tree load.
+        // A short timeout here used to hide the splash while the tree was still loading.
         const appReady = new Promise(resolve => {
-          let timeoutId;
-          const finish = () => {
-            window.removeEventListener('uravu:app-ready', finish);
-            if (timeoutId) window.clearTimeout(timeoutId);
-            resolve();
-          };
-          window.addEventListener('uravu:app-ready', finish);
-          timeoutId = window.setTimeout(finish, 4000);
+          const finish = () => resolve();
+          window.addEventListener('uravu:app-ready', finish, { once: true });
         });
-        await loadScript('./app.js?v=uravu-path-rules-20261021-7');
+        await loadScript('./app.js?v=uravu-path-rules-20261021-8');
         await appReady;
+        // Let the completed tree/layout paint behind the splash before fading it away.
+        await new Promise(resolve => window.requestAnimationFrame(() =>
+          window.requestAnimationFrame(resolve)
+        ));
 
         try {
           if ('caches' in window) {
