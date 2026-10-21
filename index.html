@@ -5,13 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f6f7f3">
   <meta name="description" content="Uravu — build and share your family tree.">
-  <link rel="manifest" href="./manifest.webmanifest?v=20261021-2">
-  <link rel="icon" type="image/png" sizes="512x512" href="./assets/uravu-icon.png?v=20261021-2">
-  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=20261021-2">
+  <link rel="manifest" href="./manifest.webmanifest?v=20261021-3">
+  <link rel="icon" type="image/png" sizes="512x512" href="./assets/uravu-icon.png?v=20261021-3">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=20261021-3">
+  <link rel="preload" as="image" href="./assets/uravu-icon.png?v=20261021-3" fetchpriority="high">
   <title>Uravu — Family tree</title>
-  <style>body.booting{visibility:hidden}#boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}#boot-error[hidden]{display:none}</style>
+  <style>
+body.booting{visibility:visible}
+body.booting .app-shell{opacity:0}
+body:not(.booting) .app-shell{opacity:1;transition:opacity .28s ease}
+#app-splash{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:#026539;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s ease;isolation:isolate}
+#app-splash img{display:block;width:clamp(88px,22vw,124px);height:auto;aspect-ratio:1;object-fit:contain;background:#026539;border-radius:24%;animation:uravu-splash-arrive .48s cubic-bezier(.2,.72,.24,1) both}
+#app-splash.is-leaving{opacity:0;pointer-events:none}
+@keyframes uravu-splash-arrive{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+#boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}
+#boot-error[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){#app-splash,#app-splash img,body:not(.booting) .app-shell{animation:none;transition:none}}
+</style>
   <script>
     (async function () {
+      const splashStartedAt = Date.now();
+      const dismissSplash = () => {
+        const splash = document.getElementById('app-splash');
+        if (!splash || splash.dataset.dismissScheduled === 'true') return;
+        splash.dataset.dismissScheduled = 'true';
+        const leave = () => {
+          splash.classList.add('is-leaving');
+          window.setTimeout(() => splash.remove(), 320);
+        };
+        window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
+      };
       const loadScript = (src) => new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src;
@@ -48,7 +71,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-tree-view-session-20261021-4';
+        stylesheet.href = './styles.css?v=uravu-tree-view-session-20261021-5';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -82,6 +105,7 @@
         } catch (finalCleanupError) { console.warn('Uravu final cache cleanup:', finalCleanupError); }
         document.body.classList.remove('booting');
         document.documentElement.classList.add('uravu-ready');
+        dismissSplash();
       } catch (error) {
         console.error('Uravu startup error:', error);
         document.body.classList.remove('booting');
@@ -91,11 +115,15 @@
           errorBox.querySelector('[data-error-message]').textContent =
             'Uravu could not start because a required file or service could not load. Refresh the page or try again later.';
         }
+        dismissSplash();
       }
     })();
   </script>
 </head>
 <body class="booting">
+  <div id="app-splash" role="status" aria-label="Opening Uravu">
+    <img src="./assets/uravu-icon.png?v=20261021-3" width="112" height="112" alt="" fetchpriority="high">
+  </div>
   <div id="boot-error" hidden>
     <h1>Uravu could not start</h1>
     <p data-error-message>One of the app files did not load.</p>
@@ -104,7 +132,7 @@
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="./" aria-label="Uravu home">
-        <img class="brand-mark" src="./assets/uravu-icon.png?v=20261021-2" alt="" width="42" height="42">
+        <img class="brand-mark" src="./assets/uravu-icon.png?v=20261021-3" alt="" width="42" height="42">
         <span><strong>உறவு</strong><small>URAVU</small></span>
       </a>
       <div class="top-actions">
