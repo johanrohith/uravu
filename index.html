@@ -88,7 +88,18 @@ body:not(.booting) .app-shell{opacity:1;transition:opacity .28s ease}
           console.warn('Uravu relationship rules unavailable; using built-in fallback:', rulesError);
           window.URAVU_RELATIONSHIP_RULES = { rules: [] };
         }
-        await loadScript('./app.js?v=uravu-path-rules-20261021-4');
+        const appReady = new Promise(resolve => {
+          let timeoutId;
+          const finish = () => {
+            window.removeEventListener('uravu:app-ready', finish);
+            if (timeoutId) window.clearTimeout(timeoutId);
+            resolve();
+          };
+          window.addEventListener('uravu:app-ready', finish);
+          timeoutId = window.setTimeout(finish, 4000);
+        });
+        await loadScript('./app.js?v=uravu-path-rules-20261021-5');
+        await appReady;
 
         try {
           if ('caches' in window) {
