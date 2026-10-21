@@ -56,9 +56,13 @@
           splash.classList.add('is-leaving');
           window.setTimeout(() => {
             splash.remove();
-            // Return system bars to the regular app color only after the green fade completes.
-            const themeColor = document.querySelector('meta[name="theme-color"]');
-            if (themeColor) themeColor.setAttribute('content', '#ffffff');
+            // Remove the temporary standalone-green theme declaration after the splash.
+            // Some Android Chromium versions retain the first matching media theme-color
+            // for the native navigation area if its content is only changed in place.
+            const launchThemeColor = document.querySelector('meta[name="theme-color"][media]');
+            if (launchThemeColor) launchThemeColor.remove();
+            const runtimeThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
+            if (runtimeThemeColor) runtimeThemeColor.setAttribute('content', '#ffffff');
           }, 320);
         };
         window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
