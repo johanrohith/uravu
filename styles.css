@@ -1001,3 +1001,29 @@ html.uravu-standalone .app-shell > main {
     z-index: 160 !important;
   }
 }
+
+
+/* Final standalone bottom-area cover: white behind the deck, above the page background. */
+html.uravu-standalone,
+html.uravu-standalone body,
+html.uravu-standalone body:has(#dashboard.tree-open) {
+  background: #fff !important;
+}
+
+@media (max-width: 760px) {
+  html.uravu-standalone::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: max(env(safe-area-inset-bottom, 0px), 32px);
+    background: #fff !important;
+    z-index: 150;
+    pointer-events: none;
+  }
+
+  html.uravu-standalone .app-bottom-nav:not([hidden]) {
+    z-index: 160 !important;
+  }
+}
