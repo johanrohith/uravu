@@ -81,6 +81,17 @@ assert.deepEqual(chithappaDaughter.ta_by_age, {
 });
 assert.match(app, /configuredRule\.ta_by_age\?\./);
 
+assert.match(html, /#app-splash\s*\{[^}]*background:#026539/s,
+  "Standalone launch splash should retain the full green background");
+assert.match(html, /#app-splash\.is-leaving\s*\{[^}]*opacity:0/s,
+  "Launch splash should fade out smoothly");
+assert.match(styles, /family-tree-viewport::before/);
+assert.match(styles, /family-tree-viewport::after/);
+assert.match(styles, /pointer-events:\s*none\s*!important/);
+assert.match(styles, /family-tree-viewport::-webkit-scrollbar-thumb[\s\S]*?background:\s*#fff\s*!important/);
+assert.match(styles, /family-tree-viewport\s*\{[^}]*scrollbar-width:\s*none\s*!important/s);
+
+
 assert.ok(app.includes("configuredRelationshipRulesByPerson"));
 assert.ok(html.includes("relationship-rules.json"));
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
