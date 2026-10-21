@@ -21,8 +21,8 @@ const hasRelationshipRule = (path, en, ta) => relationshipRules.rules.some(rule 
 );
 assert.ok(hasRelationshipRule(["Father", "Father"], "Grandfather", "தாத்தா"));
 assert.ok(hasRelationshipRule(["Father", "Father", "Father"], "Great-grandfather", "கொள்ளுத்தாத்தா"));
-assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First cousin", "அத்தான்"));
-assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First cousin", "அண்ணி"));
+assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First Cousin", "அத்தான்"));
+assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First Cousin", "அண்ணி"));
 assert.ok(app.includes("configuredRelationshipRuleFor"));
 assert.ok(html.includes("relationship-rules.json"));
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
@@ -1291,7 +1291,7 @@ assert.match(app, /window\.requestAnimationFrame\(\(\) => setTimeout\(retryRende
       parentLink("aunt", "cousin-daughter")
     ];
     assert.equal(relationLabel("me", people, relationships, "grandfather", "en"), "Grandfather");
-    assert.equal(relationLabel("me", people, relationships, "cousin-son", "en"), "First cousin");
+    assert.equal(relationLabel("me", people, relationships, "cousin-son", "en"), "First Cousin");
     assert.equal(relationLabel("me", people, relationships, "cousin-son", "ta"), "அத்தான்");
     assert.equal(relationLabel("me", people, relationships, "cousin-daughter", "ta"), "அண்ணி");
   } finally {
