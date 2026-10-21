@@ -1390,10 +1390,70 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       else if(d.cross){if(order==="older")tamil=(gender(person)==="male"?"அத்தான்":gender(person)==="female"?"அண்ணி":pathTa)+" ("+pathTa+")";else if(order==="younger")tamil=(gender(person)==="male"?"மச்சான்":gender(person)==="female"?"மச்சினி":pathTa)+" ("+pathTa+")";else tamil=pathTa.replace(" "+ageNotSure,"")+" "+ageNotSure;}
       else tamil=pathTa.replace(/ \\(வயது உறுதி இல்லை\\)/g,"")+(ageUnknown?" "+ageNotSure:"");return {english,tamil};
     }
+
+    const configuredRelationshipRules = typeof window !== "undefined" &&
+      window.URAVU_RELATIONSHIP_RULES && Array.isArray(window.URAVU_RELATIONSHIP_RULES.rules)
+      ? window.URAVU_RELATIONSHIP_RULES.rules.filter(rule =>
+          rule && Array.isArray(rule.path) && rule.path.length &&
+          rule.path.every(step => typeof step === "string") &&
+          typeof rule.en === "string" && typeof rule.ta === "string")
+      : [];
+    const relationshipRoleCache = new Map();
+    function relationshipRoleBetween(fromId, toId) {
+      const cacheKey = fromId + "\u0000" + toId;
+      if (relationshipRoleCache.has(cacheKey)) return relationshipRoleCache.get(cacheKey);
+      const from = byId.get(fromId), to = byId.get(toId);
+      if (!from || !to) return "";
+      let role = "";
+      if (parentsOf(fromId).has(toId)) {
+        role = gender(to) === "male" ? "Father" : gender(to) === "female" ? "Mother" : "Parent";
+      } else if (childrenOf(fromId).has(toId)) {
+        role = gender(to) === "male" ? "Son" : gender(to) === "female" ? "Daughter" : "Child";
+      } else if (spousesOf(fromId).has(toId)) {
+        role = gender(from) === "male" && gender(to) === "female" ? "Wife"
+          : gender(from) === "female" && gender(to) === "male" ? "Husband" : "Spouse";
+      } else if (siblingsOf(fromId).has(toId)) {
+        const order = age(to, from), g = gender(to);
+        if (g === "male") role = order === "older" ? "Older Brother" : order === "younger" ? "Younger Brother" : "Brother";
+        else if (g === "female") role = order === "older" ? "Older Sister" : order === "younger" ? "Younger Sister" : "Sister";
+        else role = "Sibling";
+      }
+      relationshipRoleCache.set(cacheKey, role);
+      return role;
+    }
+    function configuredRelationshipRuleFor(targetId) {
+      for (const rule of configuredRelationshipRules) {
+        let currentIds = new Set([egoId]);
+        for (const step of rule.path) {
+          const nextIds = new Set();
+          currentIds.forEach(fromId => {
+            const candidates = new Set([
+              ...array(parentsOf(fromId)),
+              ...array(childrenOf(fromId)),
+              ...array(spousesOf(fromId)),
+              ...array(siblingsOf(fromId))
+            ]);
+            candidates.forEach(toId => {
+              if (relationshipRoleBetween(fromId, toId) === step) nextIds.add(toId);
+            });
+          });
+          currentIds = nextIds;
+          if (!currentIds.size) break;
+        }
+        if (currentIds.has(targetId)) return rule;
+      }
+      return null;
+    }
+
     const connected=new Set([egoId]),queue=[egoId];
     for(let i=0;i<queue.length;i++){const cur=queue[i];[...array(parentsOf(cur)),...array(childrenOf(cur)),...array(spousesOf(cur))].forEach(id=>{if(!connected.has(id)){connected.add(id);queue.push(id);}});}
     for(const person of state.people){
       const id=person.id;let english="",tamil="";
+      const configuredRule = configuredRelationshipRuleFor(id);
+      if (configuredRule) {
+        const configuredLabel = state.language === "ta" ? configuredRule.ta : configuredRule.en;
+        if (configuredLabel) { labels.set(id, configuredLabel); continue; }
+      }
       if(id===egoId){english="You";tamil="நீங்கள்";}
       else if(egoSpouses.includes(id)){if(gender(ego)==="male"&&gender(person)==="female"){english="Wife";tamil="மனைவி";}else if(gender(ego)==="female"&&gender(person)==="male"){english="Husband";tamil="கணவர்";}else{english="Spouse / partner";tamil="துணைவர் / துணைவி";}}
       else if(egoParents.includes(id)){english=gendered(person,"Father","Mother","Parent");tamil=gender(person)==="male"?"தந்தை":gender(person)==="female"?"தாய்":"பெற்றோர்";}
