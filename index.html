@@ -103,7 +103,7 @@
         } catch (_) {}
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = './styles.css?v=uravu-tree-view-session-20261021-13';
+        stylesheet.href = './styles.css?v=uravu-tree-view-session-20261021-14';
         document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
           stylesheet.onload = resolve;
@@ -113,7 +113,7 @@
         if (!standalone) document.body.classList.remove('booting');
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
-        await loadScript('./auth.js?v=uravu-tree-view-session-20261021-4');
+        await loadScript('./auth.js?v=uravu-tree-view-session-20261021-3');
         try {
           const rulesResponse = await fetch('./relationship-rules.json?v=uravu-path-rules-20261021-4', { cache: 'no-store' });
           if (!rulesResponse.ok) throw new Error('Could not load relationship-rules.json');
