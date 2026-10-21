@@ -972,7 +972,7 @@
 }
 
 
-/* Standalone app surfaces use white directly; do not cover the navigation deck with an overlay. */
+/* Standalone app surfaces use white directly. */
 html.uravu-standalone,
 html.uravu-standalone body,
 html.uravu-standalone body:has(#dashboard.tree-open),
@@ -982,8 +982,21 @@ html.uravu-standalone #dashboard.tree-open {
   background-color: #fff !important;
 }
 
-/* Keep the deck at the actual viewport bottom; let the deck itself fill any safe area. */
+/* Cover only the bottom safe-area background, inside the app-shell stacking context.
+   The deck sits above this strip; unlike html::after, it cannot cover navigation items. */
 @media (max-width: 760px) {
+  html.uravu-standalone .app-shell::after {
+    content: "";
+    position: absolute;
+    left: -9px;
+    right: -9px;
+    bottom: 0;
+    height: max(env(safe-area-inset-bottom, 0px), 32px);
+    background: #fff !important;
+    z-index: 150;
+    pointer-events: none;
+  }
+
   html.uravu-standalone .app-bottom-nav:not([hidden]) {
     position: fixed !important;
     left: 0 !important;
