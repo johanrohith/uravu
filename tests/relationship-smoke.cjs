@@ -23,7 +23,7 @@ assert.ok(hasRelationshipRule(["Father", "Father"], "Grandfather", "தாத்
 assert.ok(hasRelationshipRule(["Father", "Father", "Father"], "Great-grandfather", "கொள்ளுத்தாத்தா"));
 assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First Cousin", "அத்தான்"));
 assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First Cousin", "அண்ணி"));
-assert.ok(app.includes("configuredRelationshipRuleFor"));
+assert.ok(app.includes("configuredRelationshipRulesByPerson"));
 assert.ok(html.includes("relationship-rules.json"));
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
