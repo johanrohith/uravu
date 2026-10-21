@@ -85,11 +85,13 @@ assert.match(html, /#app-splash\s*\{[^}]*background:#026539/s,
   "Standalone launch splash should retain the full green background");
 assert.match(html, /#app-splash\.is-leaving\s*\{[^}]*opacity:0/s,
   "Launch splash should fade out smoothly");
-assert.match(styles, /family-tree-viewport::before/);
-assert.match(styles, /family-tree-viewport::after/);
-assert.match(styles, /pointer-events:\s*none\s*!important/);
-assert.match(styles, /family-tree-viewport::-webkit-scrollbar-thumb[\s\S]*?background:\s*#fff\s*!important/);
-assert.match(styles, /family-tree-viewport\s*\{[^}]*scrollbar-width:\s*none\s*!important/s);
+assert.match(styles, /html\.uravu-standalone \.family-tree-viewport\s*\{\s*overflow: hidden !important;\s*overflow-x: hidden !important;\s*overflow-y: hidden !important;/,
+  "Standalone mobile tree viewport must hide native scrollbar patches");
+assert.match(styles, /family-tree-viewport::-webkit-scrollbar-corner/);
+assert.match(app, /viewport\.scrollLeft -= dx;\s*viewport\.scrollTop -= dy;/,
+  "Tree panning must still work when native scrollbars are hidden");
+assert.match(app, /setTreeZoom\(zoom\.scale, zoom\.x, zoom\.y\)/,
+  "Pinch zoom must remain wired up");
 
 
 assert.ok(app.includes("configuredRelationshipRulesByPerson"));
