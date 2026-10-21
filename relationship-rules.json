@@ -95,14 +95,14 @@
       "path": [
         "Brother"
       ],
-      "en": "Brother",
+      "en": "Brother (Age Not Sure)",
       "ta": "சகோதரர் (வயது உறுதி இல்லை)"
     },
     {
       "path": [
         "Sister"
       ],
-      "en": "Sister",
+      "en": "Sister (Age Not Sure)",
       "ta": "சகோதரி (வயது உறுதி இல்லை)"
     },
     {
@@ -223,8 +223,8 @@
         "Father",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -233,8 +233,8 @@
         "Father",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -243,8 +243,8 @@
         "Mother",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -253,8 +253,8 @@
         "Mother",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -263,8 +263,8 @@
         "Father",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -273,8 +273,8 @@
         "Father",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி)"
     },
     {
       "path": [
@@ -283,8 +283,8 @@
         "Mother",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -293,8 +293,8 @@
         "Mother",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -303,8 +303,8 @@
         "Father",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -313,8 +313,8 @@
         "Father",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -323,8 +323,8 @@
         "Mother",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -333,8 +333,8 @@
         "Mother",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -343,8 +343,8 @@
         "Father",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்" 
     },
     {
       "path": [
@@ -353,8 +353,8 @@
         "Father",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -363,8 +363,8 @@
         "Mother",
         "Father"
       ],
-      "en": "2× great-grandfather",
-      "ta": "தாத்தா (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandfather",
+      "ta": "ஓட்டன்"
     },
     {
       "path": [
@@ -373,8 +373,8 @@
         "Mother",
         "Mother"
       ],
-      "en": "2× great-grandmother",
-      "ta": "பாட்டி (4 தலைமுறைகள் மேலே)"
+      "en": "Great-great-grandmother",
+      "ta": "ஓட்டி"
     },
     {
       "path": [
@@ -485,7 +485,7 @@
         "Father",
         "Older Brother"
       ],
-      "en": "Paternal uncle (older)",
+      "en": "Paternal uncle (Older)",
       "ta": "பெரியப்பா"
     },
     {
@@ -493,7 +493,7 @@
         "Father",
         "Younger Brother"
       ],
-      "en": "Paternal uncle (younger)",
+      "en": "Paternal uncle (Younger)",
       "ta": "சித்தப்பா"
     },
     {
@@ -501,16 +501,16 @@
         "Father",
         "Older Sister"
       ],
-      "en": "Paternal aunt",
-      "ta": "அத்தை"
+      "en": "Paternal aunt (Older)",
+      "ta": "பெரிய அத்தை"
     },
     {
       "path": [
         "Father",
         "Younger Sister"
       ],
-      "en": "Paternal aunt",
-      "ta": "அத்தை"
+      "en": "Paternal aunt (Younger)",
+      "ta": "சின்ன அத்தை"
     },
     {
       "path": [
@@ -533,7 +533,7 @@
         "Mother",
         "Older Sister"
       ],
-      "en": "Maternal aunt (older)",
+      "en": "Maternal aunt (Older)",
       "ta": "பெரியம்மா"
     },
     {
@@ -541,7 +541,7 @@
         "Mother",
         "Younger Sister"
       ],
-      "en": "Maternal aunt (younger)",
+      "en": "Maternal aunt (Younger)",
       "ta": "சித்தி"
     },
     {
@@ -582,7 +582,7 @@
         "Older Brother",
         "Wife"
       ],
-      "en": "Paternal uncle's wife (older branch)",
+      "en": "Aunt (Paternal Older uncle's wife)",
       "ta": "பெரியம்மா"
     },
     {
@@ -591,7 +591,7 @@
         "Younger Brother",
         "Wife"
       ],
-      "en": "Paternal uncle's wife (younger branch)",
+      "en": "Aunt (Paternal Younger uncle's wife)",
       "ta": "சித்தி"
     },
     {
@@ -600,7 +600,7 @@
         "Older Sister",
         "Husband"
       ],
-      "en": "Paternal aunt's husband",
+      "en": "Uncle (Paternal Older aunt's husband)",
       "ta": "மாமா"
     },
     {
@@ -609,7 +609,7 @@
         "Younger Sister",
         "Husband"
       ],
-      "en": "Paternal aunt's husband",
+      "en": "Uncle (Paternal Younger aunt's husband)",
       "ta": "மாமா"
     },
     {
@@ -618,7 +618,7 @@
         "Older Brother",
         "Wife"
       ],
-      "en": "Maternal uncle's wife",
+      "en": "Aunt (Maternal Older uncle's wife)",
       "ta": "அத்தை"
     },
     {
@@ -627,7 +627,7 @@
         "Younger Brother",
         "Wife"
       ],
-      "en": "Maternal uncle's wife",
+      "en": "Aunt (Maternal Younger uncle's wife)",
       "ta": "அத்தை"
     },
     {
@@ -636,7 +636,7 @@
         "Older Sister",
         "Husband"
       ],
-      "en": "Maternal aunt's husband (older branch)",
+      "en": "Uncle (Maternal Older aunt's husband)",
       "ta": "பெரியப்பா"
     },
     {
@@ -645,7 +645,7 @@
         "Younger Sister",
         "Husband"
       ],
-      "en": "Maternal aunt's husband (younger branch)",
+      "en": "Uncle (Maternal Younger aunt's husband)",
       "ta": "சித்தப்பா"
     },
     {
@@ -701,7 +701,12 @@
         "Son"
       ],
       "en": "First Cousin",
-      "ta": "அத்தை மகன்"
+      "ta": "அத்தை மகன்",
+      "ta_by_age": {
+        "older": "அத்தான் (அத்தை மகள்)",
+        "younger": "மச்சான் (அத்தை மகள்)",
+        "unknown": "அத்தை மகன் (வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -710,7 +715,12 @@
         "Daughter"
       ],
       "en": "First Cousin",
-      "ta": "அத்தை மகள்"
+      "ta": "அத்தை மகள்",
+      "ta_by_age": {
+        "older": "அண்ணி (அத்தை மகள்)",
+        "younger": "மச்சினி (அத்தை மகள்)",
+        "unknown": "அத்தை மகள் (வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -719,7 +729,12 @@
         "Son"
       ],
       "en": "First Cousin",
-      "ta": "அத்தான்"
+      "ta": "அத்தை மகன்",
+      "ta_by_age": {
+        "older": "அத்தான் (அத்தை மகள்)",
+        "younger": "மச்சான் (அத்தை மகள்)",
+        "unknown": "அத்தை மகன் (வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -728,7 +743,12 @@
         "Daughter"
       ],
       "en": "First Cousin",
-      "ta": "அண்ணி"
+      "ta": "அத்தை மகள்",
+      "ta_by_age": {
+        "older": "அண்ணி (அத்தை மகள்)",
+        "younger": "மச்சினி (அத்தை மகள்)",
+        "unknown": "அத்தை மகள் (வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -774,6 +794,11 @@
       ],
       "en": "First Cousin",
       "ta": "பெரியம்மா மகன்"
+      "ta_by_age": {
+        "older": "அண்ணன் (பெரியம்மா மகன்)",
+        "younger": "தம்பி (பெரியம்மா மகன்)",
+        "unknown": "சகோதரர் (பெரியம்மா மகன்; வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -783,6 +808,11 @@
       ],
       "en": "First Cousin",
       "ta": "பெரியம்மா மகள்"
+      "ta_by_age": {
+        "older": "அக்கா (பெரியம்மா மகள்)",
+        "younger": "தங்கை (பெரியம்மா மகள்)",
+        "unknown": "சகோதரி (பெரியம்மா மகள்; வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -792,6 +822,11 @@
       ],
       "en": "First Cousin",
       "ta": "சித்தி மகன்"
+      "ta_by_age": {
+        "older": "அண்ணன் (சித்தி மகன்)",
+        "younger": "தம்பி (சித்தி மகன்)",
+        "unknown": "சகோதரர் (சித்தி மகன்; வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -801,6 +836,11 @@
       ],
       "en": "First Cousin",
       "ta": "சித்தி மகள்"
+      "ta_by_age": {
+        "older": "அக்கா (சித்தி மகள்)",
+        "younger": "தங்கை (சித்தி மகள்)",
+        "unknown": "சகோதரி (சித்தி மகள்; வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
@@ -827,7 +867,12 @@
         "Son"
       ],
       "en": "First Cousin",
-      "ta": "அத்தான்"
+      "ta": "தந்தையின் சகோதரர் மகன்"
+      "ta_by_age": {
+        "older": "அத்தான் (அத்தை  மகன்)",
+        "younger": "மச்சான் (அத்தை மகன்)",
+        "unknown": "தந்தையின் சகோதரி மகன் (அத்தை மகன்; வயது உறுதி இல்லை)"
+      }
     },
     {
       "path": [
