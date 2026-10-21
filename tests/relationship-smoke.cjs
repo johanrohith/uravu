@@ -21,8 +21,38 @@ const hasRelationshipRule = (path, en, ta) => relationshipRules.rules.some(rule 
 );
 assert.ok(hasRelationshipRule(["Father", "Father"], "Grandfather", "தாத்தா"));
 assert.ok(hasRelationshipRule(["Father", "Father", "Father"], "Great-grandfather", "கொள்ளுத்தாத்தா"));
-assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First Cousin", "அத்தான்"));
-assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First Cousin", "அண்ணி"));
+assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First Cousin", "அத்தை மகன்"));
+assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First Cousin", "அத்தை மகள்"));
+
+const cousinAgeRules = [
+  [["Father", "Older Sister", "Son"], "அத்தை", "male"],
+  [["Father", "Younger Sister", "Son"], "அத்தை", "male"],
+  [["Father", "Sister", "Son"], "அத்தை", "male"],
+  [["Mother", "Older Brother", "Son"], "மாமா", "male"],
+  [["Mother", "Younger Brother", "Son"], "மாமா", "male"],
+  [["Mother", "Brother", "Son"], "மாமா", "male"],
+  [["Father", "Older Sister", "Daughter"], "அத்தை", "female"],
+  [["Father", "Younger Sister", "Daughter"], "அத்தை", "female"],
+  [["Father", "Sister", "Daughter"], "அத்தை", "female"],
+  [["Mother", "Older Brother", "Daughter"], "மாமா", "female"],
+  [["Mother", "Younger Brother", "Daughter"], "மாமா", "female"],
+  [["Mother", "Brother", "Daughter"], "மாமா", "female"]
+];
+for (const [path, branch, gender] of cousinAgeRules) {
+  const rule = relationshipRules.rules.find(candidate =>
+    JSON.stringify(candidate.path) === JSON.stringify(path)
+  );
+  assert.ok(rule, "Missing cousin rule: " + JSON.stringify(path));
+  assert.deepEqual(rule.ta_by_age, gender === "male" ? {
+    older: `அத்தான் (${branch} மகன்)`,
+    younger: `மச்சான் (${branch} மகன்)`,
+    unknown: `${branch} மகன் (வயது உறுதி இல்லை)`
+  } : {
+    older: `அண்ணி (${branch} மகள்)`,
+    younger: `மச்சினி (${branch} மகள்)`,
+    unknown: `${branch} மகள் (வயது உறுதி இல்லை)`
+  }, "Wrong age-based cousin terms for " + JSON.stringify(path));
+}
 const chithappaSon = relationshipRules.rules.find(rule =>
   JSON.stringify(rule.path) === JSON.stringify(["Father", "Younger Brother", "Son"])
 );
