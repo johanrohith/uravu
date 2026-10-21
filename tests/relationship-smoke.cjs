@@ -9,6 +9,22 @@ const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
 const styles = fs.readFileSync(path.join(root, "styles.css"), "utf8");
 const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8");
+const relationshipRules = JSON.parse(fs.readFileSync(path.join(root, "relationship-rules.json"), "utf8"));
+assert.ok(Array.isArray(relationshipRules.rules) && relationshipRules.rules.length >= 100);
+assert.ok(relationshipRules.rules.every(rule =>
+  Array.isArray(rule.path) && rule.path.length > 0 &&
+  rule.path.every(step => typeof step === "string") &&
+  typeof rule.en === "string" && typeof rule.ta === "string"
+));
+const hasRelationshipRule = (path, en, ta) => relationshipRules.rules.some(rule =>
+  JSON.stringify(rule.path) === JSON.stringify(path) && rule.en === en && rule.ta === ta
+);
+assert.ok(hasRelationshipRule(["Father", "Father"], "Grandfather", "தாத்தா"));
+assert.ok(hasRelationshipRule(["Father", "Father", "Father"], "Great-grandfather", "கொள்ளுத்தாத்தா"));
+assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First cousin", "அத்தான்"));
+assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First cousin", "அண்ணி"));
+assert.ok(app.includes("configuredRelationshipRuleFor"));
+assert.ok(html.includes("relationship-rules.json"));
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
 const linkingMigration = fs.readFileSync(path.join(root, "supabase", "linking-requests-migration.sql"), "utf8");
 const recordDeletionMigration = fs.readFileSync(path.join(root, "supabase", "record-deletion-permissions-migration.sql"), "utf8");
@@ -1254,3 +1270,32 @@ assert.match(app, /recoverWorkspaceRender = \(firstError\) =>/);
 assert.match(app, /workspace render failed on first pass; retrying after layout settles/);
 assert.match(app, /workspace render failed after automatic retry/);
 assert.match(app, /window\.requestAnimationFrame\(\(\) => setTimeout\(retryRender, 0\)\)/);
+
+{
+  const priorWindow = global.window;
+  global.window = { URAVU_RELATIONSHIP_RULES: relationshipRules };
+  try {
+    const people = [
+      person("grandfather", "male", "1950-01-01"),
+      person("father", "male", "1980-01-01"),
+      person("aunt", "female", "1985-01-01"),
+      person("me", "female", "2005-01-01"),
+      person("cousin-son", "male", "2007-01-01"),
+      person("cousin-daughter", "female", "2008-01-01")
+    ];
+    const relationships = [
+      parentLink("grandfather", "father"),
+      parentLink("grandfather", "aunt"),
+      parentLink("father", "me"),
+      parentLink("aunt", "cousin-son"),
+      parentLink("aunt", "cousin-daughter")
+    ];
+    assert.equal(relationLabel("me", people, relationships, "grandfather", "en"), "Grandfather");
+    assert.equal(relationLabel("me", people, relationships, "cousin-son", "en"), "First cousin");
+    assert.equal(relationLabel("me", people, relationships, "cousin-son", "ta"), "அத்தான்");
+    assert.equal(relationLabel("me", people, relationships, "cousin-daughter", "ta"), "அண்ணி");
+  } finally {
+    if (priorWindow === undefined) delete global.window;
+    else global.window = priorWindow;
+  }
+}
