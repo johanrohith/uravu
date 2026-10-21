@@ -15,7 +15,21 @@
     (function () {
       const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
         window.navigator.standalone === true;
-      if (standalone) document.documentElement.classList.add('uravu-standalone');
+
+      // Replace, rather than mutate, the meta element so Android Chrome can
+      // observe both transitions of the native system-bar theme.
+      window.uravuSetThemeColor = function (color) {
+        document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.remove());
+        const meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = color;
+        document.head.appendChild(meta);
+      };
+
+      if (standalone) {
+        document.documentElement.classList.add('uravu-standalone');
+        window.uravuSetThemeColor('#026539');
+      }
     })();
   </script>
   <style>
@@ -48,7 +62,14 @@
         splash.dataset.dismissScheduled = 'true';
         const leave = () => {
           splash.classList.add('is-leaving');
-          window.setTimeout(() => splash.remove(), 320);
+          window.setTimeout(() => {
+            splash.remove();
+            // Use a fresh white theme meta after the green splash so the
+            // Android runtime navigation area returns to white as well.
+            if (standalone && typeof window.uravuSetThemeColor === 'function') {
+              window.uravuSetThemeColor('#ffffff');
+            }
+          }, 320);
         };
         window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
       };
