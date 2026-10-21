@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Let Android use the launch green from the very first native frame in standalone mode. -->
+  <meta name="theme-color" media="(display-mode: standalone)" content="#026539">
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Uravu — build and share your family tree.">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -27,7 +29,7 @@
     html.uravu-standalone,html.uravu-standalone body,html.uravu-standalone .app-shell,html.uravu-standalone .app-shell>main{background-color:#fff!important}
     #boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}
     #boot-error[hidden]{display:none}
-    #app-splash{display:none;position:fixed;inset:0;z-index:10000;place-items:center;background:#026539;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s ease;isolation:isolate}
+    #app-splash{display:none;position:fixed;inset:0 0 -32px 0;z-index:10000;place-items:center;background:#026539;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s ease;isolation:isolate}
     html.uravu-standalone #app-splash{display:grid}
     html.uravu-standalone:has(body.booting),
     html.uravu-standalone body.booting,
