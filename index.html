@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <!-- Let Android use the launch green from the very first native frame in standalone mode. -->
-  <meta name="theme-color" media="(display-mode: standalone)" content="#026539">
+  <!-- Keep the runtime/system navigation area white; the splash itself provides the green launch screen. -->
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Uravu — build and share your family tree.">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -16,12 +15,7 @@
     (function () {
       const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
         window.navigator.standalone === true;
-      if (standalone) {
-        document.documentElement.classList.add('uravu-standalone');
-        // Match Android's system bars to the app-only splash before first paint.
-        const themeColor = document.querySelector('meta[name="theme-color"]');
-        if (themeColor) themeColor.setAttribute('content', '#026539');
-      }
+      if (standalone) document.documentElement.classList.add('uravu-standalone');
     })();
   </script>
   <style>
@@ -54,16 +48,7 @@
         splash.dataset.dismissScheduled = 'true';
         const leave = () => {
           splash.classList.add('is-leaving');
-          window.setTimeout(() => {
-            splash.remove();
-            // Remove the temporary standalone-green theme declaration after the splash.
-            // Some Android Chromium versions retain the first matching media theme-color
-            // for the native navigation area if its content is only changed in place.
-            const launchThemeColor = document.querySelector('meta[name="theme-color"][media]');
-            if (launchThemeColor) launchThemeColor.remove();
-            const runtimeThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
-            if (runtimeThemeColor) runtimeThemeColor.setAttribute('content', '#ffffff');
-          }, 320);
+          window.setTimeout(() => splash.remove(), 320);
         };
         window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
       };
