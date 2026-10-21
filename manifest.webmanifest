@@ -4,8 +4,8 @@
   "description": "Explore your family tree and discover Tamil family relationships.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#026539",
+  "theme_color": "#026539",
   "icons": [
     {
       "src": "assets/uravu-icon-192.png?v=20261021-3",
