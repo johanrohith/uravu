@@ -3687,5 +3687,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     }
   }
 
-  start();
+  start().catch(error => {
+    console.error("Uravu app startup failed:", error);
+  }).finally(() => {
+    window.dispatchEvent(new Event("uravu:app-ready"));
+  });
 })();
