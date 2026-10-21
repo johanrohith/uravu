@@ -987,3 +987,19 @@
     max-height: 100dvh !important;
   }
 }
+
+
+/* Standalone app bottom safe-area must blend into the white tab deck. */
+@media (display-mode: standalone) {
+  html,
+  body,
+  .app-shell {
+    background-color: #fff !important;
+  }
+}
+
+html.uravu-standalone,
+html.uravu-standalone body,
+html.uravu-standalone .app-shell {
+  background-color: #fff !important;
+}
