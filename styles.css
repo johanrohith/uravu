@@ -982,28 +982,29 @@ html.uravu-standalone #dashboard.tree-open {
   background-color: #fff !important;
 }
 
-/* Cover only the bottom safe-area background, inside the app-shell stacking context.
-   The deck sits above this strip; unlike html::after, it cannot cover navigation items. */
+/* Extend the deck's own white background below it; do not place a sheet over the buttons. */
 @media (max-width: 760px) {
-  html.uravu-standalone .app-shell::after {
-    content: "";
-    position: absolute;
-    left: -9px;
-    right: -9px;
-    bottom: 0;
-    height: max(env(safe-area-inset-bottom, 0px), 32px);
-    background: #fff !important;
-    z-index: 150;
-    pointer-events: none;
-  }
-
   html.uravu-standalone .app-bottom-nav:not([hidden]) {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
+    overflow: visible !important;
+    isolation: isolate;
     padding-bottom: calc(7px + env(safe-area-inset-bottom, 0px)) !important;
     background: #fff !important;
     z-index: 160 !important;
+  }
+
+  html.uravu-standalone .app-bottom-nav:not([hidden])::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: max(env(safe-area-inset-bottom, 0px), 40px);
+    background: #fff;
+    pointer-events: none;
+    z-index: -1;
   }
 }
