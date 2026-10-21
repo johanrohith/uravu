@@ -23,6 +23,24 @@ assert.ok(hasRelationshipRule(["Father", "Father"], "Grandfather", "தாத்
 assert.ok(hasRelationshipRule(["Father", "Father", "Father"], "Great-grandfather", "கொள்ளுத்தாத்தா"));
 assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First Cousin", "அத்தான்"));
 assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First Cousin", "அண்ணி"));
+const chithappaSon = relationshipRules.rules.find(rule =>
+  JSON.stringify(rule.path) === JSON.stringify(["Father", "Younger Brother", "Son"])
+);
+const chithappaDaughter = relationshipRules.rules.find(rule =>
+  JSON.stringify(rule.path) === JSON.stringify(["Father", "Younger Brother", "Daughter"])
+);
+assert.deepEqual(chithappaSon.ta_by_age, {
+  older: "அண்ணன் (சித்தப்பா மகன்)",
+  younger: "தம்பி (சித்தப்பா மகன்)",
+  unknown: "சகோதரர் (சித்தப்பா மகன்; வயது உறுதி இல்லை)"
+});
+assert.deepEqual(chithappaDaughter.ta_by_age, {
+  older: "அக்கா (சித்தப்பா மகள்)",
+  younger: "தங்கை (சித்தப்பா மகள்)",
+  unknown: "சகோதரி (சித்தப்பா மகள்; வயது உறுதி இல்லை)"
+});
+assert.match(app, /configuredRule\.ta_by_age\?\./);
+
 assert.ok(app.includes("configuredRelationshipRulesByPerson"));
 assert.ok(html.includes("relationship-rules.json"));
 const permissionsMigration = fs.readFileSync(path.join(root, "supabase", "member-permissions-migration.sql"), "utf8");
@@ -1294,6 +1312,37 @@ assert.match(app, /window\.requestAnimationFrame\(\(\) => setTimeout\(retryRende
     assert.equal(relationLabel("me", people, relationships, "cousin-son", "en"), "First Cousin");
     assert.equal(relationLabel("me", people, relationships, "cousin-son", "ta"), "அத்தான்");
     assert.equal(relationLabel("me", people, relationships, "cousin-daughter", "ta"), "அண்ணி");
+    // Father's younger brother's children use sibling-like Tamil labels and keep their branch in brackets.
+    const unclePeople = [
+      person("grandfather", "male", "1950-01-01"),
+      person("father", "male", "1980-01-01"),
+      person("uncle", "male", "1985-01-01"),
+      person("me", "female", "2005-01-01"),
+      person("older-cousin-son", "male", "2000-01-01"),
+      person("younger-cousin-son", "male", "2010-01-01"),
+      person("older-cousin-daughter", "female", "2001-01-01"),
+      person("younger-cousin-daughter", "female", "2011-01-01"),
+      person("unknown-age-cousin-son", "male"),
+      person("unknown-age-cousin-daughter", "female")
+    ];
+    const uncleRelationships = [
+      parentLink("grandfather", "father"),
+      parentLink("grandfather", "uncle"),
+      parentLink("father", "me"),
+      parentLink("uncle", "older-cousin-son"),
+      parentLink("uncle", "younger-cousin-son"),
+      parentLink("uncle", "older-cousin-daughter"),
+      parentLink("uncle", "younger-cousin-daughter"),
+      parentLink("uncle", "unknown-age-cousin-son"),
+      parentLink("uncle", "unknown-age-cousin-daughter")
+    ];
+    assert.equal(relationLabel("me", unclePeople, uncleRelationships, "older-cousin-son", "ta"), "அண்ணன் (சித்தப்பா மகன்)");
+    assert.equal(relationLabel("me", unclePeople, uncleRelationships, "younger-cousin-son", "ta"), "தம்பி (சித்தப்பா மகன்)");
+    assert.equal(relationLabel("me", unclePeople, uncleRelationships, "older-cousin-daughter", "ta"), "அக்கா (சித்தப்பா மகள்)");
+    assert.equal(relationLabel("me", unclePeople, uncleRelationships, "younger-cousin-daughter", "ta"), "தங்கை (சித்தப்பா மகள்)");
+    assert.equal(relationLabel("me", unclePeople, uncleRelationships, "unknown-age-cousin-son", "ta"), "சகோதரர் (சித்தப்பா மகன்; வயது உறுதி இல்லை)");
+    assert.equal(relationLabel("me", unclePeople, uncleRelationships, "unknown-age-cousin-daughter", "ta"), "சகோதரி (சித்தப்பா மகள்; வயது உறுதி இல்லை)");
+
   } finally {
     if (priorWindow === undefined) delete global.window;
     else global.window = priorWindow;
