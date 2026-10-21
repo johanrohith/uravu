@@ -985,3 +985,19 @@ html.uravu-standalone .app-shell > main {
     background: #fff !important;
   }
 }
+
+
+/* Standalone Android edge-to-edge: extend the tab deck through the bottom system safe area. */
+@media (max-width: 760px) {
+  html.uravu-standalone {
+    --uravu-safe-area-max-bottom: max(env(safe-area-max-inset-bottom, 0px), 32px);
+  }
+
+  html.uravu-standalone .app-bottom-nav:not([hidden]) {
+    position: fixed !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) - var(--uravu-safe-area-max-bottom)) !important;
+    padding-bottom: calc(7px + var(--uravu-safe-area-max-bottom)) !important;
+    background: #fff !important;
+    z-index: 160 !important;
+  }
+}
