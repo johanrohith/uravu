@@ -956,3 +956,17 @@
     color: #fff !important;
   }
 }
+
+
+/* Hide native tree scrollbars while preserving touch and wheel navigation. */
+.family-tree-viewport {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scrollbar-color: transparent transparent !important;
+}
+.family-tree-viewport::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
