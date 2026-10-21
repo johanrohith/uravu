@@ -10,9 +10,42 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=20261021-3">
   <link rel="preload" as="image" href="./assets/uravu-icon.png?v=20261021-3" fetchpriority="high">
   <title>Uravu — Family tree</title>
-  <style>body.booting{visibility:hidden}#boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}#boot-error[hidden]{display:none}</style>
+  <script>
+    (function () {
+      const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true;
+      if (standalone) document.documentElement.classList.add('uravu-standalone');
+    })();
+  </script>
+  <style>
+    body.booting{visibility:hidden}
+    #boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}
+    #boot-error[hidden]{display:none}
+    #app-splash{display:none;position:fixed;inset:0;z-index:10000;place-items:center;background:#026539;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s ease;isolation:isolate}
+    html.uravu-standalone #app-splash{display:grid}
+    html.uravu-standalone body.booting{visibility:visible}
+    html.uravu-standalone body.booting .app-shell{opacity:0}
+    html.uravu-standalone body:not(.booting) .app-shell{opacity:1;transition:opacity .28s ease}
+    #app-splash img{display:block;width:clamp(88px,22vw,124px);height:auto;aspect-ratio:1;object-fit:contain;background:#026539;border:0;border-radius:24%;box-shadow:none;animation:uravu-splash-arrive .48s cubic-bezier(.2,.72,.24,1) both}
+    #app-splash.is-leaving{opacity:0;pointer-events:none}
+    @keyframes uravu-splash-arrive{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+    @media(prefers-reduced-motion:reduce){#app-splash,#app-splash img,html.uravu-standalone body:not(.booting) .app-shell{animation:none;transition:none}}
+  </style>
   <script>
     (async function () {
+      const standalone = document.documentElement.classList.contains('uravu-standalone');
+      const splashStartedAt = Date.now();
+      const dismissSplash = () => {
+        if (!standalone) return;
+        const splash = document.getElementById('app-splash');
+        if (!splash || splash.dataset.dismissScheduled === 'true') return;
+        splash.dataset.dismissScheduled = 'true';
+        const leave = () => {
+          splash.classList.add('is-leaving');
+          window.setTimeout(() => splash.remove(), 320);
+        };
+        window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
+      };
       const loadScript = (src) => new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src;
@@ -55,6 +88,8 @@
           stylesheet.onload = resolve;
           stylesheet.onerror = () => reject(new Error('Could not load the app styles.'));
         });
+        // On the regular website, reveal the styled page without waiting for auth/network startup.
+        if (!standalone) document.body.classList.remove('booting');
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-tree-view-session-20261021-3');
@@ -94,6 +129,7 @@
         } catch (finalCleanupError) { console.warn('Uravu final cache cleanup:', finalCleanupError); }
         document.body.classList.remove('booting');
         document.documentElement.classList.add('uravu-ready');
+        dismissSplash();
       } catch (error) {
         console.error('Uravu startup error:', error);
         document.body.classList.remove('booting');
@@ -103,11 +139,15 @@
           errorBox.querySelector('[data-error-message]').textContent =
             'Uravu could not start because a required file or service could not load. Refresh the page or try again later.';
         }
+        dismissSplash();
       }
     })();
   </script>
 </head>
 <body class="booting">
+  <div id="app-splash" role="status" aria-label="Opening Uravu">
+    <img src="./assets/uravu-icon.png?v=20261021-3" width="112" height="112" alt="" fetchpriority="high">
+  </div>
   <div id="boot-error" hidden>
     <h1>Uravu could not start</h1>
     <p data-error-message>One of the app files did not load.</p>
