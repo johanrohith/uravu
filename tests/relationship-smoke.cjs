@@ -1350,8 +1350,8 @@ assert.match(app, /window\.requestAnimationFrame\(\(\) => setTimeout\(retryRende
     ];
     assert.equal(relationLabel("me", people, relationships, "grandfather", "en"), "Grandfather");
     assert.equal(relationLabel("me", people, relationships, "cousin-son", "en"), "First Cousin");
-    assert.equal(relationLabel("me", people, relationships, "cousin-son", "ta"), "அத்தான்");
-    assert.equal(relationLabel("me", people, relationships, "cousin-daughter", "ta"), "அண்ணி");
+    assert.equal(relationLabel("me", people, relationships, "cousin-son", "ta"), "மச்சான் (அத்தை மகன்)");
+    assert.equal(relationLabel("me", people, relationships, "cousin-daughter", "ta"), "மச்சினி (அத்தை மகள்)");
     // Father's younger brother's children use sibling-like Tamil labels and keep their branch in brackets.
     const unclePeople = [
       person("grandfather", "male", "1950-01-01"),
