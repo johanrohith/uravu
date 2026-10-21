@@ -1008,3 +1008,48 @@ html.uravu-standalone #dashboard.tree-open {
     z-index: -1;
   }
 }
+
+
+/* Android standalone WebView can paint overlay scrollbar thumbs despite the
+   scrollbar-width/display rules above. Mask only the viewport's 10px edges;
+   the scroll container and its touch/pan behavior remain enabled. */
+@media (max-width: 760px) {
+  html.uravu-standalone .family-tree-viewport {
+    position: relative !important;
+    overflow: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  html.uravu-standalone .family-tree-viewport::-webkit-scrollbar,
+  html.uravu-standalone .family-tree-viewport::-webkit-scrollbar-track,
+  html.uravu-standalone .family-tree-viewport::-webkit-scrollbar-thumb,
+  html.uravu-standalone .family-tree-viewport::-webkit-scrollbar-corner {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+    opacity: 0 !important;
+    background: #fff !important;
+    border-color: #fff !important;
+  }
+  html.uravu-standalone .family-tree-viewport::before,
+  html.uravu-standalone .family-tree-viewport::after {
+    content: "";
+    position: absolute !important;
+    z-index: 2147483647 !important;
+    display: block !important;
+    pointer-events: none !important;
+    background: #fff !important;
+  }
+  html.uravu-standalone .family-tree-viewport::before {
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 10px !important;
+    width: 10px !important;
+  }
+  html.uravu-standalone .family-tree-viewport::after {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: 10px !important;
+  }
+}
