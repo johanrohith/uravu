@@ -970,3 +970,20 @@
   height: 0 !important;
   background: transparent !important;
 }
+
+
+/* Android standalone bottom viewport fill fix. */
+@media (max-width: 760px) {
+  html,
+  body,
+  body:has(#dashboard.tree-open) {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+
+  .app-shell {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+}
