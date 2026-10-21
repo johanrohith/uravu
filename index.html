@@ -14,7 +14,12 @@
     (function () {
       const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
         window.navigator.standalone === true;
-      if (standalone) document.documentElement.classList.add('uravu-standalone');
+      if (standalone) {
+        document.documentElement.classList.add('uravu-standalone');
+        // Match Android's system bars to the app-only splash before first paint.
+        const themeColor = document.querySelector('meta[name="theme-color"]');
+        if (themeColor) themeColor.setAttribute('content', '#026539');
+      }
     })();
   </script>
   <style>
@@ -24,6 +29,10 @@
     #boot-error[hidden]{display:none}
     #app-splash{display:none;position:fixed;inset:0;z-index:10000;place-items:center;background:#026539;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s ease;isolation:isolate}
     html.uravu-standalone #app-splash{display:grid}
+    html.uravu-standalone:has(body.booting),
+    html.uravu-standalone body.booting,
+    html.uravu-standalone body.booting .app-shell,
+    html.uravu-standalone body.booting .app-shell>main{background-color:#026539!important}
     html.uravu-standalone body.booting{visibility:visible}
     html.uravu-standalone body.booting .app-shell{opacity:0}
     html.uravu-standalone body:not(.booting) .app-shell{opacity:1;transition:opacity .28s ease}
@@ -43,7 +52,12 @@
         splash.dataset.dismissScheduled = 'true';
         const leave = () => {
           splash.classList.add('is-leaving');
-          window.setTimeout(() => splash.remove(), 320);
+          window.setTimeout(() => {
+            splash.remove();
+            // Return system bars to the regular app color only after the green fade completes.
+            const themeColor = document.querySelector('meta[name="theme-color"]');
+            if (themeColor) themeColor.setAttribute('content', '#ffffff');
+          }, 320);
         };
         window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
       };
@@ -108,7 +122,7 @@
           const finish = () => resolve();
           window.addEventListener('uravu:app-ready', finish, { once: true });
         });
-        await loadScript('./app.js?v=uravu-path-rules-20261021-8');
+        await loadScript('./app.js?v=uravu-path-rules-20261021-9');
         await appReady;
         // Let the completed tree/layout paint behind the splash before fading it away.
         await new Promise(resolve => window.requestAnimationFrame(() =>
