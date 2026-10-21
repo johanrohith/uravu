@@ -775,7 +775,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     return db.rpc(name, args);
   }
 
-  function renderAuth(user) {
+  async function renderAuth(user) {
     state.user = user || null;
     $("#signed-out").hidden = Boolean(state.user);
     $("#dashboard").hidden = !state.user;
@@ -802,7 +802,7 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       syncAppNavigation();
       return;
     }
-    refreshDashboard();
+    await refreshDashboard();
   }
 
   async function refreshDashboard() {
@@ -3678,12 +3678,38 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
     installLanguageObserver();
     applyLanguage();
     window.uravuTranslate = translateUiValue;
-    document.addEventListener("uravu:auth", event => renderAuth(event.detail?.user || null));
+    let initialAuthHandled = false;
+    let lastAuthUserId = null;
+    let initialAuthRender = Promise.resolve();
+    document.addEventListener("uravu:auth", event => {
+      const user = event.detail?.user || null;
+      const userId = user?.id || null;
+      // Supabase can publish the same initial session more than once. Do not
+      // start a second dashboard/tree load while the first one is still rendering.
+      if (initialAuthHandled && userId === lastAuthUserId) return;
+      lastAuthUserId = userId;
+      if (!initialAuthHandled) {
+        initialAuthHandled = true;
+        initialAuthRender = renderAuth(user);
+        initialAuthRender.catch(error => console.error("Uravu initial auth render failed:", error));
+        return;
+      }
+      renderAuth(user).catch(error => console.error("Uravu auth render failed:", error));
+    });
     if (window.uravuAuth?.ready) {
       const user = await window.uravuAuth.ready;
-      renderAuth(user || null);
+      if (!initialAuthHandled) {
+        initialAuthHandled = true;
+        lastAuthUserId = user?.id || null;
+        initialAuthRender = renderAuth(user || null);
+      }
+      await initialAuthRender;
     } else {
-      renderAuth(null);
+      if (!initialAuthHandled) {
+        initialAuthHandled = true;
+        initialAuthRender = renderAuth(null);
+      }
+      await initialAuthRender;
     }
   }
 
