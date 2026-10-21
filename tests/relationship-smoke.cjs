@@ -23,6 +23,16 @@ assert.ok(hasRelationshipRule(["Father", "Father"], "Grandfather", "தாத்
 assert.ok(hasRelationshipRule(["Father", "Father", "Father"], "Great-grandfather", "கொள்ளுத்தாத்தா"));
 assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Son"], "First Cousin", "அத்தை மகன்"));
 assert.ok(hasRelationshipRule(["Father", "Younger Sister", "Daughter"], "First Cousin", "அத்தை மகள்"));
+assert.deepEqual(relationshipRules.rules.find(rule => JSON.stringify(rule.path) === JSON.stringify(["Father", "Older Brother", "Son"])).ta_by_age, {
+  older: "அண்ணன் (பெரியப்பா மகன்)",
+  younger: "தம்பி (பெரியப்பா மகன்)",
+  unknown: "சகோதரர் (பெரியப்பா மகன்; வயது உறுதி இல்லை)"
+});
+assert.deepEqual(relationshipRules.rules.find(rule => JSON.stringify(rule.path) === JSON.stringify(["Father", "Older Brother", "Daughter"])).ta_by_age, {
+  older: "அக்கா (பெரியப்பா மகள்)",
+  younger: "தங்கை (பெரியப்பா மகள்)",
+  unknown: "சகோதரி (பெரியப்பா மகள்; வயது உறுதி இல்லை)"
+});
 
 const cousinAgeRules = [
   [["Father", "Older Sister", "Son"], "அத்தை", "male"],
