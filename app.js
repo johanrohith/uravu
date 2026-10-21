@@ -1396,7 +1396,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       ? window.URAVU_RELATIONSHIP_RULES.rules.filter(rule =>
           rule && Array.isArray(rule.path) && rule.path.length &&
           rule.path.every(step => typeof step === "string") &&
-          typeof rule.en === "string" && typeof rule.ta === "string")
+          typeof rule.en === "string" && typeof rule.ta === "string" &&
+          (!rule.ta_by_age || (
+            typeof rule.ta_by_age === "object" &&
+            ["older", "younger", "unknown"].every(order => typeof rule.ta_by_age[order] === "string")
+          )))
       : [];
     const relationshipRoleCache = new Map();
     function relationshipRoleBetween(fromId, toId) {
@@ -1455,7 +1459,11 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       const id=person.id;let english="",tamil="";
       const configuredRule = configuredRelationshipLabels.get(id);
       if (configuredRule) {
-        const configuredLabel = state.language === "ta" ? configuredRule.ta : configuredRule.en;
+        let configuredLabel = configuredRule.en;
+        if (state.language === "ta") {
+          const ageOrder = age(person, ego);
+          configuredLabel = configuredRule.ta_by_age?.[ageOrder] || configuredRule.ta;
+        }
         if (configuredLabel) { labels.set(id, configuredLabel); continue; }
       }
       if(id===egoId){english="You";tamil="நீங்கள்";}
