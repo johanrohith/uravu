@@ -1421,8 +1421,9 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
       relationshipRoleCache.set(cacheKey, role);
       return role;
     }
-    function configuredRelationshipRuleFor(targetId) {
-      for (const rule of configuredRelationshipRules) {
+    function configuredRelationshipRulesByPerson() {
+      const matchedByPerson = new Map();
+      configuredRelationshipRules.forEach(rule => {
         let currentIds = new Set([egoId]);
         for (const step of rule.path) {
           const nextIds = new Set();
@@ -1440,16 +1441,19 @@ tamilToEnglish["உறவுகள்"] = "Uravugal";
           currentIds = nextIds;
           if (!currentIds.size) break;
         }
-        if (currentIds.has(targetId)) return rule;
-      }
-      return null;
+        currentIds.forEach(targetId => {
+          if (!matchedByPerson.has(targetId)) matchedByPerson.set(targetId, rule);
+        });
+      });
+      return matchedByPerson;
     }
+    const configuredRelationshipLabels = configuredRelationshipRulesByPerson();
 
     const connected=new Set([egoId]),queue=[egoId];
     for(let i=0;i<queue.length;i++){const cur=queue[i];[...array(parentsOf(cur)),...array(childrenOf(cur)),...array(spousesOf(cur))].forEach(id=>{if(!connected.has(id)){connected.add(id);queue.push(id);}});}
     for(const person of state.people){
       const id=person.id;let english="",tamil="";
-      const configuredRule = configuredRelationshipRuleFor(id);
+      const configuredRule = configuredRelationshipLabels.get(id);
       if (configuredRule) {
         const configuredLabel = state.language === "ta" ? configuredRule.ta : configuredRule.en;
         if (configuredLabel) { labels.set(id, configuredLabel); continue; }
