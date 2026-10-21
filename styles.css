@@ -970,3 +970,18 @@
   height: 0 !important;
   background: transparent !important;
 }
+
+
+/* Standalone app root and bottom safe-area surface: match the tab deck. */
+html.uravu-standalone,
+html.uravu-standalone body,
+html.uravu-standalone .app-shell,
+html.uravu-standalone .app-shell > main {
+  background-color: #fff !important;
+}
+
+@media (max-width: 760px) {
+  html.uravu-standalone .app-bottom-nav:not([hidden]) {
+    background: #fff !important;
+  }
+}
