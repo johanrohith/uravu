@@ -13,8 +13,6 @@
   <style>body.booting{visibility:hidden}#boot-error{font:14px/1.6 system-ui,sans-serif;max-width:600px;margin:12vh auto;padding:24px}#boot-error[hidden]{display:none}</style>
   <script>
     (async function () {
-        window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
-      };
       const loadScript = (src) => new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src;
