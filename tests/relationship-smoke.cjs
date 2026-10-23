@@ -32,6 +32,14 @@ assert.equal((html.match(/caches\.keys\(\)/g) || []).length, 1,
   "Legacy cache cleanup should run at most once from the startup script");
 assert.match(html, /uravu-runtime-cleanup-version/);
 assert.match(html, /Uravu startup timed out while preparing the app/);
+assert.match(html, /const resourceTimeoutMs = 15000;/,
+  "Required startup assets must have a bounded resource timeout");
+assert.match(html, /Timed out loading the app styles/,
+  "Stylesheet stalls must not leave the app splash stuck");
+assert.match(html, /Timed out loading ' \+ src/,
+  "Script stalls must not leave the app splash stuck");
+assert.match(html, /rulesController\.abort\(\)/,
+  "Relationship rules fetch must be aborted after its timeout");
 assert.ok(Array.isArray(relationshipRules.rules) && relationshipRules.rules.length >= 100);
 assert.ok(relationshipRules.rules.every(rule =>
   Array.isArray(rule.path) && rule.path.length > 0 &&
