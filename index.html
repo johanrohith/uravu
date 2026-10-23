@@ -73,11 +73,29 @@
         };
         window.setTimeout(leave, Math.max(0, 420 - (Date.now() - splashStartedAt)));
       };
+      const resourceTimeoutMs = 15000;
       const loadScript = (src) => new Promise((resolve, reject) => {
         const script = document.createElement('script');
+        let settled = false;
+        const finish = (error) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          script.onload = null;
+          script.onerror = null;
+          if (error) {
+            script.remove();
+            reject(error);
+          } else {
+            resolve();
+          }
+        };
+        const timeoutId = window.setTimeout(() => {
+          finish(new Error('Timed out loading ' + src));
+        }, resourceTimeoutMs);
         script.src = src;
-        script.onload = resolve;
-        script.onerror = () => reject(new Error('Could not load ' + src));
+        script.onload = () => finish();
+        script.onerror = () => finish(new Error('Could not load ' + src));
         document.body.appendChild(script);
       });
       try {
@@ -119,23 +137,47 @@
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
         stylesheet.href = './styles.css?v=uravu-tree-view-session-20261021-16';
-        document.head.appendChild(stylesheet);
         await new Promise((resolve, reject) => {
-          stylesheet.onload = resolve;
-          stylesheet.onerror = () => reject(new Error('Could not load the app styles.'));
+          let settled = false;
+          const finish = (error) => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeoutId);
+            stylesheet.onload = null;
+            stylesheet.onerror = null;
+            if (error) {
+              stylesheet.remove();
+              reject(error);
+            } else {
+              resolve();
+            }
+          };
+          const timeoutId = window.setTimeout(() => {
+            finish(new Error('Timed out loading the app styles.'));
+          }, resourceTimeoutMs);
+          stylesheet.onload = () => finish();
+          stylesheet.onerror = () => finish(new Error('Could not load the app styles.'));
+          document.head.appendChild(stylesheet);
         });
         // On the regular website, reveal the styled page without waiting for auth/network startup.
         if (!standalone) document.body.classList.remove('booting');
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         await loadScript('./supabase-config.js?v=uravu-clean-20261018');
         await loadScript('./auth.js?v=uravu-tree-view-session-20261021-3');
+        const rulesController = new AbortController();
+        const rulesTimeoutId = window.setTimeout(() => rulesController.abort(), resourceTimeoutMs);
         try {
-          const rulesResponse = await fetch('./relationship-rules.json?v=uravu-path-rules-20261021-4', { cache: 'no-store' });
+          const rulesResponse = await fetch('./relationship-rules.json?v=uravu-path-rules-20261021-4', {
+            cache: 'no-store',
+            signal: rulesController.signal
+          });
           if (!rulesResponse.ok) throw new Error('Could not load relationship-rules.json');
           window.URAVU_RELATIONSHIP_RULES = await rulesResponse.json();
         } catch (rulesError) {
           console.warn('Uravu relationship rules unavailable; using built-in fallback:', rulesError);
           window.URAVU_RELATIONSHIP_RULES = { rules: [] };
+        } finally {
+          window.clearTimeout(rulesTimeoutId);
         }
         // Wait for the initial auth/tree render, but never leave the splash stuck forever.
         const appReady = new Promise((resolve, reject) => {
