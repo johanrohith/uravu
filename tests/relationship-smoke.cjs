@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 
 const root = path.join(__dirname, "..");
 const app = fs.readFileSync(path.join(root, "app.js"), "utf8");
@@ -10,6 +11,27 @@ const worker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
 const styles = fs.readFileSync(path.join(root, "styles.css"), "utf8");
 const schema = fs.readFileSync(path.join(root, "supabase", "schema.sql"), "utf8");
 const relationshipRules = JSON.parse(fs.readFileSync(path.join(root, "relationship-rules.json"), "utf8"));
+
+const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8"));
+assert.equal(manifest.name, "Uravu Family Tree");
+assert.equal(manifest.display, "standalone");
+assert.equal(manifest.background_color, "#026539");
+assert.ok(Array.isArray(manifest.icons) && manifest.icons.length >= 2);
+for (const icon of manifest.icons) {
+  const assetPath = icon.src.split("?")[0];
+  assert.ok(fs.existsSync(path.join(root, assetPath)), "Missing manifest icon asset: " + assetPath);
+}
+const inlineScripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script\\s*>/gi)]
+  .filter(([, attributes, source]) => !/\\bsrc\\s*=/.test(attributes) && source.trim());
+for (let i = 0; i < inlineScripts.length; i++) {
+  new vm.Script(inlineScripts[i][2], { filename: "index.html inline script " + (i + 1) });
+}
+assert.equal((html.match(/getRegistrations\\(\\)/g) || []).length, 1,
+  "Legacy service-worker cleanup should run at most once from the startup script");
+assert.equal((html.match(/caches\\.keys\\(\\)/g) || []).length, 1,
+  "Legacy cache cleanup should run at most once from the startup script");
+assert.match(html, /uravu-runtime-cleanup-version/);
+assert.match(html, /Uravu startup timed out while preparing the app/);
 assert.ok(Array.isArray(relationshipRules.rules) && relationshipRules.rules.length >= 100);
 assert.ok(relationshipRules.rules.every(rule =>
   Array.isArray(rule.path) && rule.path.length > 0 &&
