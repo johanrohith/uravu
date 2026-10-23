@@ -84,29 +84,38 @@
         if (document.readyState === 'loading') {
           await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
         }
+        // Legacy app-cache cleanup is needed only once per cleanup version, not on every launch.
+        const runtimeCleanupVersion = "uravu-runtime-cleanup-v1";
+        let runtimeCleanupDone = false;
         try {
-          if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.filter(reg => {
-              try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
-              catch (_) { return false; }
-            }).map(reg => reg.unregister()));
-          }
-        } catch (cleanupError) { console.warn('Uravu worker cleanup:', cleanupError); }
-        try {
-          if ('caches' in window) {
-            const names = await caches.keys();
-            await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
-          }
-        } catch (cacheError) { console.warn('Uravu cache cleanup:', cacheError); }
-        try {
-          const staleKeys = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && /^uravu-(demo|tree-cache|people-cache|request-cache)/i.test(key)) staleKeys.push(key);
-          }
-          staleKeys.forEach(key => localStorage.removeItem(key));
+          runtimeCleanupDone = localStorage.getItem("uravu-runtime-cleanup-version") === runtimeCleanupVersion;
         } catch (_) {}
+        if (!runtimeCleanupDone) {
+          try {
+            if ('serviceWorker' in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.filter(reg => {
+                try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
+                catch (_) { return false; }
+              }).map(reg => reg.unregister()));
+            }
+          } catch (cleanupError) { console.warn('Uravu worker cleanup:', cleanupError); }
+          try {
+            if ('caches' in window) {
+              const names = await caches.keys();
+              await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
+            }
+          } catch (cacheError) { console.warn('Uravu cache cleanup:', cacheError); }
+          try {
+            const staleKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && /^uravu-(demo|tree-cache|people-cache|request-cache)/i.test(key)) staleKeys.push(key);
+            }
+            staleKeys.forEach(key => localStorage.removeItem(key));
+          } catch (_) {}
+          try { localStorage.setItem("uravu-runtime-cleanup-version", runtimeCleanupVersion); } catch (_) {}
+        }
         const stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
         stylesheet.href = './styles.css?v=uravu-tree-view-session-20261021-16';
@@ -128,11 +137,19 @@
           console.warn('Uravu relationship rules unavailable; using built-in fallback:', rulesError);
           window.URAVU_RELATIONSHIP_RULES = { rules: [] };
         }
-        // Wait for app.js to finish its initial auth + dashboard/tree load.
-        // A short timeout here used to hide the splash while the tree was still loading.
-        const appReady = new Promise(resolve => {
-          const finish = () => resolve();
+        // Wait for the initial auth/tree render, but never leave the splash stuck forever.
+        const appReady = new Promise((resolve, reject) => {
+          let timeoutId;
+          const finish = () => {
+            window.removeEventListener('uravu:app-ready', finish);
+            window.clearTimeout(timeoutId);
+            resolve();
+          };
           window.addEventListener('uravu:app-ready', finish, { once: true });
+          timeoutId = window.setTimeout(() => {
+            window.removeEventListener('uravu:app-ready', finish);
+            reject(new Error('Uravu startup timed out while preparing the app.'));
+          }, 20000);
         });
         await loadScript('./app.js?v=uravu-path-rules-20261021-9');
         await appReady;
@@ -141,19 +158,6 @@
           window.requestAnimationFrame(resolve)
         ));
 
-        try {
-          if ('caches' in window) {
-            const names = await caches.keys();
-            await Promise.all(names.filter(name => /^uravu([_-]|$)/i.test(name)).map(name => caches.delete(name)));
-          }
-          if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.filter(reg => {
-              try { return new URL(reg.scope).pathname.startsWith('/uravu/'); }
-              catch (_) { return false; }
-            }).map(reg => reg.unregister()));
-          }
-        } catch (finalCleanupError) { console.warn('Uravu final cache cleanup:', finalCleanupError); }
         document.body.classList.remove('booting');
         document.documentElement.classList.add('uravu-ready');
         dismissSplash();
