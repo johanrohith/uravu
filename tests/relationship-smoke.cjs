@@ -21,14 +21,14 @@ for (const icon of manifest.icons) {
   const assetPath = icon.src.split("?")[0];
   assert.ok(fs.existsSync(path.join(root, assetPath)), "Missing manifest icon asset: " + assetPath);
 }
-const inlineScripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script\\s*>/gi)]
-  .filter(([, attributes, source]) => !/\\bsrc\\s*=/.test(attributes) && source.trim());
+const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+  .filter(([, attributes, source]) => !/\bsrc\s*=/.test(attributes) && source.trim());
 for (let i = 0; i < inlineScripts.length; i++) {
   new vm.Script(inlineScripts[i][2], { filename: "index.html inline script " + (i + 1) });
 }
-assert.equal((html.match(/getRegistrations\\(\\)/g) || []).length, 1,
+assert.equal((html.match(/getRegistrations\(\)/g) || []).length, 1,
   "Legacy service-worker cleanup should run at most once from the startup script");
-assert.equal((html.match(/caches\\.keys\\(\\)/g) || []).length, 1,
+assert.equal((html.match(/caches\.keys\(\)/g) || []).length, 1,
   "Legacy cache cleanup should run at most once from the startup script");
 assert.match(html, /uravu-runtime-cleanup-version/);
 assert.match(html, /Uravu startup timed out while preparing the app/);
