@@ -124,6 +124,22 @@ const recordDeletionMigration = fs.readFileSync(path.join(root, "supabase", "rec
 const singleTreeMigration = fs.readFileSync(path.join(root, "supabase", "single-tree-linking-migration.sql"), "utf8");
 const birthOrderMigration = fs.readFileSync(path.join(root, "supabase", "sibling-birth-order-migration.sql"), "utf8");
 
+ // Validate SQL function delimiters across every Supabase SQL file.
+ // This catches malformed dollar-quote endings that JavaScript syntax checks cannot detect.
+ const supabaseSqlDirectory = path.join(root, "supabase");
+ for (const filename of fs.readdirSync(supabaseSqlDirectory).filter(name => name.endsWith(".sql"))) {
+   const sqlSource = fs.readFileSync(path.join(supabaseSqlDirectory, filename), "utf8");
+   const delimiterCounts = new Map();
+   for (const match of sqlSource.matchAll(/\$\$|\$[A-Za-z_][A-Za-z_0-9]*\$/g)) {
+     delimiterCounts.set(match[0], (delimiterCounts.get(match[0]) || 0) + 1);
+   }
+   for (const [delimiter, count] of delimiterCounts) {
+     assert.equal(count % 2, 0, "Unmatched SQL dollar-quote " + delimiter + " in " + filename);
+   }
+   assert.doesNotMatch(sqlSource, /^[ \t]*\$;[ \t]*$/m,
+     "Malformed SQL dollar-quote terminator in " + filename);
+ }
+
 const dateHelperStart = app.indexOf("function datePartsValid");
 const dateHelperEnd = app.indexOf("function formatDateEntry", dateHelperStart);
 assert.ok(dateHelperStart >= 0 && dateHelperEnd > dateHelperStart);
