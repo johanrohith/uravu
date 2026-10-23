@@ -90,7 +90,7 @@ as $$
       and m.person_id is not null
       and p_tree_id = public.uravu_main_tree_id()
   );
-$;
+$$;
 
 create or replace function public.uravu_can_edit_person(p_tree_id uuid, p_person_id uuid)
 returns boolean
