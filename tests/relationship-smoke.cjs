@@ -111,6 +111,20 @@ assert.deepEqual(chithappaDaughter.ta_by_age, {
 });
 assert.match(app, /configuredRule\.ta_by_age\?\./);
 
+for (const [path, unknownLabel] of [
+  [["Father", "Brother", "Son"], "தந்தையின் சகோதரர் மகன் (வயது உறுதி இல்லை)"],
+  [["Father", "Brother", "Daughter"], "தந்தையின் சகோதரர் மகள் (வயது உறுதி இல்லை)"],
+  [["Mother", "Sister", "Son"], "தாயின் சகோதரி மகன் (வயது உறுதி இல்லை)"],
+  [["Mother", "Sister", "Daughter"], "தாயின் சகோதரி மகள் (வயது உறுதி இல்லை)"]
+]) {
+  const rule = relationshipRules.rules.find(candidate =>
+    JSON.stringify(candidate.path) === JSON.stringify(path)
+  );
+  assert.ok(rule, "Missing unknown-age cousin rule: " + JSON.stringify(path));
+  assert.equal(rule.ta_by_age?.unknown, unknownLabel,
+    "Unknown-age Tamil cousin label must be specific for " + JSON.stringify(path));
+}
+
 assert.match(html, /#app-splash\s*\{[^}]*background:#026539/s,
   "Standalone launch splash should retain the full green background");
 assert.match(html, /#app-splash\.is-leaving\s*\{[^}]*opacity:0/s,
